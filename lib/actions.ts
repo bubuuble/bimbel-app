@@ -179,27 +179,60 @@ export async function uploadMaterial(
  * Menghapus satu file materi dari Storage dan database.
  */
 export async function deleteMaterial(formData: FormData) {
+  'use server'
   const materialId = formData.get('materialId') as string;
   const fileUrl = formData.get('fileUrl') as string;
   const classId = formData.get('classId') as string;
 
-  if (!materialId || !fileUrl || !classId) return;
+  console.log("--- [ACTION] Deleting Material ---");
+  console.log("Material ID:", materialId);
+  console.log("File URL:", fileUrl);
+  console.log("Class ID:", classId);
+
+  if (!materialId || !fileUrl || !classId) {
+    console.error("Missing data for material deletion.");
+    return; 
+  }
 
   const supabase = await createClient();
 
+  // 1. Hapus dari Storage
   try {
     const url = new URL(fileUrl);
     const pathPrefix = `/storage/v1/object/public/materials/`;
     const filePath = decodeURIComponent(url.pathname.substring(pathPrefix.length));
 
     if (filePath) {
-      await supabase.storage.from('materials').remove([filePath]);
+      console.log("Attempting to delete from storage:", filePath);
+      const { error: storageError } = await supabase.storage
+        .from('materials')
+        .remove([filePath]);
+      
+      if (storageError) {
+        console.error("Storage Delete Error:", storageError);
+        // Tetap lanjutkan meskipun storage gagal
+      } else {
+        console.log("Storage file deleted successfully.");
+      }
     }
   } catch (e) {
-    console.error("Invalid file URL, skipping storage deletion:", fileUrl);
+    console.error("Invalid file URL, skipping storage deletion:", fileUrl, e);
   }
 
-  await supabase.from('materials').delete().eq('id', materialId);
+  // 2. Hapus dari Database
+  console.log("Attempting to delete from database table 'materials'...");
+  const { error: dbError } = await supabase
+    .from('materials')
+    .delete()
+    .eq('id', materialId);
+
+  if (dbError) {
+    console.error("DATABASE DELETE FAILED:", dbError);
+    // Di sini kita tidak mengembalikan apa-apa, tapi error akan tercatat di server
+    return; 
+  }
+
+  console.log("Database record deleted successfully.");
 
   revalidatePath(`/dashboard/class/${classId}`);
 }
