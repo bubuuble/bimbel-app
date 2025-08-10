@@ -468,3 +468,72 @@ export async function gradeSubmission(formData: FormData) {
   // Revalidate halaman detail tugas agar nilai baru muncul
   revalidatePath(`/dashboard/class/${classId}/task/${materialId}`);
 }
+
+export type ProfileFormState = {
+  type: 'profile';
+  success?: string;
+  error?: string;
+} | null;
+
+export type PasswordFormState = {
+  type: 'password';
+  success?: string;
+  error?: string;
+} | null;
+
+/**
+ * Memperbarui nama dan username pengguna.
+ */
+export async function updateUserProfile(
+  prevState: ProfileFormState,
+  formData: FormData
+): Promise<ProfileFormState> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { type: 'profile', error: 'Not authenticated' };
+
+  const name = formData.get('name') as string;
+  const username = formData.get('username') as string;
+
+  if (!name || !username) return { type: 'profile', error: 'Name and username are required' };
+
+  // 1. Update di tabel 'profiles'
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ name, username })
+    .eq('id', user.id);
+  
+  if (profileError) return { type: 'profile', error: `Profile update failed: ${profileError.message}` };
+
+  // 2. Update metadata di 'auth.users'
+  const { error: authError } = await supabase.auth.updateUser({
+    data: { name, username }
+  });
+
+  if (authError) return { type: 'profile', error: `Auth update failed: ${authError.message}` };
+
+  revalidatePath('/dashboard/profile');
+  return { type: 'profile', success: 'Profile updated successfully!' };
+}
+
+/**
+ * Memperbarui password pengguna.
+ */
+export async function updateUserPassword(
+  prevState: PasswordFormState,
+  formData: FormData
+): Promise<PasswordFormState> {
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!password) return { type: 'password', error: 'Password is required' };
+  if (password.length < 6) return { type: 'password', error: 'Password must be at least 6 characters' };
+  if (password !== confirmPassword) return { type: 'password', error: 'Passwords do not match' };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { type: 'password', error: `Password update failed: ${error.message}` };
+
+  return { type: 'password', success: 'Password updated successfully!' };
+}

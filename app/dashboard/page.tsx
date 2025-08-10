@@ -1,39 +1,43 @@
-// src/app/dashboard/page.tsx
+// FILE: app/dashboard/page.tsx (DISEDERHANAKAN)
+
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardClient from "./components/DashboardClient"; // Akan kita buat
 
-// Definisikan tipe data untuk profil agar bisa digunakan di tempat lain
-export type UserProfile = {
-  id: string;
-  name: string | null;
-  username: string | null;
-  role: 'ADMIN' | 'GURU' | 'SISWA';
-};
+// Impor komponen view berdasarkan peran
+import AdminView from "./components/AdminView";
+import TeacherView from "./components/TeacherView";
+import StudentView from "./components/StudentView";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
+  // Kita hanya perlu mengambil user dan profil untuk menentukan view mana yang akan dirender.
+  // Layout sudah menangani redirect jika tidak login.
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return redirect('/login');
-  }
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user!.id).single();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, name, username, role')
-    .eq('id', user.id)
-    .single();
-  
   if (!profile) {
-    return (
-      <div>
-        <h1>Error</h1>
-        <p>User profile not found. Please contact support.</p>
-      </div>
-    );
+    return <div>Profile not found.</div>
   }
 
-  // Kirim data profil ke komponen client
-  return <DashboardClient userProfile={profile} />;
+  // Pilih konten yang akan dirender berdasarkan peran
+  const renderContent = () => {
+    switch (profile.role) {
+      case 'ADMIN':
+        return <AdminView />;
+      case 'GURU':
+        return <TeacherView userProfile={profile} />;
+      case 'SISWA':
+        return <StudentView userProfile={profile} />;
+      default:
+        return <div>Error: Invalid user role.</div>;
+    }
+  };
+
+  return (
+    <div>
+      {/* Konten akan dirender di sini, di dalam layout */}
+      {renderContent()}
+    </div>
+  );
 }
