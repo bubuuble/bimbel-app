@@ -1,6 +1,6 @@
 // FILE: app/dashboard/components/DeleteClassForm.tsx
 
-'use client' // <-- TANDAI SEBAGAI CLIENT COMPONENT
+'use client' 
 
 import { deleteClass } from "@/lib/actions";
 

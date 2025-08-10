@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import Papa from 'papaparse'; // <-- TAMBAHKAN BARIS IMPOR INI
 // Import Supabase Client secara eksplisit untuk Admin Client
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
@@ -299,19 +300,16 @@ export async function createAttendanceSession(formData: FormData) {
   
   const classId = formData.get('classId') as string;
   const sessionTitle = formData.get('sessionTitle') as string;
-  const startTimeStr = formData.get('startTime') as string; // Input baru: '2024-08-10T14:00'
+  const startTimeStr = formData.get('startTime') as string;
 
-  if (!classId || !sessionTitle || !startTimeStr) {
-    console.error("Data tidak lengkap untuk membuat sesi.");
-    return; // Idealnya kembalikan state error
-  }
+  if (!classId || !sessionTitle || !startTimeStr) return;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
   const startTime = new Date(startTimeStr);
-  const expiresAt = new Date(startTime.getTime() + 15 * 60 * 1000); // Kadaluwarsa 15 menit dari waktu mulai
+  const expiresAt = new Date(startTime.getTime() + 15 * 60 * 1000);
   const sessionDate = startTime.toISOString().slice(0, 10);
 
   const { error } = await supabase.from('attendance_sessions').insert({
@@ -320,13 +318,14 @@ export async function createAttendanceSession(formData: FormData) {
     session_date: sessionDate,
     start_time: startTime.toISOString(),
     expires_at: expiresAt.toISOString(),
+    teacher_id: user.id // <<-- PASTIKAN BARIS INI ADA!
   });
 
   if (error) {
     console.error("Error creating attendance session:", error);
     return;
   }
-  revalidatePath(`/dashboard/class/${classId}`);
+  revalidatePath(`/dashboard/absensi`); // Pastikan revalidate ke halaman yang benar
 }
 
 /**
@@ -536,4 +535,153 @@ export async function updateUserPassword(
   if (error) return { type: 'password', error: `Password update failed: ${error.message}` };
 
   return { type: 'password', success: 'Password updated successfully!' };
+}
+
+export async function markNotificationAsRead(notificationId: string) {
+    'use server'
+    if (!notificationId) return;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return; // Pastikan user login
+
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+      .eq('user_id', user.id); // Keamanan tambahan: hanya bisa update notif milik sendiri
+
+    // Revalidate layout untuk memperbarui hitungan di lonceng notifikasi
+    revalidatePath('/dashboard', 'layout');
+}
+
+export async function unenrollFromClass(formData: FormData) {
+  'use server'
+
+  const classId = formData.get('classId') as string;
+  if (!classId) return;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  
+  // Hapus catatan pendaftaran yang cocok dengan siswa dan kelas saat ini
+  const { error } = await supabase
+    .from('enrollments')
+    .delete()
+    .eq('class_id', classId)
+    .eq('student_id', user.id);
+
+  if (error) {
+    console.error("Error unenrolling from class:", error);
+    // Di aplikasi nyata, kembalikan state error
+    return;
+  }
+
+  revalidatePath('/dashboard/kelas');
+}
+
+export type CsvExportState = {
+  csvString?: string;
+  error?: string;
+  fileName?: string;
+} | null;
+
+/**
+ * Mengambil data laporan absensi dan mengonversinya menjadi string CSV.
+ */
+export async function exportAttendanceToCsv(
+  prevState: CsvExportState,
+  formData: FormData
+): Promise<CsvExportState> {
+  const sessionId = formData.get('sessionId') as string;
+  if (!sessionId) {
+    return { error: 'Session ID is missing.' };
+  }
+
+  const supabase = await createClient();
+  
+  // Panggil RPC yang sudah ada. Pastikan RPC ini memiliki SECURITY DEFINER.
+  const { data: reportData, error: rpcError } = await supabase.rpc(
+    'get_session_attendance_report',
+    { p_session_id: sessionId }
+  );
+
+  if (rpcError) {
+    return { error: `Failed to fetch report data: ${rpcError.message}` };
+  }
+  if (!reportData || reportData.length === 0) {
+    return { error: 'No data to export for this session.' };
+  }
+
+  // Ambil judul sesi untuk nama file
+  const { data: sessionInfo } = await supabase
+    .from('attendance_sessions')
+    .select('title')
+    .eq('id', sessionId)
+    .single();
+
+  // Ubah data JSON menjadi string CSV
+  const csvString = Papa.unparse(reportData, {
+    header: true,
+    columns: ['student_name', 'student_username', 'status', 'submitted_at', 'notes'],
+  });
+
+  const safeTitle = sessionInfo?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const fileName = `laporan-absensi-${safeTitle || sessionId}.csv`;
+
+  return { csvString, fileName };
+}
+
+export async function changeUserPasswordByAdmin(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const supabase = await createClient();
+  // ... (tambahkan otorisasi admin seperti di action lain) ...
+
+  const userId = formData.get('userId') as string;
+  const newPassword = formData.get('newPassword') as string;
+
+  if (!userId || !newPassword || newPassword.length < 6) {
+    return { error: 'User ID and a password of at least 6 characters are required.' };
+  }
+
+  // Gunakan Supabase Admin Client untuk mengubah password pengguna lain
+  const supabaseAdmin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    password: newPassword
+  });
+
+  if (error) return { error: `Failed to update password: ${error.message}` };
+  
+  return { success: 'Password updated successfully!' };
+}
+
+export async function deleteUserByAdmin(formData: FormData) {
+  'use server'
+  const userId = formData.get('userId') as string;
+  if (!userId) return;
+
+  const supabase = await createClient();
+  // ... (tambahkan otorisasi admin) ...
+
+  const supabaseAdmin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  
+  if (error) {
+    console.error("Error deleting user:", error);
+    // Idealnya kembalikan state error
+    return;
+  }
+
+  revalidatePath('/dashboard/user-management'); // Revalidate halaman user management
 }

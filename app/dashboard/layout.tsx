@@ -1,8 +1,9 @@
-// FILE: app/dashboard/layout.tsx
+// FILE: app/dashboard/layout.tsx (REVISED)
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardLayoutClient from "./components/DashboardClient"; // Ganti nama impor
+import DashboardLayoutClient from "./components/DashboardClient";
+import NotificationBell from "./components/NotificationBell"; // <-- Impor di sini
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -12,7 +13,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return redirect('/login');
   }
 
-  // Ambil profil pengguna sekali di sini, di layout
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, name, username, role')
@@ -28,10 +28,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
-  // Kirim profil ke komponen layout client, yang akan membungkus {children}
+  // --- LOGIKA BARU DI SINI ---
   return (
-    <DashboardLayoutClient userProfile={profile}>
-      {children}
-    </DashboardLayoutClient>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      <DashboardLayoutClient userProfile={profile} />
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Header sekarang lebih simpel */}
+        <header style={{ padding: '1rem 2rem', backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            {profile.role === 'SISWA' && <NotificationBell />}
+            {/* Menggunakan user.email sebagai fallback jika username belum di-set */}
+          </div>
+        </header>
+
+        <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

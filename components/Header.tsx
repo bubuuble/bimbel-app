@@ -9,40 +9,27 @@ import { useEffect, useState } from "react"
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null)
-  const [profileName, setProfileName] = useState<string | null>(null);
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const fetchUserAndProfile = async (currentUser: User | null) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', currentUser.id)
-          .single();
-        setProfileName(profile?.name ?? null);
-      } else {
-        setProfileName(null);
-      }
-    };
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
 
-    // Fetch initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      fetchUserAndProfile(user);
-    });
+    fetchUser()
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        fetchUserAndProfile(session?.user ?? null);
+        setUser(session?.user ?? null)
       }
-    );
+    )
 
     return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase]);
+      authListener.subscription.unsubscribe()
+    }
+  }, [supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -58,7 +45,7 @@ export default function Header() {
       <nav>
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span>Hello, {profileName || user.email?.split('@')[0]}</span>
+            <span>Hello, {user.email}</span>
             <button onClick={handleLogout} style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}>
               Logout
             </button>

@@ -7,9 +7,10 @@ import type { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { enrollInClass, type EnrollState } from "@/lib/actions";
+// Impor semua action dan tipe yang dibutuhkan
+import { enrollInClass, unenrollFromClass, type EnrollState } from "@/lib/actions";
 
-// Tipe data yang sudah disesuaikan dengan ekspektasi TypeScript dan Supabase
+// Tipe data yang sudah kita perbaiki sebelumnya
 type AvailableClass = {
   id: string;
   name: string;
@@ -20,13 +21,23 @@ type EnrolledClass = {
   classes: { id: string, name: string } | null;
 };
 
+// Tombol untuk form Enroll
 function EnrollButton() {
   const { pending } = useFormStatus();
   return <button type="submit" disabled={pending}>{pending ? 'Mendaftar...' : 'Daftar Kelas'}</button>;
 }
 
+// Tombol untuk form Un-enroll
+function UnenrollButton() {
+    const { pending } = useFormStatus();
+    return <button type="submit" disabled={pending} style={{ marginLeft: '1rem', background: 'none', border: '1px solid #dc3545', color: '#dc3545', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>{pending ? '...' : 'Keluar'}</button>
+}
+
+// Komponen ClassCard untuk kelas yang tersedia
 function ClassCard({ classInfo, onEnrollSuccess }: { classInfo: AvailableClass, onEnrollSuccess: () => void }) {
-  const [state, formAction] = useActionState(enrollInClass, null);
+  // Gunakan useActionState dengan benar
+  const initialState: EnrollState = null;
+  const [state, formAction] = useActionState(enrollInClass, initialState);
   
   useEffect(() => {
     if (state?.success) { 
@@ -46,11 +57,13 @@ function ClassCard({ classInfo, onEnrollSuccess }: { classInfo: AvailableClass, 
       <form action={formAction} style={{ marginTop: '1rem' }}>
         <input type="hidden" name="classId" value={classInfo.id} />
         <EnrollButton />
+        {state?.error && <p style={{ color: 'red', fontSize: '0.9rem' }}>{state.error}</p>}
       </form>
     </div>
   );
 }
 
+// Komponen Utama
 export default function StudentClassesView({ userProfile }: { userProfile: Pick<UserProfile, 'id'> }) {
   const [availableClasses, setAvailableClasses] = useState<AvailableClass[]>([]);
   const [enrolledClasses, setEnrolledClasses] = useState<EnrolledClass[]>([]);
@@ -60,7 +73,6 @@ export default function StudentClassesView({ userProfile }: { userProfile: Pick<
   const fetchData = useCallback(async () => {
     setLoading(true);
     
-    // Ambil kelas yang sudah diikuti oleh siswa
     const { data: enrolledData } = await supabase
       .from('enrollments')
       .select(`classes!inner(id, name)`)
@@ -70,14 +82,12 @@ export default function StudentClassesView({ userProfile }: { userProfile: Pick<
     if (enrolledData) setEnrolledClasses(enrolledData);
     const enrolledClassIds = enrolledData?.map(e => e.classes?.id).filter(Boolean) || [];
 
-    // Ambil semua kelas yang ada untuk ditampilkan sebagai kelas yang tersedia
     const { data: allData } = await supabase
       .from('classes')
-      .select(`id, name, description, profiles(name)`) // profiles!inner bisa terlalu ketat jika ada guru yg profilnya terhapus
+      .select(`id, name, description, profiles(name)`)
       .returns<AvailableClass[]>();
 
     if (allData) {
-      // Filter di sisi client untuk mendapatkan kelas yang belum di-enroll
       const available = allData.filter(c => !enrolledClassIds.includes(c.id));
       setAvailableClasses(available);
     }
@@ -98,14 +108,23 @@ export default function StudentClassesView({ userProfile }: { userProfile: Pick<
       <div style={{ marginBottom: '2rem', border: '1px solid #007bff', padding: '1.5rem', borderRadius: '8px', backgroundColor: '#f8f9fa' }}>
         <h2>Kelas yang Diikuti</h2>
         {enrolledClasses.length > 0 ? (
-          <ul style={{ listStyle: 'decimal', paddingLeft: '20px' }}>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
             {enrolledClasses.map((enrollment) => {
               if (!enrollment.classes) return null;
               return (
-                <li key={enrollment.classes.id} style={{ marginBottom: '0.5rem' }}>
+                <li key={enrollment.classes.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #eee' }}>
                   <Link href={`/dashboard/class/${enrollment.classes.id}`} style={{textDecoration: 'underline', color: '#007bff', fontWeight: 'bold'}}>
                     {enrollment.classes.name}
                   </Link>
+                  <form action={async (formData) => {
+                      if (confirm(`Anda yakin ingin keluar dari kelas "${enrollment.classes?.name}"?`)) {
+                          await unenrollFromClass(formData);
+                          fetchData(); // Panggil fetchData untuk refresh daftar kelas
+                      }
+                  }}>
+                      <input type="hidden" name="classId" value={enrollment.classes.id} />
+                      <UnenrollButton />
+                  </form>
                 </li>
               );
             })}
