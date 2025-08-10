@@ -1,3 +1,5 @@
+// FILE: app/dashboard/components/UploadMaterialForm.tsx (KODE LENGKAP)
+
 'use client'
 
 import { createClient } from "@/lib/supabase/client";
@@ -5,13 +7,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 export default function UploadMaterialForm({ classId }: { classId: string }) {
-  // --- PERBAIKAN DI SINI ---
-  // Pastikan semua state yang terikat ke 'value' diinisialisasi sebagai string kosong ('')
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
-  // -------------------------
-
   const [file, setFile] = useState<File | null>(null);
   const [isTask, setIsTask] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -38,7 +36,12 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
     }
 
     try {
-      const deadlineValue = isTask ? deadline : null;
+      // --- PERUBAHAN UTAMA DI SINI ---
+      // Konversi string dari input datetime-local ke objek Date,
+      // lalu ke string ISO (UTC) sebelum mengirim ke database.
+      const deadlineValue = isTask && deadline ? new Date(deadline).toISOString() : null;
+      // ---------------------------------
+      
       let fileUrl = null;
       let fileType = null;
 
@@ -59,21 +62,19 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
         .from('materials')
         .insert({
           title: title,
-          // --- PERBAIKAN DI SINI ---
-          // Kirim 'null' ke database jika stringnya kosong, ini lebih bersih
           description: description || null,
           file_url: fileUrl,
           file_type: fileType,
           class_id: classId,
           is_task: isTask,
-          deadline: deadlineValue || null,
+          deadline: deadlineValue, // Kirim nilai yang sudah dikonversi ke UTC
         });
       if (dbError) throw dbError;
 
       alert('Material/Task created successfully!');
       router.refresh(); 
       
-      // Reset form, pastikan kembali ke string kosong
+      // Reset form
       (event.target as HTMLFormElement).reset();
       setTitle('');
       setDescription('');
@@ -93,31 +94,26 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
     <div style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '8px' }}>
       <h3>Create New Material / Task</h3>
       <form onSubmit={handleSubmit}>
-        {/* Input untuk Title */}
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="title">Title (e.g., "Bab 1 PDF" or "Tugas Video Esai")</label><br />
           <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
         </div>
         
-        {/* Input untuk Description */}
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="description">Description (Opsional)</label><br />
           <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ width: '100%', padding: '8px' }} />
         </div>
         
-        {/* Input untuk File */}
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="materialFile">File (Opsional jika ini adalah tugas)</label><br />
           <input type="file" id="materialFile" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} />
         </div>
 
-        {/* Checkbox untuk Tugas */}
         <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f0f0f0' }}>
           <input type="checkbox" name="isTask" id="isTask" checked={isTask} onChange={(e) => setIsTask(e.target.checked)} />
           <label htmlFor="isTask" style={{ marginLeft: '8px', fontWeight: 'bold' }}>Ini adalah Tugas (memerlukan jawaban siswa)</label>
         </div>
         
-        {/* Input untuk Deadline */}
         {isTask && (
           <div style={{ marginBottom: '1rem', paddingLeft: '20px' }}>
             <label htmlFor="deadline">Deadline (Opsional)</label><br />

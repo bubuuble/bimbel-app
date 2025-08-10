@@ -181,45 +181,57 @@ export async function uploadMaterial(
 export async function deleteMaterial(formData: FormData) {
   'use server'
   const materialId = formData.get('materialId') as string;
-  const fileUrl = formData.get('fileUrl') as string;
+  const fileUrl = formData.get('fileUrl') as string; // Bisa jadi string kosong atau null
   const classId = formData.get('classId') as string;
 
   console.log("--- [ACTION] Deleting Material ---");
   console.log("Material ID:", materialId);
-  console.log("File URL:", fileUrl);
+  console.log("File URL:", fileUrl); // Akan menampilkan string kosong jika tidak ada file
   console.log("Class ID:", classId);
 
-  if (!materialId || !fileUrl || !classId) {
-    console.error("Missing data for material deletion.");
+  // --- PERUBAHAN LOGIKA DI SINI ---
+  // Kita hanya butuh materialId dan classId. fileUrl bersifat opsional.
+  if (!materialId || !classId) {
+    console.error("Missing materialId or classId for deletion.");
     return; 
   }
+  // ---------------------------------
 
   const supabase = await createClient();
 
-  // 1. Hapus dari Storage
-  try {
-    const url = new URL(fileUrl);
-    const pathPrefix = `/storage/v1/object/public/materials/`;
-    const filePath = decodeURIComponent(url.pathname.substring(pathPrefix.length));
-
-    if (filePath) {
-      console.log("Attempting to delete from storage:", filePath);
-      const { error: storageError } = await supabase.storage
-        .from('materials')
-        .remove([filePath]);
+  // 1. Hapus dari Storage HANYA JIKA ADA fileUrl
+  if (fileUrl) {
+    try {
+      const url = new URL(fileUrl);
+      // Path bisa bervariasi tergantung setup bucket, path ini lebih aman
+      const pathPrefix = `/storage/v1/object/public/`; 
+      const storagePath = decodeURIComponent(url.pathname.substring(url.pathname.indexOf(pathPrefix) + pathPrefix.length));
       
-      if (storageError) {
-        console.error("Storage Delete Error:", storageError);
-        // Tetap lanjutkan meskipun storage gagal
-      } else {
-        console.log("Storage file deleted successfully.");
+      // Ambil nama bucket dari path
+      const bucketName = storagePath.split('/')[0];
+      const filePath = storagePath.substring(bucketName.length + 1);
+
+      if (filePath) {
+        console.log(`Attempting to delete from bucket '${bucketName}', path:`, filePath);
+        const { error: storageError } = await supabase.storage
+          .from(bucketName) // Gunakan nama bucket dinamis
+          .remove([filePath]);
+        
+        if (storageError) {
+          console.error("Storage Delete Error (akan tetap lanjut):", storageError);
+        } else {
+          console.log("Storage file deleted successfully.");
+        }
       }
+    } catch (e) {
+      console.error("Invalid file URL or error parsing path, skipping storage deletion:", fileUrl, e);
     }
-  } catch (e) {
-    console.error("Invalid file URL, skipping storage deletion:", fileUrl, e);
+  } else {
+    console.log("No fileUrl provided, skipping storage deletion.");
   }
 
-  // 2. Hapus dari Database
+
+  // 2. Hapus dari Database (Langkah ini selalu dijalankan)
   console.log("Attempting to delete from database table 'materials'...");
   const { error: dbError } = await supabase
     .from('materials')
@@ -228,7 +240,6 @@ export async function deleteMaterial(formData: FormData) {
 
   if (dbError) {
     console.error("DATABASE DELETE FAILED:", dbError);
-    // Di sini kita tidak mengembalikan apa-apa, tapi error akan tercatat di server
     return; 
   }
 
