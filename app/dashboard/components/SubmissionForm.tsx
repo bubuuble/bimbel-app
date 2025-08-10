@@ -17,6 +17,7 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
   const supabase = createClient();
   const router = useRouter();
 
+  
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!file) return;
@@ -32,11 +33,28 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
       const { data: { publicUrl } } = supabase.storage.from('submissions').getPublicUrl(filePath);
 
-      const { error: dbError } = await supabase.from('submissions').upsert({
-        material_id: materialId,
-        student_id: studentId,
-        file_url: publicUrl
-      }, { onConflict: 'material_id,student_id' });
+      // --- PERUBAHAN LOGIKA DI SINI ---
+      let dbError;
+      if (existingSubmission) {
+        // Jika sudah ada, lakukan UPDATE
+        const { error } = await supabase
+          .from('submissions')
+          .update({ file_url: publicUrl, submitted_at: new Date().toISOString() }) // Perbarui juga waktu submit
+          .eq('id', existingSubmission.id);
+        dbError = error;
+      } else {
+        // Jika belum ada, lakukan INSERT
+        const { error } = await supabase
+          .from('submissions')
+          .insert({
+            material_id: materialId,
+            student_id: studentId,
+            class_id: classId, // Kolom ini ada di skema Anda, penting untuk disertakan!
+            file_url: publicUrl
+          });
+        dbError = error;
+      }
+      // ---------------------------------
       
       if (dbError) throw dbError;
       
@@ -45,6 +63,8 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
     } catch (err: any) {
       setError(err.message);
+      // Tambahkan detail error dari Supabase jika ada
+      if (err.details) setError(`${err.message} (${err.details})`);
     } finally {
       setIsUploading(false);
     }
