@@ -1,7 +1,8 @@
-// FILE: app/dashboard/components/TeacherClassView.tsx
+// FILE: app/dashboard/components/TeacherClassView.tsx (KODE LENGKAP)
 
 import type { Class, Material, AttendanceSession } from "@/lib/types";
 import { deleteMaterial } from "@/lib/actions";
+import Link from "next/link"; // Pastikan Link diimpor
 
 import UploadMaterialForm from "./UploadMaterialForm";
 import EnrolledStudentsList from "./EnrolledStudentsList";
@@ -44,9 +45,23 @@ export default function TeacherClassView({ classInfo, materials, initialSessions
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {materials.map(material => (
               <li key={material.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderBottom: '1px solid #eee' }}>
-                <a href={material.file_url!} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline' }}>
-                  {material.title} {material.is_task ? ' (Tugas)' : ''}
-                </a>
+                <div>
+                  <a href={material.file_url!} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
+                    {material.title}
+                  </a>
+                  {/* --- PERUBAHAN DI SINI --- */}
+                  {material.is_task && (
+                    <span style={{ marginLeft: '8px' }}>
+                      (Tugas) - 
+                      <Link 
+                        href={`/dashboard/class/${classInfo.id}/task/${material.id}`} 
+                        style={{ marginLeft: '8px', textDecoration: 'underline', color: '#007bff' }}
+                      >
+                        Lihat Jawaban
+                      </Link>
+                    </span>
+                  )}
+                </div>
                 <form action={deleteMaterial}>
                   <input type="hidden" name="materialId" value={material.id} />
                   <input type="hidden" name="fileUrl" value={material.file_url || ''} />

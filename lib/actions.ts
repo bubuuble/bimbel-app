@@ -429,3 +429,42 @@ export async function deleteAttendanceSession(formData: FormData) {
   }
   revalidatePath(`/dashboard/class/${classId}`);
 }
+
+/**
+ * Guru memberikan nilai dan umpan balik untuk sebuah submission.
+ */
+export async function gradeSubmission(formData: FormData) {
+  'use server'
+  
+  const submissionId = formData.get('submissionId') as string;
+  const grade = formData.get('grade') as string;
+  const feedback = formData.get('feedback') as string;
+  const classId = formData.get('classId') as string;
+  const materialId = formData.get('materialId') as string;
+  
+  if (!submissionId || !grade || !classId || !materialId) {
+    console.error("Data tidak lengkap untuk memberi nilai.");
+    return; // Idealnya kembalikan state error
+  }
+  
+  const supabase = await createClient();
+
+  // Otorisasi bisa ditambahkan di sini atau andalkan RLS Policy
+  // Untuk saat ini, kita andalkan RLS
+
+  const { error } = await supabase
+    .from('submissions')
+    .update({
+      grade: parseInt(grade, 10), // Konversi grade ke angka
+      feedback: feedback || null
+    })
+    .eq('id', submissionId);
+
+  if (error) {
+    console.error("Error grading submission:", error);
+    return;
+  }
+
+  // Revalidate halaman detail tugas agar nilai baru muncul
+  revalidatePath(`/dashboard/class/${classId}/task/${materialId}`);
+}

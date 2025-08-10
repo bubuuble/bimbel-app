@@ -11,12 +11,13 @@ type Props = {
   materials: Material[];
   activeSession: { id: string, title: string | null, expires_at: string } | null;
   hasAttended: boolean;
-  submissions: Pick<Submission, 'material_id' | 'id' | 'file_url'>[];
+  // Pastikan tipe Submission di sini mencakup grade dan feedback
+  submissions: Pick<Submission, 'material_id' | 'id' | 'file_url' | 'grade' | 'feedback'>[];
 };
 
 export default function StudentClassView({ user, classInfo, materials, activeSession, hasAttended, submissions }: Props) {
   const submissionMap = new Map(submissions.map(s => [s.material_id, s]));
-  const now = new Date(); // Waktu saat ini untuk perbandingan deadline
+  const now = new Date();
 
   return (
     <>
@@ -39,6 +40,9 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
               const deadlineDate = hasDeadline ? new Date(material.deadline!) : null;
               const isOverdue = hasDeadline && deadlineDate! < now;
               
+              const currentSubmission = submissionMap.get(material.id);
+              const hasBeenGraded = currentSubmission && currentSubmission.grade !== null;
+
               return (
                 <li key={material.id} style={{ padding: '1rem', border: '1px solid #ddd', marginBottom: '1rem', borderRadius: '8px' }}>
                   <h3 style={{ marginTop: 0 }}>{material.title}</h3>
@@ -53,8 +57,6 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
                       border: `1px solid ${isOverdue ? '#dc3545' : '#007bff'}` 
                     }}>
                       <strong style={{ color: isOverdue ? '#dc3545' : '#007bff' }}>
-                        {/* TIDAK ADA PERUBAHAN DI SINI, KARENA INI SUDAH BENAR */}
-                        {/* toLocaleString tanpa timeZone akan otomatis mengonversi ke waktu lokal browser */}
                         Deadline: {deadlineDate!.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
                       </strong>
                       {isOverdue && <span style={{ marginLeft: '10px', fontWeight: 'bold', color: '#dc3545' }}>(TERLAMBAT)</span>}
@@ -68,12 +70,31 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
                   )}
 
                   {material.is_task && (
-                    <SubmissionForm
-                      materialId={material.id}
-                      studentId={user.id}
-                      classId={classInfo.id}
-                      existingSubmission={submissionMap.get(material.id) || null}
-                    />
+                    <div>
+                      {/* --- PERUBAHAN DI SINI: TAMPILKAN NILAI JIKA ADA --- */}
+                      {hasBeenGraded && (
+                        <div style={{ padding: '1rem', backgroundColor: '#f0f8ff', border: '1px solid #b0e0e6', borderRadius: '8px', marginBottom: '1rem' }}>
+                          <h4>Hasil Penilaian</h4>
+                          <p style={{ margin: '0 0 10px 0' }}><strong>Nilai: {currentSubmission.grade}</strong></p>
+                          {currentSubmission.feedback && (
+                            <div>
+                              <strong>Umpan Balik dari Guru:</strong>
+                              <p style={{ margin: '5px 0 0 0', whiteSpace: 'pre-wrap', backgroundColor: '#fff', padding: '8px', borderRadius: '4px', border: '1px solid #eee' }}>
+                                {currentSubmission.feedback}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Form submission tetap ada untuk memungkinkan submit ulang */}
+                      <SubmissionForm
+                        materialId={material.id}
+                        studentId={user.id}
+                        classId={classInfo.id}
+                        existingSubmission={currentSubmission || null}
+                      />
+                    </div>
                   )}
                 </li>
               );

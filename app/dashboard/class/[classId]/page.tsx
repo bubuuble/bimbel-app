@@ -88,7 +88,10 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
     }
 
     // Ambil data submission tugas siswa
-    const { data: submissions } = await supabase.from('submissions').select('id, material_id, file_url').eq('student_id', user.id);
+     const { data: submissions } = await supabase
+      .from('submissions')
+      .select('id, material_id, file_url, grade, feedback') // <-- PENTING
+      .eq('student_id', user.id);
 
     viewComponent = (
       <StudentClassView
@@ -97,7 +100,7 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
         materials={materials || []}
         activeSession={activeSession || null}
         hasAttended={hasAttended}
-        submissions={submissions || []}
+        submissions={submissions || []} // Kirim submissions yang sudah lengkap
       />
     );
   }

@@ -43,10 +43,15 @@ export type AttendanceSession = {
 
 // Tipe untuk tabel 'submissions'
 export type Submission = {
-  id: string;
-  created_at: string;
+  id: number;
+  created_at: string; // <<< PASTIKAN INI BENAR
   student_id: string;
   material_id: string;
-  file_url: string;
-  submitted_at: string; // Asumsi ada kolom ini
+  class_id: string;
+  file_url: string | null;
+  // Hapus 'submitted_at' jika ada
+  text_content: string | null;
+  grade: number | null;
+  feedback: string | null;
 };
+

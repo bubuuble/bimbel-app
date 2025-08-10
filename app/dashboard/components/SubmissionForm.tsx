@@ -1,13 +1,19 @@
+// FILE: app/dashboard/components/SubmissionForm.tsx (KODE LENGKAP & BENAR)
+
 'use client'
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+// Tipe Props yang sudah diperbaiki untuk menerima data yang benar
 type Props = {
   materialId: string;
   studentId: string;
   classId: string;
-  existingSubmission: { id: string, file_url: string } | null;
+  existingSubmission: { 
+    id: number,            // Tipe diubah ke number agar cocok
+    file_url: string | null  // Tipe diubah agar bisa menerima null
+  } | null;
 }
 
 export default function SubmissionForm({ materialId, studentId, classId, existingSubmission }: Props) {
@@ -17,10 +23,13 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
   const supabase = createClient();
   const router = useRouter();
 
-  
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!file) return;
+    // File hanya wajib jika ini adalah submit pertama kali atau submit ulang
+    if (!file) {
+      alert("Please select a file to upload.");
+      return;
+    }
 
     setIsUploading(true);
     setError(null);
@@ -33,13 +42,12 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
       const { data: { publicUrl } } = supabase.storage.from('submissions').getPublicUrl(filePath);
 
-      // --- PERUBAHAN LOGIKA DI SINI ---
       let dbError;
       if (existingSubmission) {
         // Jika sudah ada, lakukan UPDATE
         const { error } = await supabase
           .from('submissions')
-          .update({ file_url: publicUrl, submitted_at: new Date().toISOString() }) // Perbarui juga waktu submit
+          .update({ file_url: publicUrl })
           .eq('id', existingSubmission.id);
         dbError = error;
       } else {
@@ -49,12 +57,11 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
           .insert({
             material_id: materialId,
             student_id: studentId,
-            class_id: classId, // Kolom ini ada di skema Anda, penting untuk disertakan!
+            class_id: classId,
             file_url: publicUrl
           });
         dbError = error;
       }
-      // ---------------------------------
       
       if (dbError) throw dbError;
       
@@ -63,7 +70,6 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
     } catch (err: any) {
       setError(err.message);
-      // Tambahkan detail error dari Supabase jika ada
       if (err.details) setError(`${err.message} (${err.details})`);
     } finally {
       setIsUploading(false);
@@ -73,7 +79,15 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
   if (existingSubmission) {
     return (
       <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#e9f7ef' }}>
-        <p>Anda sudah mengumpulkan tugas ini. <a href={existingSubmission.file_url} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'underline'}}>Lihat jawaban Anda</a>.</p>
+        <p>
+          Anda sudah mengumpulkan tugas ini. 
+          {/* Tambahkan pengecekan null untuk file_url sebelum merender link */}
+          {existingSubmission.file_url && (
+            <a href={existingSubmission.file_url} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'underline', marginLeft: '5px'}}>
+              Lihat jawaban Anda
+            </a>
+          )}
+        </p>
         <details>
           <summary>Submit Ulang?</summary>
           <form onSubmit={handleSubmit} style={{ marginTop: '0.5rem' }}>
