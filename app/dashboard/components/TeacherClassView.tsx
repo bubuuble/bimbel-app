@@ -7,7 +7,6 @@ import Link from "next/link"; // Pastikan Link diimpor
 import UploadMaterialForm from "./UploadMaterialForm";
 import EnrolledStudentsList from "./EnrolledStudentsList";
 import DeleteClassForm from "./DeleteClassForm";
-import TeacherAttendanceManager from "./TeacherAttendanceManager";
 
 type Props = {
   classInfo: Pick<Class, 'id' | 'name' | 'description'>;
@@ -30,11 +29,6 @@ export default function TeacherClassView({ classInfo, materials, initialSessions
       <div style={{ marginBottom: '2rem' }}>
         <UploadMaterialForm classId={classInfo.id} />
       </div>
-
-      <hr style={{ margin: '2rem 0' }} />
-
-      {/* Manajemen Absensi */}
-      <TeacherAttendanceManager classId={classInfo.id} initialSessions={initialSessions} />
 
       <hr style={{ margin: '2rem 0' }} />
 
