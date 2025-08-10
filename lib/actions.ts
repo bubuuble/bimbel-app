@@ -288,45 +288,73 @@ export async function createAttendanceSession(formData: FormData) {
   
   const classId = formData.get('classId') as string;
   const sessionTitle = formData.get('sessionTitle') as string;
+  const startTimeStr = formData.get('startTime') as string; // Input baru: '2024-08-10T14:00'
 
-  if (!classId || !sessionTitle) {
-    console.error("Class ID and Session Title are required.");
-    // Di aplikasi nyata, sebaiknya gunakan useActionState untuk mengembalikan error ke UI
-    return;
+  if (!classId || !sessionTitle || !startTimeStr) {
+    console.error("Data tidak lengkap untuk membuat sesi.");
+    return; // Idealnya kembalikan state error
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return; // Otorisasi dasar
+  if (!user) return;
 
-  const now = new Date();
-  const startTime = now.toISOString();
-  const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-  const sessionDate = now.toISOString().slice(0, 10);
+  const startTime = new Date(startTimeStr);
+  const expiresAt = new Date(startTime.getTime() + 15 * 60 * 1000); // Kadaluwarsa 15 menit dari waktu mulai
+  const sessionDate = startTime.toISOString().slice(0, 10);
 
-  // Menggunakan nama kolom dari skema database Anda
   const { error } = await supabase.from('attendance_sessions').insert({
     class_id: classId,
     title: sessionTitle,
     session_date: sessionDate,
-    start_time: startTime,
-    expires_at: expiresAt,
-    // teacher_id tidak ada di tabel attendance_sessions Anda, jadi dihilangkan
+    start_time: startTime.toISOString(),
+    expires_at: expiresAt.toISOString(),
   });
 
   if (error) {
     console.error("Error creating attendance session:", error);
-    // Handle error
     return;
   }
-
   revalidatePath(`/dashboard/class/${classId}`);
 }
 
 /**
- * [BARU & AKTIF] Siswa melakukan absensi untuk sebuah sesi.
- * Disesuaikan agar lebih robust.
+ * [BARU] Guru mengedit sesi absensi yang sudah ada.
  */
+export async function updateAttendanceSession(formData: FormData) {
+  'use server'
+  
+  const sessionId = formData.get('sessionId') as string;
+  const classId = formData.get('classId') as string;
+  const newTitle = formData.get('newTitle') as string;
+  const newStartTimeStr = formData.get('newStartTime') as string; // Input baru
+  
+  if (!sessionId || !newTitle || !newStartTimeStr || !classId) {
+    console.error("Data tidak lengkap untuk mengedit sesi.");
+    return; // Idealnya kembalikan state error
+  }
+
+  // Hitung ulang waktu kadaluwarsa berdasarkan waktu mulai yang baru
+  const newStartTime = new Date(newStartTimeStr);
+  const newExpiresAt = new Date(newStartTime.getTime() + 15 * 60 * 1000);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('attendance_sessions')
+    .update({ 
+      title: newTitle,
+      start_time: newStartTime.toISOString(),
+      expires_at: newExpiresAt.toISOString(),
+      session_date: newStartTime.toISOString().slice(0, 10) // Update juga tanggalnya
+    })
+    .eq('id', sessionId);
+  
+  if (error) {
+    console.error("Error updating session:", error);
+    return;
+  }
+  revalidatePath(`/dashboard/class/${classId}`);
+}
+
 export async function submitAttendance(
   prevState: StudentAttendanceState,
   formData: FormData
@@ -347,7 +375,6 @@ export async function submitAttendance(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Anda harus login untuk absen.' };
 
-  // Menggunakan nama kolom dari skema database Anda
   const { error } = await supabase
     .from('attendance_records')
     .insert({
@@ -355,18 +382,39 @@ export async function submitAttendance(
       student_id: user.id,
       status: status,
       notes: notes || null,
-      // submitted_at akan diisi oleh default value di database
     });
 
   if (error) {
     if (error.code === '23505') { // Error untuk unique constraint
       return { error: 'Anda sudah melakukan absensi untuk sesi ini.' };
     }
-    // RLS Policy Anda mungkin juga menolak insert ini jika sesi sudah expired.
-    // Pesan error dari RLS biasanya tidak spesifik, jadi pesan ini cukup general.
     return { error: `Gagal submit: Sesi mungkin sudah ditutup atau terjadi error lain. (${error.message})` };
   }
 
   revalidatePath(`/dashboard/class/${classId}`);
   return { success: `Absensi dengan status '${status}' berhasil direkam!` };
+}
+
+/**
+ * [BARU] Guru menghapus sesi absensi.
+ */
+export async function deleteAttendanceSession(formData: FormData) {
+  'use server'
+  
+  const sessionId = formData.get('sessionId') as string;
+  const classId = formData.get('classId') as string;
+  
+  if (!sessionId || !classId) return;
+  
+  const supabase = await createClient();
+  // RLS Policy akan memastikan hanya guru pemilik yang bisa menghapus
+  const { error } = await supabase.from('attendance_sessions')
+    .delete()
+    .eq('id', sessionId);
+  
+  if (error) {
+    console.error("Error deleting session:", error);
+    return;
+  }
+  revalidatePath(`/dashboard/class/${classId}`);
 }
