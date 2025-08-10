@@ -285,60 +285,47 @@ export async function enrollInClass(
 
 export async function createAttendanceSession(formData: FormData) {
   'use server'
+  
   const classId = formData.get('classId') as string;
   const sessionTitle = formData.get('sessionTitle') as string;
-  if (!classId) return;
 
-  const supabase = await createClient();
-  await supabase.from('attendance_sessions').insert({
-    class_id: classId,
-    session_title: sessionTitle || `Sesi Absensi ${new Date().toLocaleDateString()}`
-  });
-  // Kita tidak perlu revalidatePath lagi karena client akan refresh sendiri
-}
-
-/**
- * Melaporkan ketidakhadiran (Sakit atau Izin).
- */
-export async function reportAbsence(
-  prevState: AbsenceState,
-  formData: FormData
-): Promise<AbsenceState> {
-  const classId = formData.get('classId') as string;
-  const status = formData.get('status') as string;
-
-  if (!classId || !status || (status !== 'SAKIT' && status !== 'IZIN')) {
-    return { error: 'Invalid data provided.' };
+  if (!classId || !sessionTitle) {
+    console.error("Class ID and Session Title are required.");
+    // Di aplikasi nyata, sebaiknya gunakan useActionState untuk mengembalikan error ke UI
+    return;
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'You must be logged in.' };
+  if (!user) return; // Otorisasi dasar
 
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const startTime = now.toISOString();
+  const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+  const sessionDate = now.toISOString().slice(0, 10);
 
-  const { error } = await supabase
-    .from('attendance_records')
-    .upsert({
-      student_id: user.id,
-      class_id: classId,
-      date: today,
-      status: status
-    }, {
-      onConflict: 'date,student_id,class_id'
-    });
+  // Menggunakan nama kolom dari skema database Anda
+  const { error } = await supabase.from('attendance_sessions').insert({
+    class_id: classId,
+    title: sessionTitle,
+    session_date: sessionDate,
+    start_time: startTime,
+    expires_at: expiresAt,
+    // teacher_id tidak ada di tabel attendance_sessions Anda, jadi dihilangkan
+  });
 
   if (error) {
-    return { error: `Failed to report absence: ${error.message}` };
+    console.error("Error creating attendance session:", error);
+    // Handle error
+    return;
   }
 
   revalidatePath(`/dashboard/class/${classId}`);
-  return { success: `Successfully reported as ${status} for today.` };
 }
 
-
 /**
- * Siswa melakukan absensi untuk sebuah sesi.
+ * [BARU & AKTIF] Siswa melakukan absensi untuk sebuah sesi.
+ * Disesuaikan agar lebih robust.
  */
 export async function submitAttendance(
   prevState: StudentAttendanceState,
@@ -347,42 +334,39 @@ export async function submitAttendance(
   const sessionId = formData.get('sessionId') as string;
   const status = formData.get('status') as string;
   const notes = formData.get('notes') as string;
+  const classId = formData.get('classId') as string; // Penting untuk revalidate
 
-  if (!sessionId || !status) {
-    return { error: 'Session ID and status are required.' };
+  if (!sessionId || !status || !classId) {
+    return { error: 'Data tidak lengkap (session, status, atau class ID hilang).' };
   }
   if (!['HADIR', 'SAKIT', 'IZIN'].includes(status)) {
-    return { error: 'Invalid status.' };
+    return { error: 'Status absensi tidak valid.' };
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'You must be logged in.' };
+  if (!user) return { error: 'Anda harus login untuk absen.' };
 
-  // Cek apakah siswa sudah absen di sesi ini
-  const { data: existingRecord } = await supabase.from('attendance_records')
-    .select('id').eq('session_id', sessionId).eq('student_id', user.id).maybeSingle();
-  if (existingRecord) {
-    return { error: 'You have already submitted attendance for this session.' };
-  }
-
-  // Masukkan catatan absensi
+  // Menggunakan nama kolom dari skema database Anda
   const { error } = await supabase
     .from('attendance_records')
     .insert({
       session_id: sessionId,
       student_id: user.id,
       status: status,
-      notes: notes || null
+      notes: notes || null,
+      // submitted_at akan diisi oleh default value di database
     });
 
   if (error) {
-    if (error.message.includes('foreign key constraint')) {
-      return { error: 'Attendance session might be closed or invalid.' };
+    if (error.code === '23505') { // Error untuk unique constraint
+      return { error: 'Anda sudah melakukan absensi untuk sesi ini.' };
     }
-    return { error: `Failed to submit attendance: ${error.message}` };
+    // RLS Policy Anda mungkin juga menolak insert ini jika sesi sudah expired.
+    // Pesan error dari RLS biasanya tidak spesifik, jadi pesan ini cukup general.
+    return { error: `Gagal submit: Sesi mungkin sudah ditutup atau terjadi error lain. (${error.message})` };
   }
 
-  revalidatePath(`/dashboard/class/${formData.get('classId')}`);
-  return { success: `Successfully submitted attendance with status: ${status}` };
+  revalidatePath(`/dashboard/class/${classId}`);
+  return { success: `Absensi dengan status '${status}' berhasil direkam!` };
 }

@@ -10,7 +10,8 @@ function SubmitButton({ status, text }: { status: string, text: string }) {
   return <button type="submit" name="status" value={status} disabled={pending}>{pending ? '...' : text}</button>;
 }
 
-type Session = { id: string; closes_at: string };
+// Tipe ini harus cocok dengan data yang dikirim dari page.tsx
+type Session = { id: string; title: string | null; expires_at: string };
 type Props = {
   classId: string;
   activeSession: Session | null;
@@ -18,7 +19,7 @@ type Props = {
 };
 
 export default function StudentAttendance({ classId, activeSession, hasAttended }: Props) {
-  const initialState: Studentwtate = null;
+  const initialState: StudentAttendanceState = null;
   const [state, formAction] = useActionState(submitAttendance, initialState);
   const [showNotes, setShowNotes] = useState(false);
 
@@ -29,7 +30,7 @@ export default function StudentAttendance({ classId, activeSession, hasAttended 
 
   if (hasAttended) {
     return (
-      <div style={{ marginTop: '2rem' }}>
+      <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#e9f7ef', borderRadius: '8px' }}>
         <h3>Absensi</h3>
         <p><strong>Terima kasih, Anda sudah melakukan absensi untuk sesi ini.</strong></p>
       </div>
@@ -40,15 +41,16 @@ export default function StudentAttendance({ classId, activeSession, hasAttended 
     return (
       <div style={{ marginTop: '2rem' }}>
         <h3>Absensi</h3>
-        <p>Tidak ada sesi absensi yang dibuka saat ini.</p>
+        <p>Tidak ada sesi absensi yang sedang dibuka oleh guru saat ini.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ marginTop: '2rem' }}>
+    <div style={{ marginTop: '2rem', padding: '1.5rem', border: '2px solid #007bff', borderRadius: '8px' }}>
       <h3>Sesi Absensi Dibuka!</h3>
-      <p>Sesi akan ditutup pada: {new Date(activeSession.closes_at).toLocaleTimeString()}</p>
+      <p><strong>{activeSession.title}</strong></p>
+      <p>Sesi akan ditutup pada: {new Date(activeSession.expires_at).toLocaleTimeString()}</p>
       <form action={formAction}>
         <input type="hidden" name="sessionId" value={activeSession.id} />
         <input type="hidden" name="classId" value={classId} />
@@ -61,14 +63,16 @@ export default function StudentAttendance({ classId, activeSession, hasAttended 
         </div>
 
         {showNotes && (
-          <div style={{ marginTop: '1rem' }}>
-            <textarea name="notes" placeholder="Tuliskan keterangan izin atau sakit..." style={{ width: '100%', minHeight: '80px' }} />
+          <div style={{ marginTop: '1rem', borderTop: '1px solid #ccc', paddingTop: '1rem' }}>
+            <label>Keterangan (opsional):</label>
+            <textarea name="notes" placeholder="Tuliskan keterangan izin atau sakit..." style={{ width: '100%', minHeight: '80px', marginTop: '0.5rem' }} />
             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
               <SubmitButton status="IZIN" text="Kirim Izin" />
               <SubmitButton status="SAKIT" text="Kirim Sakit" />
             </div>
           </div>
         )}
+        {state?.error && <p style={{color: 'red', marginTop: '1rem'}}>{state.error}</p>}
       </form>
     </div>
   );
