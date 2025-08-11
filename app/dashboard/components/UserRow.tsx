@@ -3,7 +3,12 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { updateUserRole, type FormState } from '@/lib/actions' // <-- Impor dari lokasi baru
+import { updateUserRole, type FormState } from '@/lib/actions'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TableCell, TableRow } from '@/components/ui/table'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 // Tipe data untuk props
 type UserProfile = {
@@ -17,9 +22,16 @@ type UserProfile = {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} style={{ marginLeft: '10px' }}>
-      {pending ? 'Saving...' : 'Save'}
-    </button>
+    <Button type="submit" disabled={pending} size="sm" className="ml-2">
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Saving...
+        </>
+      ) : (
+        'Save'
+      )}
+    </Button>
   )
 }
 
@@ -31,30 +43,45 @@ export default function UserRow({ profile }: { profile: UserProfile }) {
   const isSelf = profile.role === 'ADMIN';
 
   return (
-    <tr key={profile.id}>
-      <td style={{ padding: '12px', border: '1px solid #ddd' }}>{profile.name}</td>
-      <td style={{ padding: '12px', border: '1px solid #ddd' }}>{profile.username}</td>
-      <td style={{ padding: '12px', border: '1px solid #ddd' }}>{profile.role}</td>
-      <td style={{ padding: '12px', border: '1px solid #ddd' }}>
-        <form action={formAction}>
+    <TableRow>
+      <TableCell>{profile.name}</TableCell>
+      <TableCell>{profile.username}</TableCell>
+      <TableCell>
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+          {profile.role}
+        </span>
+      </TableCell>
+      <TableCell>
+        <form action={formAction} className="flex items-center gap-2">
           <input type="hidden" name="userId" value={profile.id} />
           
-          <select 
-            name="newRole" 
-            defaultValue={profile.role} 
-            disabled={isSelf}
-          >
-            <option value="SISWA">Siswa</option>
-            <option value="GURU">Guru</option>
-            <option value="ADMIN">Admin</option>
-          </select>
+          <Select name="newRole" defaultValue={profile.role} disabled={isSelf}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="SISWA">Siswa</SelectItem>
+              <SelectItem value="GURU">Guru</SelectItem>
+              <SelectItem value="ADMIN">Admin</SelectItem>
+            </SelectContent>
+          </Select>
           
           {!isSelf && <SubmitButton />}
-
-          {state?.error && <p style={{ color: 'red', fontSize: '12px', margin: '4px 0 0' }}>{state.error}</p>}
-          {state?.success && <p style={{ color: 'green', fontSize: '12px', margin: '4px 0 0' }}>{state.success}</p>}
         </form>
-      </td>
-    </tr>
+
+        {state?.error && (
+          <Alert variant="destructive" className="mt-2">
+            <XCircle className="h-4 w-4" />
+            <AlertDescription>{state.error}</AlertDescription>
+          </Alert>
+        )}
+        {state?.success && (
+          <Alert className="mt-2 border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">{state.success}</AlertDescription>
+          </Alert>
+        )}
+      </TableCell>
+    </TableRow>
   )
 }

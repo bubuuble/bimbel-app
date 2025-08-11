@@ -4,17 +4,26 @@
 import { useState } from "react";
 import { gradeSubmission } from "@/lib/actions";
 import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Submission = {
   id: number;
-  material_id: string; // atau tipe data ID Anda
+  material_id: string;
   grade: number | null;
   feedback: string | null;
 };
 
 function SubmitButton() {
     const { pending } = useFormStatus();
-    return <button type="submit" disabled={pending}>{pending ? "Menyimpan..." : "Simpan Nilai"}</button>
+    return (
+      <Button type="submit" disabled={pending}>
+        {pending ? "Menyimpan..." : "Simpan Nilai"}
+      </Button>
+    );
 }
 
 export default function GradeSubmissionForm({ submission, classId }: { submission: Submission, classId: string }) {
@@ -22,37 +31,42 @@ export default function GradeSubmissionForm({ submission, classId }: { submissio
   const [feedback, setFeedback] = useState(submission.feedback || '');
 
   return (
-    <form action={gradeSubmission} style={{ marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-      <input type="hidden" name="submissionId" value={submission.id} />
-      <input type="hidden" name="classId" value={classId} />
-      <input type="hidden" name="materialId" value={submission.material_id} />
+    <Card className="mt-4">
+      <CardContent className="p-6">
+        <form action={gradeSubmission} className="space-y-4">
+          <input type="hidden" name="submissionId" value={submission.id} />
+          <input type="hidden" name="classId" value={classId} />
+          <input type="hidden" name="materialId" value={submission.material_id} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '1rem', alignItems: 'center' }}>
-        <label htmlFor={`grade-${submission.id}`}>Nilai (0-100)</label>
-        <input 
-          type="number" 
-          id={`grade-${submission.id}`} 
-          name="grade" 
-          value={grade}
-          onChange={(e) => setGrade(e.target.value)}
-          min="0" 
-          max="100" 
-          required 
-        />
-        
-        <label htmlFor={`feedback-${submission.id}`}>Umpan Balik</label>
-        <textarea 
-          id={`feedback-${submission.id}`} 
-          name="feedback" 
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          rows={3} 
-          placeholder="Tulis umpan balik (opsional)..."
-        />
-      </div>
-      <div style={{ marginTop: '1rem' }}>
-        <SubmitButton />
-      </div>
-    </form>
-  )
+          <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
+            <Label htmlFor={`grade-${submission.id}`}>Nilai (0-100)</Label>
+            <Input 
+              type="number" 
+              id={`grade-${submission.id}`} 
+              name="grade" 
+              value={grade}
+              onChange={(e) => setGrade(e.target.value)}
+              min="0" 
+              max="100" 
+              required 
+            />
+            
+            <Label htmlFor={`feedback-${submission.id}`}>Umpan Balik</Label>
+            <Textarea 
+              id={`feedback-${submission.id}`} 
+              name="feedback" 
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={3} 
+              placeholder="Tulis umpan balik (opsional)..."
+            />
+          </div>
+          
+          <div className="flex justify-end">
+            <SubmitButton />
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
 }

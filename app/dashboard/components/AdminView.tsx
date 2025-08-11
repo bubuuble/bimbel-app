@@ -1,8 +1,11 @@
-// FILE: app/dashboard/components/AdminView.tsx (GANTI SELURUH ISI)
+// FILE: app/dashboard/components/AdminView.tsx
 
 'use client'
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Users, GraduationCap, BookOpen } from "lucide-react";
 
 type AdminStats = {
   total_users: number;
@@ -26,30 +29,61 @@ export default function AdminView() {
     fetchStats();
   }, [fetchStats]);
 
-  if (loading) return <p>Loading dashboard...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Admin Dashboard</h1>
-
-      <div style={{ border: '1px solid #ddd', padding: '1.5rem', borderRadius: '8px' }}>
-        <h2>Statistik Pengguna</h2>
-        {stats ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', textAlign: 'center' }}>
-            <div style={{ border: '1px solid #eee', padding: '1rem', borderRadius: '6px' }}>
-              <h4>Total Pengguna</h4>
-              <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0.5rem 0' }}>{stats.total_users}</p>
-            </div>
-            <div style={{ border: '1px solid #eee', padding: '1rem', borderRadius: '6px' }}>
-              <h4>Total Guru</h4>
-              <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0.5rem 0' }}>{stats.total_guru}</p>
-            </div>
-            <div style={{ border: '1px solid #eee', padding: '1rem', borderRadius: '6px' }}>
-              <h4>Total Siswa</h4>
-              <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0.5rem 0' }}>{stats.total_siswa}</p>
-            </div>
-          </div>
-        ) : <p>Memuat statistik...</p>}
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pengguna</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Guru</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_guru || 0}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Siswa</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_siswa || 0}</div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

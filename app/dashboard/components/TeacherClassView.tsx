@@ -1,8 +1,15 @@
-// FILE: app/dashboard/components/TeacherClassView.tsx (KODE LENGKAP)
+// FILE: app/dashboard/components/TeacherClassView.tsx
 
 import type { Class, Material, AttendanceSession } from "@/lib/types";
 import { deleteMaterial } from "@/lib/actions";
-import Link from "next/link"; // Pastikan Link diimpor
+import Link from "next/link";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, FileText, Trash2, ExternalLink, Eye } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import UploadMaterialForm from "./UploadMaterialForm";
 import EnrolledStudentsList from "./EnrolledStudentsList";
@@ -16,62 +23,98 @@ type Props = {
 
 export default function TeacherClassView({ classInfo, materials, initialSessions }: Props) {
   return (
-    <>
-      {/* Zona Berbahaya */}
-      <div style={{ border: '1px solid #dc3545', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
-        <h3 style={{ color: '#dc3545', marginTop: 0 }}>Zona Berbahaya (Admin/Guru)</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+      {/* Main Content - Left Side */}
+      <div className="lg:col-span-2 space-y-6">
+        {/* Delete Button - Positioned at top right */}
         <DeleteClassForm classId={classInfo.id} />
+
+        {/* Class Info Header */}
+        <div className="pr-32"> {/* Add right padding to avoid overlap with delete button */}
+          <h1 className="text-2xl font-bold">{classInfo.name}</h1>
+          <p className="text-muted-foreground">{classInfo.description}</p>
+        </div>
+
+        <Separator />
+
+        {/* Upload Material */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload Materi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <UploadMaterialForm classId={classInfo.id} />
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Materials & Tasks List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Daftar Materi & Tugas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {materials && materials.length > 0 ? (
+              <div className="space-y-3">
+                {materials.map(material => (
+                  <div key={material.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={material.file_url!} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-medium hover:text-blue-600 transition-colors"
+                        >
+                          {material.title}
+                        </a>
+                        <ExternalLink className="h-3 w-3 text-gray-400" />
+                        
+                        {material.is_task && (
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">Tugas</Badge>
+                            <Link 
+                              href={`/dashboard/class/${classInfo.id}/task/${material.id}`}
+                              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              <Eye className="h-3 w-3" />
+                              Lihat Jawaban
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <form action={deleteMaterial}>
+                      <input type="hidden" name="materialId" value={material.id} />
+                      <input type="hidden" name="fileUrl" value={material.file_url || ''} />
+                      <input type="hidden" name="classId" value={classInfo.id} />
+                      <Button type="submit" variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Hapus
+                      </Button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">
+                Belum ada materi yang diunggah untuk kelas ini.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <hr style={{ margin: '2rem 0' }} />
-
-      {/* Upload Materi */}
-      <div style={{ marginBottom: '2rem' }}>
-        <UploadMaterialForm classId={classInfo.id} />
+      {/* Sidebar - Right Side */}
+      <div className="lg:col-span-1">
+        <EnrolledStudentsList classId={classInfo.id} />
       </div>
-
-      <hr style={{ margin: '2rem 0' }} />
-
-      {/* Daftar Materi & Tugas */}
-      <div>
-        <h2>Daftar Materi & Tugas</h2>
-        {materials && materials.length > 0 ? (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {materials.map(material => (
-              <li key={material.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderBottom: '1px solid #eee' }}>
-                <div>
-                  <a href={material.file_url!} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', fontWeight: 'bold' }}>
-                    {material.title}
-                  </a>
-                  {/* --- PERUBAHAN DI SINI --- */}
-                  {material.is_task && (
-                    <span style={{ marginLeft: '8px' }}>
-                      (Tugas) - 
-                      <Link 
-                        href={`/dashboard/class/${classInfo.id}/task/${material.id}`} 
-                        style={{ marginLeft: '8px', textDecoration: 'underline', color: '#007bff' }}
-                      >
-                        Lihat Jawaban
-                      </Link>
-                    </span>
-                  )}
-                </div>
-                <form action={deleteMaterial}>
-                  <input type="hidden" name="materialId" value={material.id} />
-                  <input type="hidden" name="fileUrl" value={material.file_url || ''} />
-                  <input type="hidden" name="classId" value={classInfo.id} />
-                  <button type="submit" style={{ marginLeft: '1rem', background: 'none', border: '1px solid red', color: 'red', fontSize: '0.8rem', padding: '4px 8px', cursor: 'pointer' }}>Hapus</button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        ) : ( <p>Belum ada materi yang diunggah untuk kelas ini.</p> )}
-      </div>
-      
-      <hr style={{ margin: '2rem 0' }} />
-      
-      {/* Daftar Siswa Terdaftar */}
-      <EnrolledStudentsList classId={classInfo.id} />
-    </>
+    </div>
   );
 }

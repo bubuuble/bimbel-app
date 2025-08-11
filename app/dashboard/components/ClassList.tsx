@@ -1,6 +1,10 @@
 // src/app/dashboard/guru/ClassList.tsx
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link"; // Pastikan Link sudah diimpor
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, Plus } from "lucide-react";
 
 export default async function ClassList() {
   const supabase = await createClient();
@@ -12,27 +16,69 @@ export default async function ClassList() {
     .from('classes')
     .select('*')
     .eq('teacher_id', user.id)
-    .order('created_at', { ascending: false }); // Urutkan dari yg terbaru
+    .order('created_at', { ascending: false });
   
-  if (error) return <p>Could not fetch classes.</p>;
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-destructive">Could not fetch classes.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      <h3>Your Classes</h3>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-2xl font-semibold tracking-tight">Your Classes</h3>
+        <Button asChild>
+          <Link href="/dashboard/guru/create-class">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Class
+          </Link>
+        </Button>
+      </div>
+
       {classes.length === 0 ? (
-        <p>You have not created any classes yet.</p>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground text-center">
+              You have not created any classes yet.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <ul>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {classes.map(c => (
-            <li key={c.id}>
-              {/* UBAH INI: Bungkus dengan Link */}
-              <Link href={`/dashboard/guru/kelas/${c.id}`} style={{ fontWeight: 'bold', textDecoration: 'underline' }}>
-                {c.name}
-              </Link>
-               - <span>{c.description || 'No description'}</span>
-            </li>
+            <Card key={c.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">
+                    <Link 
+                      href={`/dashboard/guru/kelas/${c.id}`}
+                      className="hover:underline"
+                    >
+                      {c.name}
+                    </Link>
+                  </CardTitle>
+                  <Badge variant="secondary">Active</Badge>
+                </div>
+                <CardDescription>
+                  {c.description || 'No description'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link href={`/dashboard/guru/kelas/${c.id}`}>
+                    View Class
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

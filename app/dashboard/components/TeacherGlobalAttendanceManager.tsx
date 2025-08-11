@@ -1,4 +1,4 @@
-// FILE: app/dashboard/components/TeacherGlobalAttendanceManager.tsx (DENGAN PAGINATION)
+// FILE: app/dashboard/components/TeacherGlobalAttendanceManager.tsx
 
 'use client'
 import { createClient } from "@/lib/supabase/client";
@@ -7,7 +7,17 @@ import { createAttendanceSession } from "@/lib/actions";
 import { useFormStatus } from "react-dom";
 import type { AttendanceSession } from "@/lib/types";
 import ExportButton from "./ExportButton";
-import PaginationControls from "./PaginationControls"; // <-- Impor
+import PaginationControls from "./PaginationControls";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Clock, Users, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type ReportRow = { 
   student_name: string | null; 
@@ -23,21 +33,39 @@ type SessionWithClass = AttendanceSession & {
 
 function SubmitButton({ text }: { text: string }) {
   const { pending } = useFormStatus();
-  return <button type="submit" disabled={pending}>{pending ? "Menyimpan..." : text}</button>
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? "Menyimpan..." : text}
+    </Button>
+  );
 }
 
 function SessionRow({ session, onSelect, isSelected }: { session: SessionWithClass, onSelect: () => void, isSelected: boolean }) {
   return (
-    <div style={{ padding: '10px', border: '1px solid #ccc', marginBottom: '10px', borderRadius: '5px', backgroundColor: isSelected ? '#e7f3ff' : 'transparent', cursor: 'pointer' }} onClick={onSelect}>
-      <div>
-        <strong>{session.title}</strong><br/>
-        <small>Kelas: {session.classes?.name || 'N/A'} | Dijadwalkan: {new Date(session.start_time).toLocaleString()}</small>
-      </div>
-    </div>
+    <Card 
+      className={cn(
+        "cursor-pointer transition-colors hover:bg-accent/50",
+        isSelected && "ring-2 ring-primary bg-accent"
+      )}
+      onClick={onSelect}
+    >
+      <CardContent className="p-4">
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm">{session.title}</h4>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Users className="h-3 w-3" />
+            <span>{session.classes?.name || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <CalendarDays className="h-3 w-3" />
+            <span>{new Date(session.start_time).toLocaleString()}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-// Tambahkan props currentPage dan totalPages
 export default function TeacherGlobalAttendanceManager({ 
     teacherClasses, 
     initialSessions,
@@ -76,69 +104,159 @@ export default function TeacherGlobalAttendanceManager({
   };
   
   return (
-    <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-      <h1>Manajemen Absensi</h1>
+    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+      <div className="flex items-center gap-2">
+        <Clock className="h-6 w-6" />
+        <h1 className="text-3xl font-bold">Manajemen Absensi</h1>
+      </div>
       
-      {/* ... Form tidak berubah ... */}
       {teacherClasses.length > 0 ? (
-        <form ref={formRef} action={async (formData) => {
-            await createAttendanceSession(formData);
-            formRef.current?.reset();
-          }} style={{ border: '1px solid #ddd', padding: '1.5rem', marginBottom: '2rem', borderRadius: '8px' }}>
-          <h4>Buat Sesi Absensi Baru</h4>
-          <div style={{ marginBottom: '1rem' }}>
-            <label>Pilih Kelas</label><br/>
-            <select name="classId" required style={{ width: '100%', padding: '8px', marginTop: '5px' }}>
-              {teacherClasses.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label>Judul Sesi</label><br/>
-            <input type="text" name="sessionTitle" placeholder="e.g., Pertemuan 5 - Review" required style={{ width: '100%', padding: '8px', marginTop: '5px' }}/>
-          </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <label>Waktu Mulai Absensi</label><br/>
-            <input type="datetime-local" name="startTime" required style={{ padding: '8px', marginTop: '5px' }}/>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <SubmitButton text="Jadwalkan Sesi (Aktif 15 Menit)" />
-          </div>
-        </form>
+        <Card>
+          <CardHeader>
+            <CardTitle>Buat Sesi Absensi Baru</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form 
+              ref={formRef} 
+              action={async (formData) => {
+                await createAttendanceSession(formData);
+                formRef.current?.reset();
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="classId">Pilih Kelas</Label>
+                <Select name="classId" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kelas..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teacherClasses.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="sessionTitle">Judul Sesi</Label>
+                <Input 
+                  type="text" 
+                  name="sessionTitle" 
+                  placeholder="e.g., Pertemuan 5 - Review" 
+                  required 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="startTime">Waktu Mulai Absensi</Label>
+                <Input 
+                  type="datetime-local" 
+                  name="startTime" 
+                  required 
+                />
+              </div>
+              
+              <SubmitButton text="Jadwalkan Sesi (Aktif 15 Menit)" />
+            </form>
+          </CardContent>
+        </Card>
       ) : (
-        <div style={{ border: '1px solid #ddd', padding: '1.5rem', borderRadius: '8px', backgroundColor: '#fffbe6' }}>
-            <p>Anda harus membuat minimal satu kelas untuk bisa membuat sesi absensi.</p>
-        </div>
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Anda harus membuat minimal satu kelas untuk bisa membuat sesi absensi.
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2rem' }}>
-        <div>
-          <h4>Riwayat Sesi:</h4>
-          {initialSessions.length > 0 ? (
-            <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
-                {initialSessions.map(session => (
-                  <SessionRow 
-                    key={session.id} 
-                    session={session} 
-                    onSelect={() => handleSessionClick(session.id)}
-                    isSelected={selectedSessionId === session.id}
-                  />
-                ))}
-            </div>
-          ) : <p>Belum ada sesi yang dibuat.</p>}
-          {/* --- RENDER KONTROL PAGINATION DI SINI --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Riwayat Sesi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {initialSessions.length > 0 ? (
+                <ScrollArea className="h-[500px] pr-4">
+                  <div className="space-y-3">
+                    {initialSessions.map(session => (
+                      <SessionRow 
+                        key={session.id} 
+                        session={session} 
+                        onSelect={() => handleSessionClick(session.id)}
+                        isSelected={selectedSessionId === session.id}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Belum ada sesi yang dibuat.
+                </p>
+              )}
+            </CardContent>
+          </Card>
           <PaginationControls currentPage={currentPage} totalPages={totalPages} />
         </div>
         
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4>Detail Laporan:</h4>
-            {selectedSessionId && reportData.length > 0 && (
-                <ExportButton sessionId={selectedSessionId} />
-            )}
-          </div>
-          {/* ... Sisa logika laporan tidak berubah ... */}
+        <div className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg">Detail Laporan</CardTitle>
+                {selectedSessionId && reportData.length > 0 && (
+                  <ExportButton sessionId={selectedSessionId} />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!selectedSessionId ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Pilih sesi untuk melihat laporan kehadiran</p>
+                </div>
+              ) : isLoadingReport ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-muted-foreground">Memuat laporan...</p>
+                </div>
+              ) : error ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : reportData.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Belum ada data kehadiran untuk sesi ini</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {reportData.map((row, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{row.student_name || 'N/A'}</p>
+                          <p className="text-sm text-muted-foreground">@{row.student_username || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={row.status === 'hadir' ? 'default' : 'secondary'}>
+                            {row.status}
+                          </Badge>
+                          {row.submitted_at && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(row.submitted_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -2,8 +2,12 @@
 'use client'
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { enrollInClass, type EnrollState } from '@/lib/actions'; // Pastikan path ini sesuai dengan struktur proyek Anda
+import { enrollInClass, type EnrollState } from '@/lib/actions';
 import { useEffect } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { User } from "lucide-react";
 
 // Tipe data untuk properti komponen
 type ClassInfo = {
@@ -15,7 +19,11 @@ type ClassInfo = {
 
 function EnrollButton() {
   const { pending } = useFormStatus();
-  return <button type="submit" disabled={pending}>{pending ? 'Enrolling...' : 'Enroll'}</button>;
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? 'Enrolling...' : 'Enroll'}
+    </Button>
+  );
 }
 
 // Ini adalah komponen untuk satu kartu kelas
@@ -30,16 +38,25 @@ export default function ClassCard({ classInfo }: { classInfo: ClassInfo }) {
   }, [state]);
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '1rem', borderRadius: '8px' }}>
-      <h3>{classInfo.name}</h3>
-      {/* @ts-ignore */}
-      <p>Teacher: {classInfo.profiles?.name || 'N/A'}</p>
-      <p>{classInfo.description || 'No description available.'}</p>
-      
-      <form action={formAction}>
-        <input type="hidden" name="classId" value={classInfo.id} />
-        <EnrollButton />
-      </form>
-    </div>
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle className="text-lg">{classInfo.name}</CardTitle>
+        <CardDescription className="flex items-center gap-2">
+          <User className="h-4 w-4" />
+          <span>Teacher: {classInfo.profiles?.name || 'N/A'}</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          {classInfo.description || 'No description available.'}
+        </p>
+      </CardContent>
+      <CardFooter>
+        <form action={formAction} className="w-full">
+          <input type="hidden" name="classId" value={classInfo.id} />
+          <EnrollButton />
+        </form>
+      </CardFooter>
+    </Card>
   );
 }

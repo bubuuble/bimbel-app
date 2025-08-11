@@ -1,18 +1,25 @@
-// FILE: app/dashboard/components/SubmissionForm.tsx (KODE LENGKAP & BENAR)
+// FILE: app/dashboard/components/SubmissionForm.tsx
 
 'use client'
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
+import { Upload, FileText, ChevronDown } from "lucide-react";
 
-// Tipe Props yang sudah diperbaiki untuk menerima data yang benar
 type Props = {
   materialId: string;
   studentId: string;
   classId: string;
   existingSubmission: { 
-    id: number,            // Tipe diubah ke number agar cocok
-    file_url: string | null  // Tipe diubah agar bisa menerima null
+    id: number,
+    file_url: string | null
   } | null;
 }
 
@@ -20,14 +27,14 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient();
   const router = useRouter();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // File hanya wajib jika ini adalah submit pertama kali atau submit ulang
     if (!file) {
-      alert("Please select a file to upload.");
+      setError("Please select a file to upload.");
       return;
     }
 
@@ -44,14 +51,12 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
       let dbError;
       if (existingSubmission) {
-        // Jika sudah ada, lakukan UPDATE
         const { error } = await supabase
           .from('submissions')
           .update({ file_url: publicUrl })
           .eq('id', existingSubmission.id);
         dbError = error;
       } else {
-        // Jika belum ada, lakukan INSERT
         const { error } = await supabase
           .from('submissions')
           .insert({
@@ -65,7 +70,7 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
       
       if (dbError) throw dbError;
       
-      alert('Jawaban berhasil di-submit!');
+      setError(null);
       router.refresh();
 
     } catch (err: any) {
@@ -78,34 +83,89 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
   if (existingSubmission) {
     return (
-      <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#e9f7ef' }}>
-        <p>
-          Anda sudah mengumpulkan tugas ini. 
-          {/* Tambahkan pengecekan null untuk file_url sebelum merender link */}
-          {existingSubmission.file_url && (
-            <a href={existingSubmission.file_url} target="_blank" rel="noopener noreferrer" style={{textDecoration: 'underline', marginLeft: '5px'}}>
-              Lihat jawaban Anda
-            </a>
-          )}
-        </p>
-        <details>
-          <summary>Submit Ulang?</summary>
-          <form onSubmit={handleSubmit} style={{ marginTop: '0.5rem' }}>
-            <input type="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} required />
-            <button type="submit" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Submit Ulang Jawaban'}</button>
-            {error && <p style={{color: 'red'}}>{error}</p>}
-          </form>
-        </details>
-      </div>
+      <Card className="mt-2">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <FileText className="w-3 h-3 mr-1" />
+              Submitted
+            </Badge>
+          </div>
+          <CardDescription>
+            You have already submitted this assignment.
+            {existingSubmission.file_url && (
+              <Button variant="link" className="p-0 h-auto ml-1" asChild>
+                <a href={existingSubmission.file_url} target="_blank" rel="noopener noreferrer">
+                  View your submission
+                </a>
+              </Button>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                Resubmit Assignment
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="resubmit-file">Upload New File</Label>
+                  <Input 
+                    id="resubmit-file"
+                    type="file" 
+                    onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} 
+                    required 
+                  />
+                </div>
+                <Button type="submit" disabled={isUploading} className="w-full">
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isUploading ? 'Uploading...' : 'Resubmit Assignment'}
+                </Button>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+              </form>
+            </CollapsibleContent>
+          </Collapsible>
+        </CardContent>
+      </Card>
     );
   }
   
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: '0.5rem' }}>
-      <label>Upload Jawaban Anda:</label><br/>
-      <input type="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} required />
-      <button type="submit" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Submit'}</button>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-    </form>
+    <Card className="mt-2">
+      <CardHeader>
+        <CardTitle className="text-lg">Submit Assignment</CardTitle>
+        <CardDescription>Upload your assignment file below</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="assignment-file">Upload Your Answer</Label>
+            <Input 
+              id="assignment-file"
+              type="file" 
+              onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} 
+              required 
+            />
+          </div>
+          <Button type="submit" disabled={isUploading} className="w-full">
+            <Upload className="w-4 h-4 mr-2" />
+            {isUploading ? 'Uploading...' : 'Submit Assignment'}
+          </Button>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
 }

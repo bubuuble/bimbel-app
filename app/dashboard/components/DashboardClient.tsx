@@ -1,30 +1,61 @@
-// FILE: app/dashboard/components/DashboardLayoutClient.tsx (REVISED)
-
 'use client'
 
 import type { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  LogOut, 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  BookOpen, 
+  ClipboardCheck, 
+  Calendar,
+  User
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-function NavLink({ href, children }: { href: string, children: React.ReactNode }) {
+function NavLink({ href, children, icon: Icon }: { 
+  href: string, 
+  children: React.ReactNode,
+  icon?: React.ElementType 
+}) {
   const pathname = usePathname();
   const isActive = pathname === href;
 
   return (
-    <li>
-      <Link href={href} style={{
-        display: 'block',
-        padding: '10px 15px',
-        borderRadius: '6px',
-        textDecoration: 'none',
-        color: isActive ? 'white' : '#333',
-        backgroundColor: isActive ? '#007bff' : 'transparent',
-        transition: 'background-color 0.2s'
-      }}>
+    <Link 
+      href={href} 
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        isActive 
+          ? "bg-accent text-accent-foreground" 
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+      )}
+    >
+      {Icon && <Icon className="h-4 w-4" />}
+      {children}
+    </Link>
+  );
+}
+
+function NavSection({ title, children }: { title: string, children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h4>
+      <div className="space-y-1">
         {children}
-      </Link>
-    </li>
+      </div>
+    </div>
   );
 }
 
@@ -38,53 +69,124 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
     router.refresh();
   };
 
-  return (
-      <aside style={{ 
-        width: '250px', 
-        backgroundColor: '#ffffff', 
-        padding: '1.5rem', 
-        borderRight: '1px solid #dee2e6', 
-        display: 'flex', 
-        flexDirection: 'column' 
-      }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontWeight: 'bold' }}>BimbelApp</h2>
-        <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-          <p style={{ fontWeight: 'bold' }}>Hello, {userProfile.name || userProfile.username}</p>
-          <p style={{
-            padding: '4px 8px', backgroundColor: '#e9ecef',
-            borderRadius: '4px', display: 'inline-block', fontSize: '0.9rem'
-          }}>
-            Peran: {userProfile.role}
-          </p>
-        </div>
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'destructive';
+      case 'GURU': return 'default';
+      case 'SISWA': return 'secondary';
+      default: return 'outline';
+    }
+  };
 
-        {/* --- PERUBAHAN DI SINI --- */}
-        <nav>
-  <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-    <NavLink href="/dashboard">Dashboard</NavLink>
-    
-    {/* MENU ADMIN BARU */}
-    {userProfile.role === 'ADMIN' && (
-      <>
-        <NavLink href="/dashboard/user-management">User Management</NavLink>
-        <NavLink href="/dashboard/attendance-report">Attendance Report</NavLink>
-      </>
-    )}
-    
-    {/* MENU GURU & SISWA */}
-    {(userProfile.role === 'GURU' || userProfile.role === 'SISWA') && (
-      <NavLink href="/dashboard/kelas">Kelas Saya</NavLink>
-    )}
-    {userProfile.role === 'GURU' && (
-      <NavLink href="/dashboard/absensi">Manajemen Absensi</NavLink>
-    )}
-    {userProfile.role === 'SISWA' && (
-      <NavLink href="/dashboard/kehadiran">Kehadiran</NavLink>
-    )}
-    <NavLink href="/dashboard/profile">Profil Saya</NavLink>
-  </ul>
-</nav>
-        {/* --- AKHIR PERUBAHAN --- */}
-      </aside>
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'Administrator';
+      case 'GURU': return 'Guru';
+      case 'SISWA': return 'Siswa';
+      default: return role;
+    }
+  };
+
+  return (
+    <div className="flex h-full w-64 flex-col border-r bg-background">
+      {/* Header */}
+      <div className="flex h-16 items-center px-6 border-b">
+        <div className="flex items-center space-x-2">
+          <h2 className="text-lg font-bold">Bimbel Master</h2>
+        </div>
+      </div>
+
+      {/* User Profile Card */}
+      <div className="p-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col items-center space-y-3">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {(userProfile.name || userProfile.username)?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">
+                  {userProfile.name || userProfile.username}
+                </p>
+                <Badge variant={getRoleBadgeVariant(userProfile.role)} className="text-xs">
+                  {getRoleLabel(userProfile.role)}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Separator />
+
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-4">
+        <nav className="space-y-4 py-4">
+          <NavLink href="/dashboard" icon={LayoutDashboard}>
+            Dashboard
+          </NavLink>
+          
+          {/* Admin Menu */}
+          {userProfile.role === 'ADMIN' && (
+            <NavSection title="Admin">
+              <NavLink href="/dashboard/user-management" icon={Users}>
+                User Management
+              </NavLink>
+              <NavLink href="/dashboard/attendance-report" icon={FileText}>
+                Attendance Report
+              </NavLink>
+            </NavSection>
+          )}
+          
+          {/* Teacher & Student Menu */}
+          {(userProfile.role === 'GURU' || userProfile.role === 'SISWA') && (
+            <NavSection title="Kelas">
+              <NavLink href="/dashboard/kelas" icon={BookOpen}>
+                Kelas Saya
+              </NavLink>
+            </NavSection>
+          )}
+          
+          {userProfile.role === 'GURU' && (
+            <NavSection title="Manajemen">
+              <NavLink href="/dashboard/absensi" icon={ClipboardCheck}>
+                Manajemen Absensi
+              </NavLink>
+            </NavSection>
+          )}
+          
+          {userProfile.role === 'SISWA' && (
+            <NavSection title="Aktivitas">
+              <NavLink href="/dashboard/kehadiran" icon={Calendar}>
+                Kehadiran
+              </NavLink>
+            </NavSection>
+          )}
+          
+          <NavSection title="Account">
+            <NavLink href="/dashboard/profile" icon={User}>
+              Profil Saya
+            </NavLink>
+          </NavSection>
+        </nav>
+      </ScrollArea>
+
+      <Separator />
+
+      {/* Logout Button */}
+      <div className="p-4">
+        <Button 
+          onClick={handleLogout}
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -30,21 +30,33 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // --- LOGIKA BARU DI SINI ---
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
-      <DashboardLayoutClient userProfile={profile} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden min-h-[calc(100vh-3rem)]">
+        <div className="flex h-full">
+          <DashboardLayoutClient userProfile={profile} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Header sekarang lebih simpel */}
-        <header style={{ padding: '1rem 2rem', backgroundColor: '#ffffff', borderBottom: '1px solid #dee2e6', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            {profile.role === 'SISWA' && <NotificationBell />}
-            {/* Menggunakan user.email sebagai fallback jika username belum di-set */}
+          <div className="flex-1 flex flex-col">
+            {/* Header sekarang lebih simpel */}
+            <header className="p-6 bg-white border-b border-gray-200 flex justify-between items-center">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {profile.role === 'ADMIN' ? 'Panel Admin' :
+                   profile.role === 'GURU' ? 'Dashboard Guru' : 'Portal Siswa'}
+                </h1>
+                <p className="text-sm text-gray-600">Selamat datang, {profile.name}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {profile.role === 'SISWA' && <NotificationBell />}
+              </div>
+            </header>
+
+            <main className="flex-1 p-8 overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
+              <div className="max-w-6xl mx-auto">
+                {children}
+              </div>
+            </main>
           </div>
-        </header>
-
-        <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-          {children}
-        </main>
+        </div>
       </div>
     </div>
   );

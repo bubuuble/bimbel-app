@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import ProfileClient from "../components/ProfileClient"; // Komponen yang akan kita buat
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ProfileClient from "../components/ProfileClient";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -27,9 +28,15 @@ export default async function ProfilePage() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '700px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '2rem' }}>Profil Saya</h1>
-      <ProfileClient user={userData} />
+    <div className="container mx-auto max-w-2xl p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Profil Saya</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProfileClient user={userData} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

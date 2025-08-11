@@ -1,4 +1,4 @@
-// FILE: app/dashboard/components/UserManagementClient.tsx (KODE LENGKAP)
+// FILE: app/dashboard/components/UserManagementClient.tsx
 
 'use client'
 
@@ -7,98 +7,194 @@ import CreateUserForm from "./CreateUserForm";
 import { updateUserRole, changeUserPasswordByAdmin, deleteUserByAdmin, type FormState } from "@/lib/actions";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Edit, Save, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type UserProfile = { 
-  id: string; 
-  name: string | null; 
-  username: string | null; 
-  email: string | null; 
-  role: 'ADMIN' | 'GURU' | 'SISWA'; 
+    id: string; 
+    name: string | null; 
+    username: string | null; 
+    email: string | null; 
+    role: 'ADMIN' | 'GURU' | 'SISWA'; 
 };
 
-// Komponen terpisah untuk setiap baris pengguna agar lebih terorganisir
 function UserRow({ profile }: { profile: UserProfile }) {
-    const [isChangingPassword, setIsChangingPassword] = useState(false);
-    const [passwordState, changePasswordAction] = useActionState(changeUserPasswordByAdmin, null);
+        const [isChangingPassword, setIsChangingPassword] = useState(false);
+        const [passwordState, changePasswordAction] = useActionState(changeUserPasswordByAdmin, null);
+        const [roleState, changeRoleAction] = useActionState(updateUserRole, null);
+        const { pending: isSavingRole } = useFormStatus();
 
-    // Untuk form ganti role
-    const [roleState, changeRoleAction] = useActionState(updateUserRole, null);
-    const { pending: isSavingRole } = useFormStatus();
+        const handleDelete = async () => {
+                if (confirm(`Anda yakin ingin menghapus pengguna "${profile.name || profile.username}"? Tindakan ini tidak dapat diurungkan.`)) {
+                        const formData = new FormData();
+                        formData.append('userId', profile.id);
+                        await deleteUserByAdmin(formData);
+                }
+        };
 
-    const handleDelete = async () => {
-        if (confirm(`Anda yakin ingin menghapus pengguna "${profile.name || profile.username}"? Tindakan ini tidak dapat diurungkan.`)) {
-            const formData = new FormData();
-            formData.append('userId', profile.id);
-            await deleteUserByAdmin(formData);
-        }
-    };
-    
-    return (
-        <tr style={{ borderBottom: '1px solid #eee' }}>
-            <td style={{ padding: '12px' }}>{profile.name}</td>
-            <td style={{ padding: '12px' }}>{profile.username}</td>
-            <td style={{ padding: '12px' }}>{profile.role}</td>
-            <td style={{ padding: '12px' }}>
-                <form action={changeRoleAction} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <input type="hidden" name="userId" value={profile.id} />
-                    <select name="newRole" defaultValue={profile.role} disabled={profile.role === 'ADMIN'}>
-                        <option value="SISWA">Siswa</option>
-                        <option value="GURU">Guru</option>
-                        <option value="ADMIN">Admin</option>
-                    </select>
-                    {profile.role !== 'ADMIN' && <button type="submit" disabled={isSavingRole}>{isSavingRole ? '...' : 'Save'}</button>}
-                    {roleState?.success && <span style={{ color: 'green', fontSize: '12px' }}>{roleState.success}</span>}
-                    {roleState?.error && <span style={{ color: 'red', fontSize: '12px' }}>{roleState.error}</span>}
-                </form>
-            </td>
-            <td style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {isChangingPassword ? (
-                    <form action={changePasswordAction}>
-                        <input type="hidden" name="userId" value={profile.id} />
-                        <input type="password" name="newPassword" placeholder="Password Baru" required />
-                        <button type="submit">Simpan Pass</button>
-                        <button type="button" onClick={() => setIsChangingPassword(false)}>Batal</button>
-                        {passwordState?.success && <p style={{ color: 'green' }}>{passwordState.success}</p>}
-                        {passwordState?.error && <p style={{ color: 'red' }}>{passwordState.error}</p>}
-                    </form>
-                ) : (
-                    <button onClick={() => setIsChangingPassword(true)} disabled={profile.role === 'ADMIN'}>Ubah Password</button>
-                )}
-                <button onClick={handleDelete} disabled={profile.role === 'ADMIN'} style={{ backgroundColor: '#ffdddd', color: 'red' }}>Hapus User</button>
-            </td>
-        </tr>
-    );
+        const getRoleBadgeVariant = (role: string) => {
+                switch (role) {
+                        case 'ADMIN': return 'destructive';
+                        case 'GURU': return 'default';
+                        case 'SISWA': return 'secondary';
+                        default: return 'outline';
+                }
+        };
+        
+        return (
+                <TableRow>
+                        <TableCell className="font-medium">{profile.name}</TableCell>
+                        <TableCell>{profile.username}</TableCell>
+                        <TableCell>
+                                <Badge variant={getRoleBadgeVariant(profile.role)}>
+                                        {profile.role}
+                                </Badge>
+                        </TableCell>
+                        <TableCell>
+                                <form action={changeRoleAction} className="flex items-center gap-2">
+                                        <input type="hidden" name="userId" value={profile.id} />
+                                        <Select name="newRole" defaultValue={profile.role} disabled={profile.role === 'ADMIN'}>
+                                                <SelectTrigger className="w-32">
+                                                        <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                        <SelectItem value="SISWA">Siswa</SelectItem>
+                                                        <SelectItem value="GURU">Guru</SelectItem>
+                                                        <SelectItem value="ADMIN">Admin</SelectItem>
+                                                </SelectContent>
+                                        </Select>
+                                        {profile.role !== 'ADMIN' && (
+                                                <Button type="submit" size="sm" disabled={isSavingRole}>
+                                                        <Save className="h-4 w-4" />
+                                                </Button>
+                                        )}
+                                </form>
+                                {roleState?.success && (
+                                        <Alert className="mt-2">
+                                                <AlertDescription className="text-green-600 text-sm">
+                                                        {roleState.success}
+                                                </AlertDescription>
+                                        </Alert>
+                                )}
+                                {roleState?.error && (
+                                        <Alert className="mt-2" variant="destructive">
+                                                <AlertDescription className="text-sm">
+                                                        {roleState.error}
+                                                </AlertDescription>
+                                        </Alert>
+                                )}
+                        </TableCell>
+                        <TableCell>
+                                <div className="flex flex-col gap-2">
+                                        {isChangingPassword ? (
+                                                <form action={changePasswordAction} className="space-y-2">
+                                                        <input type="hidden" name="userId" value={profile.id} />
+                                                        <Input 
+                                                                type="password" 
+                                                                name="newPassword" 
+                                                                placeholder="Password Baru" 
+                                                                required 
+                                                                className="w-32"
+                                                        />
+                                                        <div className="flex gap-1">
+                                                                <Button type="submit" size="sm">
+                                                                        <Save className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button 
+                                                                        type="button" 
+                                                                        variant="outline" 
+                                                                        size="sm"
+                                                                        onClick={() => setIsChangingPassword(false)}
+                                                                >
+                                                                        <X className="h-4 w-4" />
+                                                                </Button>
+                                                        </div>
+                                                        {passwordState?.success && (
+                                                                <Alert>
+                                                                        <AlertDescription className="text-green-600 text-sm">
+                                                                                {passwordState.success}
+                                                                        </AlertDescription>
+                                                                </Alert>
+                                                        )}
+                                                        {passwordState?.error && (
+                                                                <Alert variant="destructive">
+                                                                        <AlertDescription className="text-sm">
+                                                                                {passwordState.error}
+                                                                        </AlertDescription>
+                                                                </Alert>
+                                                        )}
+                                                </form>
+                                        ) : (
+                                                <Button 
+                                                        onClick={() => setIsChangingPassword(true)} 
+                                                        disabled={profile.role === 'ADMIN'}
+                                                        variant="outline"
+                                                        size="sm"
+                                                >
+                                                        <Edit className="h-4 w-4 mr-1" />
+                                                        Ubah Password
+                                                </Button>
+                                        )}
+                                        <Button 
+                                                onClick={handleDelete} 
+                                                disabled={profile.role === 'ADMIN'}
+                                                variant="destructive"
+                                                size="sm"
+                                        >
+                                                <Trash2 className="h-4 w-4 mr-1" />
+                                                Hapus
+                                        </Button>
+                                </div>
+                        </TableCell>
+                </TableRow>
+        );
 }
 
-
 export default function UserManagementClient({ initialProfiles }: { initialProfiles: UserProfile[] }) {
-    const [profiles, setProfiles] = useState(initialProfiles);
+        const [profiles, setProfiles] = useState(initialProfiles);
 
-    return (
-        <div>
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
-                    <thead>
-                    <tr style={{ backgroundColor: '#f0f0f0', borderBottom: '2px solid #ddd' }}>
-                        <th style={{ padding: '12px', textAlign: 'left' }}>Nama</th>
-                        <th style={{ padding: '12px', textAlign: 'left' }}>Username</th>
-                        <th style={{ padding: '12px', textAlign: 'left' }}>Peran Saat Ini</th>
-                        <th style={{ padding: '12px', textAlign: 'left' }}>Ubah Peran</th>
-                        <th style={{ padding: '12px', textAlign: 'left' }}>Tindakan</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {profiles.map((profile) => (
-                        <UserRow key={profile.id} profile={profile} />
-                    ))}
-                    </tbody>
-                </table>
-            </div>
-            
-            {/* Form Create User dipindah ke bawah tabel */}
-            <div style={{ marginTop: '3rem' }}>
-                <CreateUserForm />
-            </div>
-        </div>
-    );
+        return (
+                <div className="space-y-8">
+                        <Card>
+                                <CardHeader>
+                                        <CardTitle>Manajemen Pengguna</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                        <div className="overflow-x-auto">
+                                                <Table>
+                                                        <TableHeader>
+                                                                <TableRow>
+                                                                        <TableHead>Nama</TableHead>
+                                                                        <TableHead>Username</TableHead>
+                                                                        <TableHead>Peran Saat Ini</TableHead>
+                                                                        <TableHead>Ubah Peran</TableHead>
+                                                                        <TableHead>Tindakan</TableHead>
+                                                                </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                                {profiles.map((profile) => (
+                                                                        <UserRow key={profile.id} profile={profile} />
+                                                                ))}
+                                                        </TableBody>
+                                                </Table>
+                                        </div>
+                                </CardContent>
+                        </Card>
+                        
+                        <Card>
+                                <CardHeader>
+                                        <CardTitle>Tambah Pengguna Baru</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                        <CreateUserForm />
+                                </CardContent>
+                        </Card>
+                </div>
+        );
 }

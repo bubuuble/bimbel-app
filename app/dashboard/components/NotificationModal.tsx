@@ -1,53 +1,43 @@
-// FILE: app/dashboard/components/NotificationModal.tsx
-
 'use client'
 
-export default function NotificationModal({ isOpen, onClose, children }: { isOpen: boolean, onClose: () => void, children: React.ReactNode }) {
-  if (!isOpen) return null;
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
+// FILE: app/dashboard/components/NotificationModal.tsx
+
+export default function NotificationModal({ 
+  isOpen, 
+  onClose, 
+  children 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  children: React.ReactNode 
+}) {
   return (
-    // Backdrop
-    <div 
-      onClick={onClose} 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: 1000,
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}
-    >
-      {/* Modal Content */}
-      <div 
-        onClick={(e) => e.stopPropagation()} // Mencegah modal tertutup saat diklik di dalam
-        style={{
-          position: 'fixed',
-          top: '60px', // Sedikit di bawah header
-          right: '20px',
-          width: '400px',
-          maxHeight: '80vh',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}
-      >
-        <header style={{ padding: '1rem', borderBottom: '1px solid #ddd', fontWeight: 'bold' }}>
-            Notifikasi
-        </header>
-        <div style={{ overflowY: 'auto', flex: 1 }}>
-            {children}
-        </div>
-        <footer style={{ padding: '1rem', borderTop: '1px solid #ddd', textAlign: 'right' }}>
-            <button onClick={onClose}>Tutup</button>
-        </footer>
-      </div>
-    </div>
-  );
-}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md max-h-[80vh] p-0 fixed top-16 right-4 translate-x-0 translate-y-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle>Notifikasi</DialogTitle>
+        </DialogHeader>
+        
+        <ScrollArea className="flex-1 px-6 py-4 max-h-[60vh]">
+          {children}
+        </ScrollArea>
+        
+        <DialogFooter className="px-6 py-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Tutup
+          </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }

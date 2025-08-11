@@ -1,9 +1,15 @@
-// FILE: app/dashboard/components/StudentClassView.tsx (KODE LENGKAP)
+// FILE: app/dashboard/components/StudentClassView.tsx
 
 import type { User } from "@supabase/supabase-js";
 import type { Class, Material, Submission } from "@/lib/types";
 import SubmissionForm from "./SubmissionForm";
 import StudentAttendance from "./StudentAttendance";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileText, Clock, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 
 type Props = {
   user: User;
@@ -11,7 +17,6 @@ type Props = {
   materials: Material[];
   activeSession: { id: string, title: string | null, expires_at: string } | null;
   hasAttended: boolean;
-  // Pastikan tipe Submission di sini mencakup grade dan feedback
   submissions: Pick<Submission, 'material_id' | 'id' | 'file_url' | 'grade' | 'feedback'>[];
 };
 
@@ -20,21 +25,22 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
   const now = new Date();
 
   return (
-    <>
-      {/* Komponen Absensi Siswa */}
+    <div className="space-y-6">
+      {/* Student Attendance */}
       <StudentAttendance
         classId={classInfo.id}
         activeSession={activeSession}
         hasAttended={hasAttended}
       />
 
-      <hr style={{ margin: '2rem 0' }} />
+      <Separator />
 
-      {/* Daftar Materi & Tugas */}
-      <div>
-        <h2>Materi & Tugas</h2>
+      {/* Materials & Tasks */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Materi & Tugas</h2>
+        
         {materials && materials.length > 0 ? (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <div className="space-y-4">
             {materials.map(material => {
               const hasDeadline = material.is_task && material.deadline;
               const deadlineDate = hasDeadline ? new Date(material.deadline!) : null;
@@ -44,64 +50,105 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
               const hasBeenGraded = currentSubmission && currentSubmission.grade !== null;
 
               return (
-                <li key={material.id} style={{ padding: '1rem', border: '1px solid #ddd', marginBottom: '1rem', borderRadius: '8px' }}>
-                  <h3 style={{ marginTop: 0 }}>{material.title}</h3>
-                  {material.description && <p>{material.description}</p>}
-                  
-                  {hasDeadline && (
-                    <div style={{ 
-                      padding: '8px 12px', 
-                      marginBottom: '1rem', 
-                      borderRadius: '4px',
-                      backgroundColor: isOverdue ? '#fff0f1' : '#e7f3ff',
-                      border: `1px solid ${isOverdue ? '#dc3545' : '#007bff'}` 
-                    }}>
-                      <strong style={{ color: isOverdue ? '#dc3545' : '#007bff' }}>
-                        Deadline: {deadlineDate!.toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
-                      </strong>
-                      {isOverdue && <span style={{ marginLeft: '10px', fontWeight: 'bold', color: '#dc3545' }}>(TERLAMBAT)</span>}
+                <Card key={material.id} className="w-full">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        {material.title}
+                      </CardTitle>
+                      {material.is_task && (
+                        <Badge variant={hasBeenGraded ? "default" : isOverdue ? "destructive" : "secondary"}>
+                          {hasBeenGraded ? "Dinilai" : isOverdue ? "Terlambat" : "Tugas"}
+                        </Badge>
+                      )}
                     </div>
-                  )}
+                    {material.description && (
+                      <p className="text-sm text-muted-foreground">{material.description}</p>
+                    )}
+                  </CardHeader>
 
-                  {material.file_url && (
-                    <a href={material.file_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginBottom: '1rem', fontWeight: 'bold' }}>
-                      Lihat Materi/Soal
-                    </a>
-                  )}
+                  <CardContent className="space-y-4">
+                    {/* Deadline Alert */}
+                    {hasDeadline && (
+                      <Alert variant={isOverdue ? "destructive" : "default"}>
+                        <Clock className="h-4 w-4" />
+                        <AlertDescription>
+                          <span className="font-medium">
+                            Deadline: {deadlineDate!.toLocaleString('id-ID', { 
+                              dateStyle: 'full', 
+                              timeStyle: 'short' 
+                            })}
+                          </span>
+                          {isOverdue && (
+                            <span className="ml-2 font-bold">(TERLAMBAT)</span>
+                          )}
+                        </AlertDescription>
+                      </Alert>
+                    )}
 
-                  {material.is_task && (
-                    <div>
-                      {/* --- PERUBAHAN DI SINI: TAMPILKAN NILAI JIKA ADA --- */}
-                      {hasBeenGraded && (
-                        <div style={{ padding: '1rem', backgroundColor: '#f0f8ff', border: '1px solid #b0e0e6', borderRadius: '8px', marginBottom: '1rem' }}>
-                          <h4>Hasil Penilaian</h4>
-                          <p style={{ margin: '0 0 10px 0' }}><strong>Nilai: {currentSubmission.grade}</strong></p>
+                    {/* Material File Link */}
+                    {material.file_url && (
+                      <Button variant="outline" className="w-fit" asChild>
+                        <a href={material.file_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Lihat Materi/Soal
+                        </a>
+                      </Button>
+                    )}
+
+                    {/* Grade Results */}
+                    {material.is_task && hasBeenGraded && (
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            Hasil Penilaian
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default" className="text-lg px-3 py-1">
+                              Nilai: {currentSubmission.grade}
+                            </Badge>
+                          </div>
                           {currentSubmission.feedback && (
-                            <div>
-                              <strong>Umpan Balik dari Guru:</strong>
-                              <p style={{ margin: '5px 0 0 0', whiteSpace: 'pre-wrap', backgroundColor: '#fff', padding: '8px', borderRadius: '4px', border: '1px solid #eee' }}>
+                            <div className="space-y-2">
+                              <p className="font-medium text-sm">Umpan Balik dari Guru:</p>
+                              <div className="bg-white p-3 rounded-md border text-sm whitespace-pre-wrap">
                                 {currentSubmission.feedback}
-                              </p>
+                              </div>
                             </div>
                           )}
-                        </div>
-                      )}
-                      
-                      {/* Form submission tetap ada untuk memungkinkan submit ulang */}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Submission Form */}
+                    {material.is_task && (
                       <SubmissionForm
                         materialId={material.id}
                         studentId={user.id}
                         classId={classInfo.id}
                         existingSubmission={currentSubmission || null}
                       />
-                    </div>
-                  )}
-                </li>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })}
-          </ul>
-        ) : ( <p>Belum ada materi atau tugas yang diunggah untuk kelas ini.</p> )}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="text-center py-8">
+              <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                Belum ada materi atau tugas yang diunggah untuk kelas ini.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </>
+    </div>
   );
 }

@@ -1,14 +1,32 @@
-// FILE: app/dashboard/components/ExportButton.tsx (BUAT FILE BARU)
+// FILE: app/dashboard/components/ExportButton.tsx
 
 'use client'
 
 import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { exportAttendanceToCsv, type CsvExportState } from "@/lib/actions";
+import { Button } from "@/components/ui/button";
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-function Submit() {
-    const { pending } = useFormStatus();
-    return <button type="submit" disabled={pending}>{pending ? 'Mengekspor...' : 'Ekspor ke CSV'}</button>
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <Button type="submit" disabled={pending} size="sm">
+      {pending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Mengekspor...
+        </>
+      ) : (
+        <>
+          <Download className="mr-2 h-4 w-4" />
+          Ekspor ke CSV
+        </>
+      )}
+    </Button>
+  );
 }
 
 export default function ExportButton({ sessionId }: { sessionId: string }) {
@@ -17,14 +35,14 @@ export default function ExportButton({ sessionId }: { sessionId: string }) {
   
   useEffect(() => {
     if (state?.error) {
-      alert(state.error); // Ganti dengan toast
+      toast.error("Error", {
+        description: state.error,
+      });
     }
+    
     if (state?.csvString && state.fileName) {
-      // Buat Blob dari string CSV
       const blob = new Blob([state.csvString], { type: 'text/csv;charset=utf-8;' });
-      // Buat URL sementara untuk Blob
       const url = URL.createObjectURL(blob);
-      // Buat link tersembunyi, klik, lalu hapus
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', state.fileName);
@@ -32,13 +50,15 @@ export default function ExportButton({ sessionId }: { sessionId: string }) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      toast.success("Data berhasil diekspor ke CSV");
     }
   }, [state]);
 
   return (
     <form action={formAction}>
       <input type="hidden" name="sessionId" value={sessionId} />
-      <Submit />
+      <SubmitButton />
     </form>
-  )
+  );
 }

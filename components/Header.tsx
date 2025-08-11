@@ -43,19 +43,10 @@ export default function Header() {
         BimbelApp
       </Link>
       <nav>
-        {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span>Hello, {user.email}</span>
-            <button onClick={handleLogout} style={{ padding: '0.5rem 1rem', cursor: 'pointer' }}>
-              Logout
-            </button>
-          </div>
-        ) : (
           <div style={{ display: 'flex', gap: '1rem' }}>
             <Link href="/login">Login</Link>
             <Link href="/register">Register</Link>
           </div>
-        )}
       </nav>
     </header>
   )

@@ -4,6 +4,8 @@
 import { markNotificationAsRead } from "@/lib/actions";
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Check, Loader2 } from "lucide-react";
 
 export default function MarkAsReadButton({ notificationId }: { notificationId: string }) {
     let [isPending, startTransition] = useTransition();
@@ -12,16 +14,29 @@ export default function MarkAsReadButton({ notificationId }: { notificationId: s
     const handleClick = () => {
         startTransition(async () => {
             await markNotificationAsRead(notificationId);
-            // Secara manual memicu refresh pada data yang ditampilkan di dalam modal.
-            // Ini diperlukan karena revalidatePath di server action tidak selalu
-            // memicu refresh pada Server Component yang dirender di dalam Client Component.
             router.refresh(); 
         });
     };
 
     return (
-        <button onClick={handleClick} disabled={isPending} style={{ padding: '4px 8px', fontSize: '0.8rem' }}>
-            {isPending ? '...' : 'Tandai sudah dibaca'}
-        </button>
+        <Button 
+            onClick={handleClick} 
+            disabled={isPending}
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-xs"
+        >
+            {isPending ? (
+                <>
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    Loading...
+                </>
+            ) : (
+                <>
+                    <Check className="mr-1 h-3 w-3" />
+                    Tandai sudah dibaca
+                </>
+            )}
+        </Button>
     );
 }
