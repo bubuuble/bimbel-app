@@ -62,7 +62,7 @@ export default function Header() {
     <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
       <NavLink href="/">Beranda</NavLink>
       <NavLink href="/product">Produk</NavLink>
-      <NavLink href="/testimonial">Testimonial</NavLink>
+      <NavLink href="/testimoni">Testimoni</NavLink>
       <NavLink href="/blog">Blog</NavLink>
       <NavLink href="/tentang-kami">Tentang Kami</NavLink>
     </nav>

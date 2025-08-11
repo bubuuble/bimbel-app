@@ -26,6 +26,19 @@ export default defineType({
       name: 'heroImages', title: 'Hero: Gambar Carousel', type: 'array', group: 'hero',
       of: [{ type: 'image', options: { hotspot: true }, fields: [{ name: 'alt', type: 'string', title: 'Teks Alternatif' }] }],
     }),
+    defineField({
+      name: 'heroFloatingObjects', title: 'Hero: Floating Objects', type: 'array', group: 'hero',
+      of: [{
+        type: 'object',
+        fields: [
+          defineField({ name: 'text', title: 'Text', type: 'string' }),
+          defineField({ name: 'label', title: 'Label', type: 'string' }),
+          defineField({ name: 'image', title: 'Icon Image', type: 'image' }),
+          defineField({ name: 'position', title: 'CSS Position Class', type: 'string', 
+            description: 'e.g., "top-16 left-10" or "bottom-20 right-16"' }),
+        ]
+      }],
+    }),
 
     // --- Company Stats Section (Data dimasukkan langsung) ---
     defineField({
@@ -67,24 +80,6 @@ export default defineType({
       }]
     }),
 
-    // --- Pricing Section (Data dimasukkan langsung) ---
-    defineField({
-      name: 'pricingPackages', title: 'Paket Harga', type: 'array', group: 'pricing',
-      of: [{
-        type: 'object',
-        name: 'pricingPackage',
-        fields: [
-          defineField({ name: 'name', title: 'Nama Paket', type: 'string' }),
-          defineField({ name: 'price', title: 'Harga (teks)', type: 'string' }),
-          defineField({ name: 'price_period', title: 'Periode Harga', type: 'string' }),
-          defineField({
-            name: 'features', title: 'Fitur Paket', type: 'array',
-            of: [{ type: 'object', fields: [{name: 'text', type: 'string'}, {name: 'included', type: 'boolean', initialValue: true}]}]
-          }),
-          defineField({ name: 'isFeatured', title: 'Paket Unggulan?', type: 'boolean' }),
-        ]
-      }],
-    }),
 
     // --- Testimonials Section (Data dimasukkan langsung) ---
     defineField({
@@ -99,8 +94,5 @@ export default defineType({
       }],
     }),
     
-    // --- CTA Section ---
-    defineField({ name: 'ctaTitle', title: 'CTA: Judul', type: 'string', group: 'cta' }),
-    defineField({ name: 'ctaDescription', title: 'CTA: Deskripsi', type: 'text', group: 'cta' }),
   ],
 })

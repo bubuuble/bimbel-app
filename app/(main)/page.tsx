@@ -1,30 +1,35 @@
 // FILE: app/(main)/page.tsx (KODE LENGKAP)
 
-import { client } from "@/sanity/lib/client"; // <-- Pastikan path ini benar
+import { client } from "@/sanity/lib/client";
 import { groq } from "next-sanity";
 import { urlForImage } from "@/sanity/lib/image";
 
 // Impor semua komponen section
-import Header from '@/components/Header';
 import HeroSection from '@/components/landing/HeroSection';
 import CompanyStatsSection from '@/components/landing/CompanyStatsSection';
 import SupportSection from '@/components/landing/SupportSection';
 import ValuePropositionSection from '@/components/landing/ValuePropositionSection';
 import ProgramOutcomesSection from '@/components/landing/ProgramOutcomesSection';
-import TestimonialSection from '@/components/landing/TestimonialSection';
+import ProductDetail from "@/components/landing/ProductDetail";
+
 // Query GROQ lengkap untuk mengambil semua data landing page
 const LANDING_PAGE_QUERY = groq`*[_type == "landingPage"][0] {
   heroTitle,
   heroDescription,
   heroImages[]{ asset, alt },
-  heroFloatingObjects,
-  companyStats,
-  supporters[]{ name, logo, alt },
-  valuePropositionTitle,
-  valuePropositionBenefits,
-  programOutcomes,
-  pricingPackages,
-  testimonials,
+  supporters[]{ 
+    _key,
+    name, 
+    logo, 
+    alt 
+  },
+  benefitsTitle,
+  benefitsList[]{
+    _key,
+    title,
+    description,
+    icon
+  },
   ctaTitle,
   ctaDescription
 }`;
@@ -44,19 +49,14 @@ export default async function HomePage() {
   // Transformasi data untuk komponen, pastikan ada fallback yang aman
   const heroImagesWithUrls = data.heroImages?.map((img: any) => ({
       src: urlForImage(img).width(1200).url(),
-      alt: img.alt || 'Bimbel Master Hero Image', // Fallback alt
+      alt: img.alt || 'Bimbel Master Hero Image',
+      asset: img.asset
   })) || [];
 
   const supportersWithUrls = data.supporters?.map((s: any) => ({
       ...s,
       logoUrl: urlForImage(s.logo).width(150).url(),
-      alt: s.alt || s.name, // Fallback alt
-  })) || [];
-
-  const testimonialsWithUrls = data.testimonials?.map((t: any) => ({
-      ...t,
-      imageUrl: urlForImage(t.image).width(400).url(),
-      imageAlt: t.name || 'Testimonial Image', // Fallback alt
+      alt: s.alt || s.name,
   })) || [];
 
   return (
@@ -66,16 +66,15 @@ export default async function HomePage() {
           title={data.heroTitle || "Selamat Datang di Bimbel Master"}
           description={data.heroDescription || "Deskripsi default untuk hero section."}
           heroImages={heroImagesWithUrls}
-          floatingObjects={data.heroFloatingObjects || []}
         />
-        
-        <CompanyStatsSection stats={data.companyStats || []} />
-        <SupportSection supporters={supportersWithUrls} />
+        <ProductDetail />
+        <CompanyStatsSection />
         <ValuePropositionSection 
-            title={data.valuePropositionTitle || "Keuntungan Bergabung Bersama Kami"}
-            benefits={data.valuePropositionBenefits || []} 
+            title={data.benefitsTitle || "Keuntungan Bergabung Bersama Kami"}
+            benefits={data.benefitsList || []} 
         />
-        <ProgramOutcomesSection outcomes={data.programOutcomes || []} />
+        <ProgramOutcomesSection outcomes={data.benefitsList || []} />
+        <SupportSection supporters={supportersWithUrls} />
       </main>
     </>
   );

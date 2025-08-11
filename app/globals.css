@@ -142,12 +142,15 @@
 }
 
 /* Animasi untuk slider logo partner (infinite scroll) */
-@keyframes infinite-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.333%);
+  }
 }
 
 .animate-infinite-scroll {
-  /* Durasi bisa disesuaikan, semakin besar semakin lambat */
-  animation: infinite-scroll 40s linear infinite;
+  animation: scroll-left 20s linear infinite;
 }
