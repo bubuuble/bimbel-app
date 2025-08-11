@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/lib/LanguageContext";
 
 // --- Type Definitions ---
 type StudentStats = {
@@ -34,6 +35,7 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [enrolledClasses, setEnrolledClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
@@ -109,9 +111,9 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {userProfile.name || 'Student'}!
+          {t('student.welcome')}, {userProfile.name || 'Student'}!
         </h1>
-        <p className="text-muted-foreground">Here's your learning progress overview</p>
+        <p className="text-muted-foreground">{t('student.overview')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -120,9 +122,9 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Attendance</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.attendance')}</p>
                 <p className="text-2xl font-bold">{stats?.total_kehadiran || 0}</p>
-                <p className="text-xs text-muted-foreground">Total Present</p>
+                <p className="text-xs text-muted-foreground">{t('student.stats.totalPresent')}</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                 <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -135,9 +137,9 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Assignments</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.assignments')}</p>
                 <p className="text-2xl font-bold">{stats?.persentase_tugas.toFixed(0) || 0}%</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
+                <p className="text-xs text-muted-foreground">{t('student.stats.completed')}</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
                 <Target className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -150,9 +152,9 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Classes</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.classes')}</p>
                 <p className="text-2xl font-bold">{stats?.total_kelas || 0}</p>
-                <p className="text-xs text-muted-foreground">Enrolled</p>
+                <p className="text-xs text-muted-foreground">{t('student.stats.enrolled')}</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
                 <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -165,7 +167,7 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">Average Score</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.average')} Score</p>
                 <p className="text-2xl font-bold">{stats?.rata_rata_nilai.toFixed(1) || 0}</p>
                 <p className="text-xs text-muted-foreground">Out of 100</p>
               </div>
@@ -183,7 +185,7 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Recent Activities
+              {t('student.recentActivity')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -218,7 +220,8 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
             ) : (
               <div className="text-center py-8">
                 <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No recent activities</p>
+                <p className="text-muted-foreground">{t('student.noActivity')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('student.startLearning')}</p>
               </div>
             )}
           </CardContent>
@@ -229,7 +232,7 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-green-600" />
-              My Classes
+              {t('student.myClasses')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -261,7 +264,7 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
                   <p className="text-muted-foreground">No classes enrolled</p>
                   <Button asChild>
                     <Link href="/dashboard/classes">
-                      Browse Classes
+                      {t('student.viewAll')} Classes
                     </Link>
                   </Button>
                 </div>

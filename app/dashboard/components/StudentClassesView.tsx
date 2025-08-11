@@ -106,23 +106,40 @@ export default function StudentClassesView({ userProfile }: { userProfile: Pick<
   const fetchData = useCallback(async () => {
     setLoading(true);
     
+    // Query 1: Ambil kelas yang sudah diikuti oleh siswa
     const { data: enrolledData } = await supabase
       .from('enrollments')
+      // Kita tidak bisa order di sini, jadi kita akan order setelahnya
       .select(`classes!inner(id, name)`)
       .eq('student_id', userProfile.id)
       .returns<EnrolledClass[]>();
     
-    if (enrolledData) setEnrolledClasses(enrolledData);
+    if (enrolledData) {
+        // --- TAMBAHKAN SORTING DI SINI ---
+        const sortedEnrolled = enrolledData.sort((a, b) => {
+            const nameA = a.classes?.name.toLowerCase() || '';
+            const nameB = b.classes?.name.toLowerCase() || '';
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+        });
+        setEnrolledClasses(sortedEnrolled);
+        // ---------------------------------
+    }
     const enrolledClassIds = enrolledData?.map(e => e.classes?.id).filter(Boolean) || [];
 
+    // Query 2: Ambil semua kelas yang ada
     const { data: allData } = await supabase
       .from('classes')
       .select(`id, name, description, profiles(name)`)
+      // --- TAMBAHKAN ORDER DI SINI ---
+      .order('name', { ascending: true })
+      // -------------------------------
       .returns<AvailableClass[]>();
 
     if (allData) {
       const available = allData.filter(c => !enrolledClassIds.includes(c.id));
-      setAvailableClasses(available);
+      setAvailableClasses(available); // Ini sudah otomatis terurut karena `allData` sudah diurutkan
     }
     
     setLoading(false);

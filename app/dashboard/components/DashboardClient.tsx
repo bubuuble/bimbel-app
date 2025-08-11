@@ -21,6 +21,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/LanguageContext";
 
 function NavLink({ href, children, icon: Icon }: { 
   href: string, 
@@ -61,6 +62,7 @@ function NavSection({ title, children }: { title: string, children: React.ReactN
 
 export default function DashboardLayoutClient({ userProfile }: { userProfile: UserProfile }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const supabase = createClient();
 
   const handleLogout = async () => {
@@ -125,26 +127,26 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
       <ScrollArea className="flex-1 px-4">
         <nav className="space-y-4 py-4">
           <NavLink href="/dashboard" icon={LayoutDashboard}>
-            Dashboard
+            {t('nav.dashboard')}
           </NavLink>
           
           {/* Admin Menu */}
           {userProfile.role === 'ADMIN' && (
             <NavSection title="Admin">
               <NavLink href="/dashboard/user-management" icon={Users}>
-                User Management
+                {t('nav.users')}
               </NavLink>
               <NavLink href="/dashboard/attendance-report" icon={FileText}>
-                Attendance Report
+                {t('nav.attendance')} Report
               </NavLink>
             </NavSection>
           )}
           
           {/* Teacher & Student Menu */}
           {(userProfile.role === 'GURU' || userProfile.role === 'SISWA') && (
-            <NavSection title="Kelas">
+            <NavSection title={t('nav.classes')}>
               <NavLink href="/dashboard/kelas" icon={BookOpen}>
-                Kelas Saya
+                {t('nav.classes')}
               </NavLink>
             </NavSection>
           )}
@@ -184,7 +186,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
           className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          {t('nav.logout')}
         </Button>
       </div>
     </div>

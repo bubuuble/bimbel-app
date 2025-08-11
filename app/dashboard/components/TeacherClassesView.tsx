@@ -53,7 +53,7 @@ export default function TeacherClassesView({ userProfile }: { userProfile: Pick<
       .from('classes')
       .select('id, name, description')
       .eq('teacher_id', userProfile.id)
-      .order('created_at', { ascending: false });
+      .order('name', { ascending: true });
     if (data) setClasses(data);
     setLoading(false);
   }, [supabase, userProfile.id]);
