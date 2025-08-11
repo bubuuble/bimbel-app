@@ -32,7 +32,7 @@ export default function DeleteClassForm({ classId }: { classId: string }) {
   };
 
   return (
-    <div className="absolute top-4 right-4">
+    <div className="flex-shrink-0">
       <TooltipProvider>
         <Tooltip>
           <AlertDialog>
@@ -41,7 +41,7 @@ export default function DeleteClassForm({ classId }: { classId: string }) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-white"
                 >
                   <AlertTriangle className="h-4 w-4 mr-1" />
                   Hapus Kelas

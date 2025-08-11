@@ -23,31 +23,27 @@ type Props = {
 
 export default function TeacherClassView({ classInfo, materials, initialSessions }: Props) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
-      {/* Main Content - Left Side */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* Delete Button - Positioned at top right */}
+    <div className="space-y-6">
+      {/* Delete Button - Top Right Corner */}
+      <div className="flex justify-end">
         <DeleteClassForm classId={classInfo.id} />
+      </div>
 
-        {/* Class Info Header */}
-        <div className="pr-32"> {/* Add right padding to avoid overlap with delete button */}
-          <h1 className="text-2xl font-bold">{classInfo.name}</h1>
-          <p className="text-muted-foreground">{classInfo.description}</p>
-        </div>
+      {/* Main Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content - Left Side */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Upload Material */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Materi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UploadMaterialForm classId={classInfo.id} />
+            </CardContent>
+          </Card>
 
-        <Separator />
-
-        {/* Upload Material */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Materi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UploadMaterialForm classId={classInfo.id} />
-          </CardContent>
-        </Card>
-
-        <Separator />
+          <Separator />
 
         {/* Materials & Tasks List */}
         <Card>
@@ -115,6 +111,7 @@ export default function TeacherClassView({ classInfo, materials, initialSessions
       <div className="lg:col-span-1">
         <EnrolledStudentsList classId={classInfo.id} />
       </div>
+    </div>
     </div>
   );
 }
