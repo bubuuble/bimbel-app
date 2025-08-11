@@ -1,70 +1,82 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, Star, ArrowRight } from "lucide-react";
+// FILE: app/(main)/page.tsx (KODE LENGKAP)
 
-export default function Home() {
+import { client } from "@/sanity/lib/client"; // <-- Pastikan path ini benar
+import { groq } from "next-sanity";
+import { urlForImage } from "@/sanity/lib/image";
+
+// Impor semua komponen section
+import Header from '@/components/Header';
+import HeroSection from '@/components/landing/HeroSection';
+import CompanyStatsSection from '@/components/landing/CompanyStatsSection';
+import SupportSection from '@/components/landing/SupportSection';
+import ValuePropositionSection from '@/components/landing/ValuePropositionSection';
+import ProgramOutcomesSection from '@/components/landing/ProgramOutcomesSection';
+import TestimonialSection from '@/components/landing/TestimonialSection';
+// Query GROQ lengkap untuk mengambil semua data landing page
+const LANDING_PAGE_QUERY = groq`*[_type == "landingPage"][0] {
+  heroTitle,
+  heroDescription,
+  heroImages[]{ asset, alt },
+  heroFloatingObjects,
+  companyStats,
+  supporters[]{ name, logo, alt },
+  valuePropositionTitle,
+  valuePropositionBenefits,
+  programOutcomes,
+  pricingPackages,
+  testimonials,
+  ctaTitle,
+  ctaDescription
+}`;
+
+export default async function HomePage() {
+  const data = await client.fetch(LANDING_PAGE_QUERY);
+
+  // Jika tidak ada data sama sekali dari Sanity, tampilkan pesan
+  if (!data) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <p>Konten landing page belum di-publish di Sanity Studio.</p>
+        </div>
+    );
+  }
+  
+  // Transformasi data untuk komponen, pastikan ada fallback yang aman
+  const heroImagesWithUrls = data.heroImages?.map((img: any) => ({
+      src: urlForImage(img).width(1200).url(),
+      alt: img.alt || 'Bimbel Master Hero Image', // Fallback alt
+  })) || [];
+
+  const supportersWithUrls = data.supporters?.map((s: any) => ({
+      ...s,
+      logoUrl: urlForImage(s.logo).width(150).url(),
+      alt: s.alt || s.name, // Fallback alt
+  })) || [];
+
+  const testimonialsWithUrls = data.testimonials?.map((t: any) => ({
+      ...t,
+      imageUrl: urlForImage(t.image).width(400).url(),
+      imageAlt: t.name || 'Testimonial Image', // Fallback alt
+  })) || [];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Welcome to <span className="text-blue-600">Bimbel Master</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Platform pembelajaran modern untuk siswa, guru, dan administrator. 
-            Kelola kelas, absensi, dan materi pembelajaran dengan mudah.
-          </p>
-          <div className="flex gap-4 justify-center">
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-          Fitur Unggulan
-        </h2>
+    <>
+      <main>
+        <HeroSection
+          title={data.heroTitle || "Selamat Datang di Bimbel Master"}
+          description={data.heroDescription || "Deskripsi default untuk hero section."}
+          heroImages={heroImagesWithUrls}
+          floatingObjects={data.heroFloatingObjects || []}
+        />
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-              </div>
-              <CardTitle>Manajemen Kelas</CardTitle>
-              <CardDescription>
-                Kelola kelas, siswa, dan materi pembelajaran dengan sistem yang terintegrasi
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="mx-auto mb-4 p-3 bg-green-100 rounded-full w-fit">
-                <Users className="h-8 w-8 text-green-600" />
-              </div>
-              <CardTitle>Absensi Digital</CardTitle>
-              <CardDescription>
-                Sistem absensi digital untuk memantau kehadiran siswa secara real-time
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="mx-auto mb-4 p-3 bg-purple-100 rounded-full w-fit">
-                <Star className="h-8 w-8 text-purple-600" />
-              </div>
-              <CardTitle>Dashboard Analitik</CardTitle>
-              <CardDescription>
-                Laporan dan analitik komprehensif untuk memantau progress pembelajaran
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </div>
-    </div>
+        <CompanyStatsSection stats={data.companyStats || []} />
+        <SupportSection supporters={supportersWithUrls} />
+        <ValuePropositionSection 
+            title={data.valuePropositionTitle || "Keuntungan Bergabung Bersama Kami"}
+            benefits={data.valuePropositionBenefits || []} 
+        />
+        <ProgramOutcomesSection outcomes={data.programOutcomes || []} />
+      </main>
+    </>
   );
 }
