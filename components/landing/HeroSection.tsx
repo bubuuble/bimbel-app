@@ -76,15 +76,6 @@ export default function HeroSection({ title, description, heroImages }: HeroSect
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="bg-neutral-900 hover:bg-neutral-800 text-white px-8 py-6 rounded-xl font-medium">
-                <Link href="/dashboard">Mulai Belajar</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="border-neutral-300 text-neutral-700 hover:bg-neutral-100 px-8 py-6 rounded-xl font-medium">
-                <Link href="/about">Pelajari Lebih Lanjut</Link>
-              </Button>
-            </div>
-            
             {/* Stats row */}
             <div className="flex items-center gap-8 pt-8 border-t border-neutral-200">
               <div className="text-center">

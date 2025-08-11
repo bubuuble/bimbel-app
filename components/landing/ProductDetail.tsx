@@ -45,7 +45,7 @@ const ProductDetail: React.FC = () => {
                         </div>
                         
                         <Button asChild size="lg" className="bg-neutral-900 hover:bg-neutral-800 text-white px-8 py-6 rounded-xl font-medium group">
-                            <Link href="/programs" className="inline-flex items-center gap-2">
+                            <Link href="/product" className="inline-flex items-center gap-2">
                                 Jelajahi Program
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
                             </Link>
