@@ -6,6 +6,7 @@ import { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null)
@@ -38,15 +39,25 @@ export default function Header() {
   }
 
   return (
-    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #eaeaea' }}>
-      <Link href="/" style={{ fontWeight: 'bold', textDecoration: 'none', color: 'black' }}>
-        BimbelApp
+    <header className="flex justify-between items-center p-4 border-b border-gray-200">
+      <Link href="/" className="font-bold text-black no-underline">
+        Bimbel Master
       </Link>
       <nav>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link href="/login">Login</Link>
-            <Link href="/register">Register</Link>
+        {user ? (
+          <div className="flex items-center gap-4">
+            <span>Hello, {user.email?.split('@')[0]}</span>
+            <Button onClick={handleLogout} variant="outline" size="sm">
+              Logout
+            </Button>
           </div>
+        ) : (
+          <div className="flex gap-4">
+            <Link href="/login">
+              <Button variant="outline" size="sm">Login</Button>
+            </Link>
+          </div>
+        )}
       </nav>
     </header>
   )
