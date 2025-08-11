@@ -84,17 +84,33 @@ const StatCard: React.FC<StatCardProps> = ({ stat, isVisible, index }) => {
   return (
     <div className="group text-center space-y-4 p-6">
       {/* Icon */}
-      <div className="mx-auto w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center group-hover:bg-neutral-900 transition-all duration-500">
-        <IconComponent className="w-7 h-7 text-neutral-600 group-hover:text-white transition-colors duration-500" />
+      <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:transition-all duration-500 border-2" 
+           style={{borderColor: 'rgb(0,75,173)', '--tw-bg-opacity': '0.1'}}
+           onMouseEnter={(e) => {
+             e.currentTarget.style.backgroundColor = 'rgb(0,75,173)';
+           }}
+           onMouseLeave={(e) => {
+             e.currentTarget.style.backgroundColor = 'rgba(0,75,173,0.1)';
+           }}>
+        <IconComponent className="w-7 h-7 transition-colors duration-500" 
+                      style={{color: 'rgb(209,51,19)'}}
+                      onMouseEnter={(e) => {
+                        if (e.currentTarget.parentElement) {
+                          e.currentTarget.style.color = 'white';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'rgb(209,51,19)';
+                      }} />
       </div>
       
       {/* Count */}
       <div className="space-y-1">
-        <div className="text-3xl md:text-4xl font-bold text-neutral-900 tabular-nums">
+        <div className="text-3xl md:text-4xl font-bold tabular-nums" style={{color: 'rgb(0,75,173)'}}>
           {formatNumber(count)}
         </div>
         
-        <h3 className="text-sm font-medium text-neutral-600 uppercase tracking-wide">
+        <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
           {stat.title}
         </h3>
         
@@ -125,16 +141,17 @@ const CompanyStatsSection: React.FC = () => {
         
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 rounded-full text-sm text-neutral-600 font-medium">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border" 
+               style={{backgroundColor: 'rgba(0,75,173,0.05)', borderColor: 'rgb(0,75,173)', color: 'rgb(0,75,173)'}}>
+            <div className="w-2 h-2 rounded-full" style={{backgroundColor: 'rgb(209,51,19)'}} />
             Dipercaya lebih dari 1000+ siswa
           </div>
           
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 max-w-3xl mx-auto leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold max-w-3xl mx-auto leading-tight" style={{color: 'rgb(0,75,173)'}}>
             Pencapaian yang membanggakan bersama siswa-siswa terbaik
           </h2>
           
-          <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{color: 'rgb(0,75,173)'}}>
             Hasil nyata dari komitmen kami dalam menghadirkan pendidikan berkualitas tinggi dan bimbingan yang personal.
           </p>
         </div>
@@ -153,7 +170,7 @@ const CompanyStatsSection: React.FC = () => {
 
         {/* Bottom decoration */}
         <div className="mt-16 flex justify-center">
-          <div className="w-24 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
+          <div className="w-24 h-px" style={{background: 'linear-gradient(to right, transparent, rgb(0,75,173), transparent)'}} />
         </div>
       </div>
     </section>

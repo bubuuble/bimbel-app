@@ -154,3 +154,25 @@
 .animate-infinite-scroll {
   animation: scroll-left 20s linear infinite;
 }
+
+/* Brand color hover utilities */
+.brand-hover-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.brand-hover-card:hover {
+  background-color: rgba(0, 75, 173, 0.03);
+  border-color: rgba(0, 75, 173, 0.1);
+}
+
+.brand-icon-hover {
+  transition: all 0.3s ease-in-out;
+}
+
+.brand-icon-hover:hover {
+  background-color: rgb(209, 51, 19);
+}
+
+.brand-icon-hover:hover svg {
+  color: white;
+}
