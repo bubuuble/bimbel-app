@@ -51,11 +51,13 @@ export default function Header() {
     <div className="container mx-auto px-6 h-20 flex items-center">
     {/* Logo */}
     <Link href="/" className="flex items-center gap-2">
-      {/* Ganti dengan logo Anda jika ada, misal /logo.svg */}
-      <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-        BM
-      </div>
-      <span className="font-bold text-xl text-gray-900">Bimbel Master</span>
+      <Image 
+      src="/image/logo/logo.png" 
+      alt="Bimbel Master Logo" 
+      width={200} 
+      height={200} 
+      className="rounded-lg"
+      />
     </Link>
 
     {/* Navigasi Tengah */}
