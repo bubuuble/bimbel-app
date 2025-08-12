@@ -9,10 +9,10 @@ export default async function UserManagementPage() {
   const { data: profiles } = await supabase.rpc('get_all_users');
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Manage and monitor user accounts across your platform.
         </p>
       </div>
@@ -20,13 +20,13 @@ export default async function UserManagementPage() {
       <Separator />
       
       <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">All Users</CardTitle>
+          <CardDescription className="text-sm">
             View and manage all registered users in the system.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <UserManagementClient initialProfiles={profiles || []} />
         </CardContent>
       </Card>

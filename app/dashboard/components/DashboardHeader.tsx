@@ -26,14 +26,16 @@ export default function DashboardHeader({ userRole, userName }: DashboardHeaderP
   };
 
   return (
-    <header className="p-6 bg-white border-b border-gray-200 flex justify-between items-center">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900">
+    <header className="p-3 sm:p-4 lg:p-6 bg-white border-b border-gray-200 flex justify-between items-center">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
           {getRoleTitle(userRole)}
         </h1>
-        <p className="text-sm text-gray-600">{t('dashboard.welcome')}, {userName}</p>
+        <p className="text-xs sm:text-sm text-gray-600 truncate">
+          {t('dashboard.welcome')}, {userName}
+        </p>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 ml-4">
         <LanguageSwitcher />
         {userRole === 'SISWA' && <NotificationBell />}
       </div>

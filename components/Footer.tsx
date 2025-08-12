@@ -28,9 +28,9 @@ export default function Footer() {
                         <div className="space-y-4">
                             <h4 className="font-semibold text-primary">Kantor Pusat</h4>
                             <address className="text-muted-foreground text-sm not-italic leading-relaxed">
-                                Pakuwon Tower 26-J<br />
-                                Jl. Casablanca Raya No.88<br />
-                                Jakarta Selatan, DKI Jakarta 12960
+                                Jl. Agus Salim No 30 A-B<br />
+                                Sawahan<br />
+                                Padang, Sumatera Barat<br />
                             </address>
                         </div>
                     </div>

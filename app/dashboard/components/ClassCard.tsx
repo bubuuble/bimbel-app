@@ -20,7 +20,7 @@ type ClassInfo = {
 function EnrollButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full">
+    <Button type="submit" disabled={pending} className="w-full text-sm">
       {pending ? 'Enrolling...' : 'Enroll'}
     </Button>
   );
@@ -38,20 +38,20 @@ export default function ClassCard({ classInfo }: { classInfo: ClassInfo }) {
   }, [state]);
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-lg">{classInfo.name}</CardTitle>
-        <CardDescription className="flex items-center gap-2">
-          <User className="h-4 w-4" />
+    <Card className="w-full">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-base sm:text-lg">{classInfo.name}</CardTitle>
+        <CardDescription className="flex items-center gap-2 text-sm">
+          <User className="h-3 w-3 sm:h-4 sm:w-4" />
           <span>Teacher: {classInfo.profiles?.name || 'N/A'}</span>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="p-4 sm:p-6 pt-0">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           {classInfo.description || 'No description available.'}
         </p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="p-4 sm:p-6 pt-0">
         <form action={formAction} className="w-full">
           <input type="hidden" name="classId" value={classInfo.id} />
           <EnrollButton />

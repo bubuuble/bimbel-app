@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from "react";
 import type { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { usePathname, useRouter } from 'next/navigation';
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
   LogOut, 
   LayoutDashboard, 
@@ -18,15 +20,17 @@ import {
   BookOpen, 
   ClipboardCheck, 
   Calendar,
-  User
+  User,
+  Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/LanguageContext";
 
-function NavLink({ href, children, icon: Icon }: { 
+function NavLink({ href, children, icon: Icon, onClick }: { 
   href: string, 
   children: React.ReactNode,
-  icon?: React.ElementType 
+  icon?: React.ElementType,
+  onClick?: () => void
 }) {
   const pathname = usePathname();
   const isActive = pathname === href;
@@ -34,6 +38,7 @@ function NavLink({ href, children, icon: Icon }: {
   return (
     <Link 
       href={href} 
+      onClick={onClick}
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
         isActive 
@@ -64,6 +69,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
   const router = useRouter();
   const { t } = useLanguage();
   const supabase = createClient();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -89,27 +95,27 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
     }
   };
 
-  return (
-    <div className="flex h-full w-64 flex-col border-r bg-background">
+  const SidebarContent = () => (
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex h-16 items-center px-6 border-b">
+      <div className="flex h-14 sm:h-16 items-center px-4 sm:px-6 border-b">
         <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-bold">Bimbel Master</h2>
+          <h2 className="text-base sm:text-lg font-bold">Bimbel Master</h2>
         </div>
       </div>
 
       {/* User Profile Card */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col items-center space-y-3">
-              <Avatar className="h-12 w-12">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col items-center space-y-2 sm:space-y-3">
+              <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {(userProfile.name || userProfile.username)?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center space-y-1">
-                <p className="text-sm font-medium">
+                <p className="text-xs sm:text-sm font-medium">
                   {userProfile.name || userProfile.username}
                 </p>
                 <Badge variant={getRoleBadgeVariant(userProfile.role)} className="text-xs">
@@ -124,19 +130,19 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
       <Separator />
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-4">
-        <nav className="space-y-4 py-4">
-          <NavLink href="/dashboard" icon={LayoutDashboard}>
+      <ScrollArea className="flex-1 px-3 sm:px-4">
+        <nav className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+          <NavLink href="/dashboard" icon={LayoutDashboard} onClick={() => setSidebarOpen(false)}>
             {t('nav.dashboard')}
           </NavLink>
           
           {/* Admin Menu */}
           {userProfile.role === 'ADMIN' && (
             <NavSection title="Admin">
-              <NavLink href="/dashboard/user-management" icon={Users}>
+              <NavLink href="/dashboard/user-management" icon={Users} onClick={() => setSidebarOpen(false)}>
                 {t('nav.users')}
               </NavLink>
-              <NavLink href="/dashboard/attendance-report" icon={FileText}>
+              <NavLink href="/dashboard/attendance-report" icon={FileText} onClick={() => setSidebarOpen(false)}>
                 {t('nav.attendance')} Report
               </NavLink>
             </NavSection>
@@ -145,7 +151,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
           {/* Teacher & Student Menu */}
           {(userProfile.role === 'GURU' || userProfile.role === 'SISWA') && (
             <NavSection title={t('nav.classes')}>
-              <NavLink href="/dashboard/kelas" icon={BookOpen}>
+              <NavLink href="/dashboard/kelas" icon={BookOpen} onClick={() => setSidebarOpen(false)}>
                 {t('nav.classes')}
               </NavLink>
             </NavSection>
@@ -153,7 +159,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
           
           {userProfile.role === 'GURU' && (
             <NavSection title="Manajemen">
-              <NavLink href="/dashboard/absensi" icon={ClipboardCheck}>
+              <NavLink href="/dashboard/absensi" icon={ClipboardCheck} onClick={() => setSidebarOpen(false)}>
                 Manajemen Absensi
               </NavLink>
             </NavSection>
@@ -161,14 +167,14 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
           
           {userProfile.role === 'SISWA' && (
             <NavSection title="Aktivitas">
-              <NavLink href="/dashboard/kehadiran" icon={Calendar}>
+              <NavLink href="/dashboard/kehadiran" icon={Calendar} onClick={() => setSidebarOpen(false)}>
                 Kehadiran
               </NavLink>
             </NavSection>
           )}
           
           <NavSection title="Account">
-            <NavLink href="/dashboard/profile" icon={User}>
+            <NavLink href="/dashboard/profile" icon={User} onClick={() => setSidebarOpen(false)}>
               Profil Saya
             </NavLink>
           </NavSection>
@@ -178,7 +184,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
       <Separator />
 
       {/* Logout Button */}
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <Button 
           onClick={handleLogout}
           variant="ghost"
@@ -190,5 +196,32 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
         </Button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Sidebar */}
+      <div className="lg:hidden">
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="fixed top-4 left-4 z-50 lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex h-full w-64 flex-col border-r bg-background">
+        <SidebarContent />
+      </div>
+    </>
   );
 }

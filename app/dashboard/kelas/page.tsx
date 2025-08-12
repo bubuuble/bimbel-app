@@ -49,14 +49,14 @@ function AccessDeniedCard() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-destructive">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-center text-destructive text-lg sm:text-xl">
             Akses Ditolak
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <Alert>
-            <AlertDescription>
+            <AlertDescription className="text-sm">
               Halaman ini hanya tersedia untuk Guru dan Siswa.
             </AlertDescription>
           </Alert>
@@ -70,14 +70,14 @@ function ProfileNotFoundCard() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-destructive">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-center text-destructive text-lg sm:text-xl">
             Profil Tidak Ditemukan
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           <Alert>
-            <AlertDescription>
+            <AlertDescription className="text-sm">
               Silakan hubungi administrator untuk mengatur profil Anda.
             </AlertDescription>
           </Alert>
@@ -89,11 +89,11 @@ function ProfileNotFoundCard() {
 
 function ClassesPageSkeleton() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <Skeleton className="h-8 w-48" />
-      <div className="grid gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <Skeleton className="h-6 sm:h-8 w-36 sm:w-48" />
+      <div className="grid gap-3 sm:gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full" />
+          <Skeleton key={i} className="h-24 sm:h-32 w-full" />
         ))}
       </div>
     </div>

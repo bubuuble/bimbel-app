@@ -76,54 +76,49 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-6 sm:h-8 w-48 sm:w-64" />
+          <Skeleton className="h-4 w-32 sm:w-48" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-16 w-full" />
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-20" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
               </CardContent>
             </Card>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2">
-            <CardContent className="p-6">
-              <Skeleton className="h-64 w-full" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <Skeleton className="h-64 w-full" />
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+          <Skeleton className="h-48 sm:h-64" />
+          <Skeleton className="h-48 sm:h-64" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           {t('student.welcome')}, {userProfile.name || 'Student'}!
         </h1>
-        <p className="text-muted-foreground">{t('student.overview')}</p>
+        <p className="text-sm sm:text-base text-muted-foreground">{t('student.overview')}</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.attendance')}</p>
-                <p className="text-2xl font-bold">{stats?.total_kehadiran || 0}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{t('student.stats.attendance')}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats?.total_kehadiran || 0}</p>
                 <p className="text-xs text-muted-foreground">{t('student.stats.totalPresent')}</p>
               </div>
               <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
@@ -141,47 +136,47 @@ export default function StudentView({ userProfile }: { userProfile: UserProfile 
                 <p className="text-2xl font-bold">{stats?.persentase_tugas.toFixed(0) || 0}%</p>
                 <p className="text-xs text-muted-foreground">{t('student.stats.completed')}</p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <Target className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <Target className="h-4 w-4 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.classes')}</p>
-                <p className="text-2xl font-bold">{stats?.total_kelas || 0}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{t('student.stats.classes')}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats?.total_kelas || 0}</p>
                 <p className="text-xs text-muted-foreground">{t('student.stats.enrolled')}</p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">{t('student.stats.average')} Score</p>
-                <p className="text-2xl font-bold">{stats?.rata_rata_nilai.toFixed(1) || 0}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{t('student.stats.average')} Score</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats?.rata_rata_nilai.toFixed(1) || 0}</p>
                 <p className="text-xs text-muted-foreground">Out of 100</p>
               </div>
-              <div className="h-12 w-12 rounded-lg bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
-                <Award className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-lg bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
+                <Award className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Activities */}
-        <Card className="lg:col-span-2">
+        <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />

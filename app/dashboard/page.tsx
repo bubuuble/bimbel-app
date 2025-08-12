@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-4 sm:space-y-6">
       {/* Konten akan dirender di sini, di dalam layout */}
       {renderContent()}
     </div>
