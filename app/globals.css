@@ -176,3 +176,40 @@
 .brand-icon-hover:hover svg {
   color: white;
 }
+
+/* Product page animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Sanity Studio hydration fix */
+/* Fix for Sanity blockquote hydration error */
+[data-testid*="text-style"] div {
+  display: contents !important;
+}
+
+/* Alternative fix for blockquote nesting */
+p div[data-testid*="blockquote"] {
+  display: contents !important;
+}
+
+/* Sanity Studio specific fixes */
+.sanity-studio blockquote p {
+  display: block !important;
+}
+
+.sanity-studio blockquote div {
+  display: contents !important;
+}

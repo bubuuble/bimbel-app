@@ -47,12 +47,11 @@ const ProductDetail: React.FC = () => {
                         </div>
                         
                         <Button asChild size="lg" 
-                                className="px-8 py-6 rounded-xl font-medium group border-2 hover:shadow-lg transition-all duration-300" 
+                                className="px-8 py-6 rounded-xl font-medium group border-2 hover:shadow-lg transition-all duration-300 hover:bg-[rgb(189,46,17)]" 
                                 style={{
                                     backgroundColor: 'rgb(209,51,19)', 
                                     borderColor: 'rgb(209,51,19)', 
-                                    color: 'white',
-                                    ':hover': {backgroundColor: 'rgb(189,46,17)'}
+                                    color: 'white'
                                 }}>
                             <Link href="/product" className="inline-flex items-center gap-2">
                                 Jelajahi Program

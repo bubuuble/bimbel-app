@@ -25,8 +25,9 @@ type SubmissionWithProfile = {
   } | null;
 };
 
-export default async function TaskSubmissionsPage({ params }: { params: { classId: string, materialId: string } }) {
+export default async function TaskSubmissionsPage({ params }: { params: Promise<{ classId: string, materialId: string }> }) {
   const supabase = await createClient();
+  const { classId, materialId } = await params;
 
   // 1. Dapatkan pengguna yang sedang login
   const { data: { user } } = await supabase.auth.getUser();
@@ -36,7 +37,7 @@ export default async function TaskSubmissionsPage({ params }: { params: { classI
   const { data: material } = await supabase
     .from('materials')
     .select(`title, class_id`)
-    .eq('id', params.materialId)
+    .eq('id', materialId)
     .single();
   
   if (!material) notFound();
@@ -85,7 +86,7 @@ export default async function TaskSubmissionsPage({ params }: { params: { classI
   const { data: submissions, error } = await supabase
     .from('submissions')
     .select(`*, profiles ( name, username )`)
-    .eq('material_id', params.materialId)
+    .eq('material_id', materialId)
     .order('created_at', { ascending: true })
     .returns<SubmissionWithProfile[]>();
 
@@ -107,7 +108,7 @@ export default async function TaskSubmissionsPage({ params }: { params: { classI
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/dashboard/class/${params.classId}`}>
+          <Link href={`/dashboard/class/${classId}`}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Kembali ke Kelas
           </Link>
@@ -200,7 +201,7 @@ export default async function TaskSubmissionsPage({ params }: { params: { classI
                   <Separator />
                   
                   {/* Grading Form */}
-                  <GradeSubmissionForm submission={submission} classId={params.classId} />
+                  <GradeSubmissionForm submission={submission} classId={classId} />
                 </CardContent>
               </Card>
             ))}

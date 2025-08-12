@@ -3,27 +3,32 @@
 import { client } from "@/sanity/lib/client";
 import { groq } from "next-sanity";
 import { urlForImage } from "@/sanity/lib/image";
-import TestimonialSection from '@/components/landing/TestimonialSection';
+import { Testimonial, TestimonialWithImage } from "@/types/testimonial";
+import TestimonialGrid from '@/components/TestimonialGrid';
 
-// Query GROQ untuk mengambil data testimonials
-const TESTIMONIALS_QUERY = groq`*[_type == "landingPage"][0] {
-  testimonials[]{
-    _key,
-    name,
-    testimonial,
-    image
-  }
+// Query GROQ untuk mengambil data testimonials dari collection testimonial
+const TESTIMONIALS_QUERY = groq`*[_type == "testimonial"] | order(publishedAt desc) {
+  _id,
+  name,
+  testimonial,
+  image,
+  school,
+  program,
+  achievement,
+  rating,
+  featured,
+  publishedAt
 }`;
 
 export default async function TestimoniPage() {
-  const data = await client.fetch(TESTIMONIALS_QUERY);
+  const testimonials: Testimonial[] = await client.fetch(TESTIMONIALS_QUERY);
 
-  // Transformasi data untuk testimonials
-  const testimonialsWithUrls = data?.testimonials?.map((t: any) => ({
-      ...t,
-      imageUrl: urlForImage(t.image).width(400).url(),
-      imageAlt: t.name || 'Testimonial Image',
-  })) || [];
+  // Transformasi data untuk testimonials dengan image URLs
+  const testimonialsWithUrls: TestimonialWithImage[] = testimonials.map((testimonial) => ({
+    ...testimonial,
+    imageUrl: testimonial.image ? urlForImage(testimonial.image).width(400).url() : undefined,
+    imageAlt: testimonial.image?.alt || testimonial.name || 'Testimonial Image',
+  }));
 
   return (
     <>
@@ -42,11 +47,36 @@ export default async function TestimoniPage() {
             <p className="text-lg max-w-3xl mx-auto leading-relaxed" style={{color: 'rgb(0,75,173)', opacity: 0.8}}>
               Dengarkan langsung pengalaman dan pencapaian siswa-siswa kami yang telah merasakan transformasi pembelajaran berkualitas.
             </p>
+            
+            {/* Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-3xl font-bold mb-2" style={{color: 'rgb(209,51,19)'}}>
+                  {testimonialsWithUrls.length}+
+                </div>
+                <div className="text-gray-600 font-medium">Testimoni Siswa</div>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-3xl font-bold mb-2" style={{color: 'rgb(209,51,19)'}}>
+                  {testimonialsWithUrls.filter(t => t.featured).length}+
+                </div>
+                <div className="text-gray-600 font-medium">Prestasi Unggulan</div>
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <div className="text-3xl font-bold mb-2" style={{color: 'rgb(209,51,19)'}}>
+                  {testimonialsWithUrls.length > 0 
+                    ? (testimonialsWithUrls.reduce((sum, t) => sum + t.rating, 0) / testimonialsWithUrls.length).toFixed(1)
+                    : '0.0'
+                  }
+                </div>
+                <div className="text-gray-600 font-medium">Rating Rata-rata</div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Testimonial Section */}
-        <TestimonialSection testimonials={testimonialsWithUrls} />
+        {/* Testimonial Grid */}
+        <TestimonialGrid testimonials={testimonialsWithUrls} />
       </main>
     </>
   );

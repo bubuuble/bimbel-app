@@ -47,8 +47,8 @@ const TestimonialSection = () => {
             </div>
             <div className="flex justify-end mt-4">
                  <button onClick={handleNext} 
-                         className="p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 border"
-                         style={{borderColor: 'rgb(0,75,173)', ':hover': {backgroundColor: 'rgba(0,75,173,0.05)'}}}>
+                         className="p-3 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 border hover:bg-blue-50"
+                         style={{borderColor: 'rgb(0,75,173)'}}>
                     <ChevronRight className="h-6 w-6" style={{color: 'rgb(0,75,173)'}} />
                 </button>
             </div>

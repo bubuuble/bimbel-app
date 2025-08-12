@@ -12,9 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import TeacherClassView from "../../components/TeacherClassView";
 import StudentClassView from "../../components/StudentClassView";
 
-export default async function ClassDetailPage({ params }: { params: { classId: string } }) {
+export default async function ClassDetailPage({ params }: { params: Promise<{ classId: string }> }) {
   const supabase = await createClient();
-  const { classId } = params;
+  const { classId } = await params;
 
   // 1. User Authorization
   const { data: { user } } = await supabase.auth.getUser();
@@ -90,10 +90,14 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
     );
   }
 
+  // <<< PERUBAHAN DI SINI: Query untuk mengambil materi DAN file-filenya >>>
   // 4. Get common data needed by all roles
   const { data: materials } = await supabase
     .from('materials')
-    .select('*')
+    .select(`
+      *,
+      material_files ( id, file_name, file_url )
+    `)
     .eq('class_id', classId)
     .order('created_at', { ascending: false });
 
@@ -115,16 +119,28 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
       />
     );
   } else if (isEnrolledStudent) {
-    // Student specific data
     const now = new Date().toISOString();
+    
+    // Ambil SESI YANG SEDANG AKTIF SAAT INI
     const { data: activeSession } = await supabase
       .from('attendance_sessions')
       .select('id, title, expires_at')
       .eq('class_id', classId)
-      .gt('expires_at', now)
-      .order('created_at', { ascending: false })
+      .lte('start_time', now)
+      .gte('expires_at', now)
+      .order('start_time', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    // Ambil SESI TERJADWAL BERIKUTNYA
+    const { data: scheduledSession } = await supabase
+        .from('attendance_sessions')
+        .select('id, title, start_time')
+        .eq('class_id', classId)
+        .gt('start_time', now)
+        .order('start_time', { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
     let hasAttended = false;
     if (activeSession) {
@@ -140,7 +156,8 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
     const { data: submissions } = await supabase
       .from('submissions')
       .select('id, material_id, file_url, grade, feedback')
-      .eq('student_id', user.id);
+      .eq('student_id', user.id)
+      .eq('class_id', classId);
 
     viewComponent = (
       <StudentClassView
@@ -148,6 +165,7 @@ export default async function ClassDetailPage({ params }: { params: { classId: s
         classInfo={classInfo}
         materials={materials || []}
         activeSession={activeSession || null}
+        scheduledSession={scheduledSession || null}
         hasAttended={hasAttended}
         submissions={submissions || []}
       />

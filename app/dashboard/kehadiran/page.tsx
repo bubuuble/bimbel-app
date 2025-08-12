@@ -33,12 +33,13 @@ type EnrolledClassResult = {
 }
 
 // searchParams akan berisi filter dari URL, contoh: ?class_id=...
-export default async function KehadiranPage({ searchParams }: { searchParams: { class_id?: string } }) {
+export default async function KehadiranPage({ searchParams }: { searchParams: Promise<{ class_id?: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect('/login');
 
-  const selectedClassId = searchParams.class_id;
+  const { class_id } = await searchParams;
+  const selectedClassId = class_id;
 
   // 1. Ambil daftar kelas yang diikuti siswa untuk dropdown filter
     const { data: enrolledClassesData } = await supabase

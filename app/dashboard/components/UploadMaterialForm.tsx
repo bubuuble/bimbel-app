@@ -1,10 +1,10 @@
-// FILE: app/dashboard/components/UploadMaterialForm.tsx
+// FILE: app/dashboard/components/UploadMaterialForm.tsx (Versi FINAL & Diperbaiki)
 
 'use client'
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +13,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, Upload, Calendar, FileText, ChevronDown, Plus } from "lucide-react";
+import { Loader2, Upload, Calendar, FileText, ChevronDown, Plus, X } from "lucide-react";
 
 export default function UploadMaterialForm({ classId }: { classId: string }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isTask, setIsTask] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +28,28 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
   const supabase = createClient();
   const router = useRouter();
 
+  // <<< PERBAIKAN UTAMA DI SINI >>>
+  // Logika diubah untuk MENAMBAHKAN file ke state yang ada, bukan menggantinya.
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      // Menggunakan functional update untuk memastikan kita bekerja dengan state terbaru
+      setFiles(prevFiles => [...prevFiles, ...Array.from(e.target.files!)]);
+    }
+  };
+  
+  const removeFile = (indexToRemove: number) => {
+    setFiles(files.filter((_, index) => index !== indexToRemove));
+  };
+
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsUploading(true);
     setError(null);
 
     // Validasi
-    if (!isTask && !file) {
-      setError('File is required for regular materials.');
+    if (!isTask && files.length === 0) {
+      setError('At least one file is required for regular materials.');
       setIsUploading(false);
       return;
     }
@@ -48,33 +62,48 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
     try {
       const deadlineValue = isTask && deadline ? new Date(deadline).toISOString() : null;
       
-      let fileUrl = null;
-      let fileType = null;
-
-      if (file) {
-        const sanitizedFileName = file.name.replace(/\s+/g, '_');
-        const filePath = `${classId}/${Date.now()}_${sanitizedFileName}`;
-        
-        const { error: uploadError } = await supabase.storage.from('materials').upload(filePath, file);
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage.from('materials').getPublicUrl(filePath);
-        fileUrl = publicUrl;
-        fileType = file.type;
-      }
-      
-      const { error: dbError } = await supabase
+      const { data: materialData, error: materialError } = await supabase
         .from('materials')
         .insert({
           title: title,
           description: description || null,
-          file_url: fileUrl,
-          file_type: fileType,
           class_id: classId,
           is_task: isTask,
           deadline: deadlineValue,
+        })
+        .select('id')
+        .single();
+        
+      if (materialError) throw materialError;
+      
+      const newMaterialId = materialData.id;
+
+      if (files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          const sanitizedFileName = file.name.replace(/\s+/g, '_');
+          const filePath = `${classId}/${newMaterialId}/${Date.now()}_${sanitizedFileName}`;
+          
+          const { error: uploadError } = await supabase.storage.from('materials').upload(filePath, file);
+          if (uploadError) throw new Error(`Upload failed for ${file.name}: ${uploadError.message}`);
+          
+          const { data: { publicUrl } } = supabase.storage.from('materials').getPublicUrl(filePath);
+
+          return {
+            material_id: newMaterialId,
+            file_name: file.name,
+            file_url: publicUrl,
+            file_type: file.type,
+          };
         });
-      if (dbError) throw dbError;
+
+        const uploadedFilesData = await Promise.all(uploadPromises);
+
+        const { error: filesInsertError } = await supabase
+          .from('material_files')
+          .insert(uploadedFilesData);
+
+        if (filesInsertError) throw filesInsertError;
+      }
 
       alert('Material/Task created successfully!');
       router.refresh(); 
@@ -83,10 +112,10 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
       (event.target as HTMLFormElement).reset();
       setTitle('');
       setDescription('');
-      setFile(null);
+      setFiles([]);
       setIsTask(false);
       setDeadline('');
-      setIsOpen(false); // Close the dropdown after successful submission
+      setIsOpen(false);
 
     } catch (err: any) {
       console.error("Process failed:", err);
@@ -114,33 +143,49 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
         <CollapsibleContent>
           <CardContent className="pt-0">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  type="text"
+                  placeholder="e.g., Bab 1 - Latihan Soal & Pembahasan"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="materialFiles">Files {!isTask && "(Required)"}</Label>
+                <p className="text-xs text-gray-600">Tekan lagi untuk mengupload lebih dari satu file</p>
+                <div className="flex items-center space-x-2">
                   <Input
-                    id="title"
-                    type="text"
-                    placeholder="e.g., Bab 1 PDF or Tugas Video Esai"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
+                    id="materialFiles"
+                    type="file"
+                    multiple // Atribut penting untuk multi-file
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="materialFile">File {!isTask && "(Required)"}</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="materialFile"
-                      type="file"
-                      onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                      className="cursor-pointer"
-                    />
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                  </div>
+                  <Upload className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               
+              {files.length > 0 && (
+                <div className="space-y-2 p-3 border rounded-md">
+                    <p className="text-sm font-medium">Selected files:</p>
+                    <ul className="space-y-1">
+                        {files.map((file, index) => (
+                            <li key={index} className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>{file.name}</span>
+                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFile(index)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
@@ -187,23 +232,12 @@ export default function UploadMaterialForm({ classId }: { classId: string }) {
               <div className="flex gap-2">
                 <Button type="submit" disabled={isUploading} className="flex-1">
                   {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
                   ) : (
-                    <>
-                      <FileText className="mr-2 h-4 w-4" />
-                      Save {isTask ? 'Task' : 'Material'}
-                    </>
+                    <><FileText className="mr-2 h-4 w-4" />Save {isTask ? 'Task' : 'Material'}</>
                   )}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsOpen(false)}
-                  disabled={isUploading}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isUploading}>
                   Cancel
                 </Button>
               </div>

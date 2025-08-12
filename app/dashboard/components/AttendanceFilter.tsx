@@ -22,7 +22,7 @@ export default function AttendanceFilter({ classes, selectedClassId }: Attendanc
   const searchParams = useSearchParams()
 
   const handleClassChange = (classId: string) => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams?.toString() || '')
     
     if (classId === 'all') {
       params.delete('class_id')

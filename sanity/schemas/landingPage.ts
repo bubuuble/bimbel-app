@@ -15,7 +15,6 @@ export default defineType({
     { name: 'supporters', title: 'Supporters' },
     { name: 'benefits', title: 'Value & Outcomes' },
     { name: 'pricing', title: 'Pricing' },
-    { name: 'testimonials', title: 'Testimonials' },
     { name: 'cta', title: 'Call to Action' },
   ],
   fields: [
@@ -80,19 +79,5 @@ export default defineType({
       }]
     }),
 
-
-    // --- Testimonials Section (Data dimasukkan langsung) ---
-    defineField({
-      name: 'testimonials', title: 'Testimonials', type: 'array', group: 'testimonials',
-      of: [{
-        type: 'object',
-        fields: [
-          defineField({ name: 'name', title: 'Nama Siswa', type: 'string' }),
-          defineField({ name: 'testimonial', title: 'Kutipan', type: 'text' }),
-          defineField({ name: 'image', title: 'Foto Siswa', type: 'image', options: { hotspot: true } }),
-        ]
-      }],
-    }),
-    
   ],
 })

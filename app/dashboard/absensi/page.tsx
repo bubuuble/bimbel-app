@@ -22,10 +22,12 @@ type SessionWithClass = AttendanceSession & {
   } | null;
 };
 
-export default async function GlobalAbsensiPage({ searchParams }: { searchParams: { page?: string } }) {
+export default async function GlobalAbsensiPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect('/login');
+  
+  const { page } = await searchParams;
   
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (profile?.role !== 'GURU') {
@@ -51,7 +53,7 @@ export default async function GlobalAbsensiPage({ searchParams }: { searchParams
     );
   }
 
-  const currentPage = parseInt(searchParams.page || '1', 10);
+  const currentPage = parseInt(page || '1', 10);
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   
   const { count: totalSessions } = await supabase

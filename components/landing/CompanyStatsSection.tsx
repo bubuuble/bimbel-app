@@ -85,7 +85,7 @@ const StatCard: React.FC<StatCardProps> = ({ stat, isVisible, index }) => {
     <div className="group text-center space-y-4 p-6">
       {/* Icon */}
       <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:transition-all duration-500 border-2" 
-           style={{borderColor: 'rgb(0,75,173)', '--tw-bg-opacity': '0.1'}}
+           style={{borderColor: 'rgb(0,75,173)'} as React.CSSProperties}
            onMouseEnter={(e) => {
              e.currentTarget.style.backgroundColor = 'rgb(0,75,173)';
            }}
