@@ -2,6 +2,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/middleware' // Import helper middleware
 
+export const runtime = 'nodejs'; // Atau 'experimental-edge'
 export async function middleware(request: NextRequest) {
   // This middleware is used to refresh the user's session cookie
   // and handle authentication redirects.

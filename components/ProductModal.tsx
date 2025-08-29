@@ -1,17 +1,15 @@
 // FILE: components/ProductModal.tsx
-"use client"
+'use client'
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { urlForImage } from '@/sanity/lib/image';
 import { Product } from '@/types/product';
 import { 
   X, 
   Star, 
-  ArrowRight, 
   ImageIcon, 
   CheckCircle,
   Tag,
@@ -19,13 +17,21 @@ import {
   Sparkles,
   GraduationCap,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2,
+  CreditCard
 } from 'lucide-react';
 
-/**
- * Sub-komponen untuk membuat seksi informasi yang terstruktur dan rapi.
- * Menggunakan brand colors untuk konsistensi visual.
- */
+// Props Interface yang sudah diperbarui untuk menerima fungsi pembayaran
+interface ProductModalProps {
+  product: Product | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onPayment: (product: Product) => void;
+  isProcessingPayment: boolean;
+}
+
+// Sub-komponen untuk seksi informasi
 const InfoSection = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
   <div>
     <h3 className="flex items-center gap-2 text-sm font-semibold mb-3 uppercase tracking-wider" style={{color: 'rgb(0,75,173)'}}>
@@ -36,284 +42,128 @@ const InfoSection = ({ title, icon, children }: { title: string; icon: React.Rea
   </div>
 );
 
-interface ProductModalProps {
-  product: Product | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 const ProductModal: React.FC<ProductModalProps> = ({ 
   product, 
   isOpen, 
-  onClose 
+  onClose,
+  onPayment,
+  isProcessingPayment
 }) => {
-  // Jangan render apapun jika tidak ada produk yang dipilih.
   if (!product) return null;
 
-  // State untuk image slider
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Gabungkan semua gambar yang tersedia
   const allImages = [
     ...(product.featuredImage ? [{ asset: product.featuredImage, alt: product.title }] : []),
-    ...(product.gallery || []),
-    ...(product.pricelistImage ? [{ asset: product.pricelistImage, alt: `${product.title} - Price List` }] : [])
-  ].filter(img => img.asset); // Filter hanya yang memiliki asset
+    ...(product.gallery || [])
+  ].filter(img => img.asset);
 
-  // Fungsi navigasi gambar
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-  };
+  const nextImage = () => setCurrentImageIndex(prev => (prev + 1) % allImages.length);
+  const prevImage = () => setCurrentImageIndex(prev => (prev - 1 + allImages.length) % allImages.length);
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-  };
+  const formatPrice = (price: number): string => new Intl.NumberFormat('id-ID', {
+    style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+  }).format(price);
 
-  const goToImage = (index: number) => {
-    setCurrentImageIndex(index);
-  };
-
-  // Fungsi helper untuk mendapatkan label kategori.
-  const getCategoryLabel = (category: string): string => {
-    const labels: Record<string, string> = {
-      'sd': 'SD', 'smp': 'SMP', 'sma': 'SMA', 'sbmptn': 'SBMPTN',
-      'cpns': 'CPNS', 'toefl': 'TOEFL', 'umum': 'Umum'
-    };
-    return labels[category] || 'Umum';
-  };
-
-  // Fungsi helper untuk memformat harga ke Rupiah.
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
-
-  // Fungsi untuk render rich text dari Sanity
+  // Fungsi sederhana untuk merender portable text (bisa diganti dengan library jika lebih kompleks)
   const renderDescription = (description: any): string => {
-    if (typeof description === 'string') {
-      return description;
-    }
-    
+    if (!description) return product.shortDescription || "Informasi detail tentang program ini.";
+    if (typeof description === 'string') return description;
     if (Array.isArray(description)) {
       return description
-        .map(block => {
-          if (block._type === 'block' && block.children) {
-            return block.children
-              .map((child: any) => child.text || '')
-              .join('');
-          }
-          return '';
-        })
-        .join(' ');
+        .map(block => block._type === 'block' && block.children ? block.children.map((child: any) => child.text || '').join('') : '')
+        .join('\n\n');
     }
-    
     return '';
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl w-[95vw] sm:w-[90vw] md:w-[85vw] max-h-[95vh] h-auto p-0 bg-gradient-to-br from-blue-50 to-red-50 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border-0 flex flex-col lg:flex-row overflow-hidden">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] p-0 flex flex-col lg:flex-row overflow-hidden rounded-xl shadow-2xl">
         
-        <DialogTitle className="sr-only">{product.title}</DialogTitle>
-
-        {/* KOLOM KIRI: VISUAL GAMBAR PRODUK */}
-        <div className="w-full lg:w-1/2 xl:w-3/5 flex-shrink-0 bg-gradient-to-br from-blue-100 via-slate-50 to-red-100 overflow-hidden relative">
-          {/* Brand watermark */}
-          <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 bg-white/90 backdrop-blur-sm rounded-full p-1.5 md:p-2 shadow-lg">
-            <GraduationCap className="w-4 h-4 md:w-5 md:h-5" style={{color: 'rgb(0,75,173)'}} />
-          </div>
-          
-          <div className="w-full h-[30vh] sm:h-[35vh] md:h-[45vh] lg:h-full p-2 sm:p-4 md:p-6 lg:p-8">
-            <div className="w-full h-full shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden ring-1 ring-white/50" style={{boxShadow: '0 25px 50px -12px rgba(0,75,173,0.25)'}}>
-              {allImages.length > 0 ? (
-                <div className="relative h-full">
-                  {/* Main Image */}
-                  <Image
-                    src={urlForImage(allImages[currentImageIndex].asset).width(1200).url()}
-                    alt={allImages[currentImageIndex].alt || product.title}
-                    fill
-                    className="object-contain p-1 sm:p-2 md:p-4"
-                    priority
-                  />
-                  
-                  {/* Navigation Arrows - Only show if more than 1 image */}
-                  {allImages.length > 1 && (
-                    <>
-                      <button
-                        onClick={prevImage}
-                        className="absolute left-1 sm:left-2 md:left-2 lg:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border border-gray-200"
-                      >
-                        <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" style={{color: 'rgb(0,75,173)'}} />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="absolute right-1 sm:right-2 md:right-2 lg:right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 border border-gray-200"
-                      >
-                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" style={{color: 'rgb(0,75,173)'}} />
-                      </button>
-                      
-                      {/* Image Counter */}
-                      <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 md:bottom-4 md:right-4 px-2 py-1 sm:px-3 sm:py-1 md:px-4 md:py-2 bg-black/70 backdrop-blur-sm rounded-full">
-                        <span className="text-white text-xs sm:text-xs md:text-sm font-medium">
-                          {currentImageIndex + 1} / {allImages.length}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                  
-                  {/* Thumbnail Strip - Only show on larger screens */}
-                  {allImages.length > 1 && (
-                    <div className="absolute bottom-1 left-1 right-12 sm:bottom-2 sm:left-2 sm:right-16 md:bottom-4 md:left-4 md:right-20 hidden md:block">
-                      <div className="flex gap-1 md:gap-2 overflow-x-auto scrollbar-hide">
-                        {allImages.map((image, index) => (
-                          <button
-                            key={index}
-                            onClick={() => goToImage(index)}
-                            className={`relative flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-md lg:rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                              index === currentImageIndex 
-                                ? 'border-white scale-105 shadow-lg' 
-                                : 'border-white/50 hover:border-white hover:scale-105'
-                            }`}
-                          >
-                            <Image
-                              src={urlForImage(image.asset).width(100).height(100).url()}
-                              alt={image.alt || `${product.title} - Image ${index + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-blue-200 rounded-lg sm:rounded-xl md:rounded-2xl">
-                  <div className="text-center" style={{color: 'rgb(0,75,173)'}}>
-                    <ImageIcon className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 mx-auto mb-2" />
-                    <p className="font-medium text-xs sm:text-sm md:text-base">Gambar tidak tersedia</p>
-                  </div>
-                </div>
+        {/* Kolom Kiri: Gambar */}
+        <div className="w-full lg:w-1/2 bg-gray-100 flex items-center justify-center p-4 relative">
+          {allImages.length > 0 ? (
+            <div className="relative w-full h-64 lg:h-full">
+              <Image
+                src={urlForImage(allImages[currentImageIndex].asset).width(800).url()}
+                alt={allImages[currentImageIndex].alt || product.title}
+                fill
+                className="object-contain rounded-lg"
+              />
+              {allImages.length > 1 && (
+                <>
+                  <Button onClick={prevImage} variant="outline" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8"><ChevronLeft className="h-4 w-4" /></Button>
+                  <Button onClick={nextImage} variant="outline" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full h-8 w-8"><ChevronRight className="h-4 w-4" /></Button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">{currentImageIndex + 1} / {allImages.length}</div>
+                </>
               )}
             </div>
-          </div>
+          ) : (
+            <div className="text-center text-gray-500"><ImageIcon className="mx-auto h-12 w-12" /><p>Gambar tidak tersedia</p></div>
+          )}
         </div>
         
-        {/* KOLOM KANAN: INFORMASI & AKSI */}
-        <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-sm min-h-0">
-          {/* Header dengan judul dan tombol close */}
-          <div className="px-3 sm:px-4 md:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-6 lg:pt-8 pb-2 sm:pb-3 md:pb-4 flex-shrink-0">
-            <div className="flex justify-between items-start gap-2 sm:gap-3 md:gap-4">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold line-clamp-2" style={{color: 'rgb(0,75,173)'}}>
-                  {product.title}
-                </h1>
-                <div className="flex items-center gap-2 mt-1 md:mt-2">
-                  <span className="inline-flex items-center px-2 sm:px-2 md:px-3 py-1 rounded-full text-xs font-medium bg-white text-white border" style={{backgroundColor: 'rgb(209,51,19)', borderColor: 'rgb(209,51,19)'}}>
-                    <GraduationCap className="w-3 h-3 mr-1" />
-                    {getCategoryLabel(product.category)}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-white hover:bg-red-50 flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg border border-gray-200 hover:border-red-300 flex-shrink-0 group"
-                aria-label="Tutup modal"
-              >
-                <X className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-600 group-hover:text-red-500 transition-colors" />
-              </button>
-            </div>
-          </div>
+        {/* Kolom Kanan: Informasi & Aksi */}
+        <div className="flex-1 flex flex-col bg-white min-h-0">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 z-20"><X className="h-6 w-6" /></button>
           
-          {/* Konten utama yang bisa di-scroll dengan enhanced mobile scrolling */}
-          <div className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-3 sm:pb-4 md:pb-6 lg:pb-8 space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8 overscroll-contain" style={{scrollBehavior: 'smooth'}}>
+          {/* Header yang memenuhi syarat aksesibilitas */}
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-2xl font-bold" style={{color: 'rgb(0,75,173)'}}>
+              {product.title}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Konten yang bisa di-scroll */}
+          <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
             <InfoSection title="Harga & Status" icon={<Tag size={14} />}>
-              <div className="p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border shadow-lg text-white" style={{backgroundColor: 'rgb(0,75,173)', borderColor: 'rgb(0,75,173)'}}>
-                <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white">
-                  {formatPrice(product.price)}
-                </p>
-                <div className="flex items-center gap-2 mt-2 md:mt-3 text-xs sm:text-xs md:text-sm font-medium bg-white/20 rounded-full px-2 sm:px-2 md:px-3 py-1 w-fit" style={{color: 'rgb(255,255,255)'}}>
-                  <Star size={12} className="fill-current sm:w-3 sm:h-3 md:w-4 md:h-4" style={{color: 'rgb(255,215,0)'}} />
-                  <span>Program Unggulan</span>
-                </div>
+              <div className="p-4 rounded-lg text-white" style={{backgroundColor: 'rgb(0,75,173)'}}>
+                <p className="text-3xl font-bold">{formatPrice(product.price)}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm"><Star size={14} className="fill-current text-yellow-400" /><span>Program Unggulan</span></div>
               </div>
             </InfoSection>
 
             <InfoSection title="Deskripsi" icon={<FileText size={14} />}>
-              <div className="bg-white/60 backdrop-blur-sm p-3 sm:p-3 md:p-4 rounded-lg sm:rounded-lg md:rounded-xl border shadow-sm" style={{borderColor: 'rgb(0,75,173,0.2)'}}>
-                <p className="text-gray-700 leading-relaxed text-xs sm:text-sm md:text-sm">
-                  {renderDescription(product.description) || product.shortDescription || "Informasi detail tentang program ini."}
-                </p>
-              </div>
+              <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                {renderDescription(product.description)}
+              </p>
             </InfoSection>
 
             {product.features && product.features.length > 0 && (
               <InfoSection title="Fitur Termasuk" icon={<Sparkles size={14} />}>
-                <div className="bg-white/60 backdrop-blur-sm p-3 sm:p-3 md:p-4 rounded-lg sm:rounded-lg md:rounded-xl border shadow-sm" style={{borderColor: 'rgb(0,75,173,0.2)'}}>
-                  <ul className="space-y-2 sm:space-y-2 md:space-y-3">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2 sm:gap-2 md:gap-3 text-xs sm:text-sm md:text-sm text-gray-800">
-                        <div className="rounded-full p-0.5 sm:p-0.5 md:p-1 flex-shrink-0 mt-0.5" style={{backgroundColor: 'rgb(209,51,19)'}}>
-                          <CheckCircle className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 text-white" />
-                        </div>
-                        <span className="leading-relaxed">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <ul className="space-y-2">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-3 text-sm">
+                      <CheckCircle className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </InfoSection>
             )}
-
-            {/* Mobile Image Gallery - Enhanced mobile thumbnail display */}
-            {allImages.length > 1 && (
-              <div className="block md:hidden">
-                <InfoSection title="Galeri" icon={<ImageIcon size={14} />}>
-                  <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide p-1" style={{scrollBehavior: 'smooth'}}>
-                    {allImages.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => goToImage(index)}
-                        className={`relative flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                          index === currentImageIndex 
-                            ? 'border-red-500 scale-105 shadow-lg' 
-                            : 'border-gray-300 hover:border-red-300 hover:scale-105'
-                        }`}
-                      >
-                        <Image
-                          src={urlForImage(image.asset).width(100).height(100).url()}
-                          alt={image.alt || `${product.title} - Image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </InfoSection>
-              </div>
-            )}
-
-            {/* Additional spacing for mobile to ensure proper scrolling */}
-            <div className="h-4 sm:h-6 md:hidden" />
           </div>
 
-          {/* Footer Aksi yang "Sticky" with enhanced mobile design */}
-          <div className="flex-shrink-0 px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-5 lg:py-6 bg-white/90 backdrop-blur-sm border-t" style={{borderColor: 'rgb(0,75,173,0.2)'}}>
+          {/* Footer Aksi */}
+          <div className="flex-shrink-0 p-6 border-t bg-gray-50">
             <Button 
-              asChild
-              className="w-full h-10 sm:h-12 md:h-14 text-sm sm:text-sm md:text-base font-bold group rounded-lg sm:rounded-xl md:rounded-2xl text-white shadow-xl border-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98]"
-              style={{
-                backgroundColor: 'rgb(209,51,19)', 
-                boxShadow: '0 20px 25px -5px rgba(209,51,19,0.25), 0 10px 10px -5px rgba(209,51,19,0.1)'
-              }}
+              onClick={() => onPayment(product)}
+              disabled={isProcessingPayment}
+              className="w-full h-12 text-base font-bold group rounded-lg text-white"
+              style={{backgroundColor: 'rgb(209,51,19)'}}
             >
-              <Link href={`/pembayaran?product_id=${product._id}`} className="flex items-center justify-center gap-2 sm:gap-2 md:gap-3">
-                <GraduationCap className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                <span>Daftar Sekarang</span>
-                <ArrowRight className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              {isProcessingPayment ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="mr-2 h-5 w-5" />
+                  Daftar & Bayar Sekarang
+                </>
+              )}
             </Button>
           </div>
         </div>

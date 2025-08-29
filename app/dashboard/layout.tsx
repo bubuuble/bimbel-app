@@ -1,10 +1,11 @@
-// FILE: app/dashboard/layout.tsx (REVISED)
+// FILE: app/dashboard/layout.tsx (REVISED & FIXED)
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardLayoutClient from "./components/DashboardClient";
 import DashboardHeader from "./components/DashboardHeader";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import { UserProfile } from "@/lib/types"; // Impor tipe untuk casting
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -14,13 +15,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return redirect('/login');
   }
 
-  const { data: profile } = await supabase
+  // --- [PERBAIKAN UTAMA DI SINI] ---
+  // Tambahkan 'email' ke dalam daftar select
+  const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, name, username, role')
+    .select('id, name, username, role, email') // <-- 'email' ditambahkan di sini
     .eq('id', user.id)
     .single();
   
-  if (!profile) {
+  if (error || !profile) {
+    console.error("Dashboard layout profile error:", error);
     return (
       <div>
         <h1>Error</h1>
@@ -29,16 +33,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     );
   }
 
-  // --- LOGIKA BARU DI SINI ---
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-blue-50 p-2 sm:p-4 lg:p-6">
         <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden min-h-[calc(100vh-1rem)] sm:min-h-[calc(100vh-2rem)] lg:min-h-[calc(100vh-3rem)]">
           <div className="flex flex-col lg:flex-row h-full">
-            <DashboardLayoutClient userProfile={profile} />
+            {/* Memastikan 'profile' sesuai dengan tipe yang diharapkan oleh komponen */}
+            <DashboardLayoutClient userProfile={profile as UserProfile} />
 
             <div className="flex-1 flex flex-col">
-              <DashboardHeader userRole={profile.role} userName={profile.name} />
+              <DashboardHeader userRole={profile.role} userName={profile.name || ''} />
 
               <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
                 <div className="max-w-6xl mx-auto">

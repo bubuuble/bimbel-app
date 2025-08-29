@@ -21,7 +21,8 @@ import {
   ClipboardCheck, 
   Calendar,
   User,
-  Menu
+  Menu,
+  ShoppingCart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -142,6 +143,9 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
               <NavLink href="/dashboard/user-management" icon={Users} onClick={() => setSidebarOpen(false)}>
                 {t('nav.users')}
               </NavLink>
+              <NavLink href="/dashboard/order-management" icon={ShoppingCart} onClick={() => setSidebarOpen(false)}>
+                Manajemen Pesanan
+              </NavLink>
               <NavLink href="/dashboard/attendance-report" icon={FileText} onClick={() => setSidebarOpen(false)}>
                 {t('nav.attendance')} Report
               </NavLink>
@@ -169,6 +173,9 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
             <NavSection title="Aktivitas">
               <NavLink href="/dashboard/kehadiran" icon={Calendar} onClick={() => setSidebarOpen(false)}>
                 Kehadiran
+              </NavLink>
+              <NavLink href="/dashboard/riwayat-pesanan" icon={ShoppingCart} onClick={() => setSidebarOpen(false)}>
+                Riwayat Pesanan
               </NavLink>
             </NavSection>
           )}

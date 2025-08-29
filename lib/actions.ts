@@ -1,16 +1,20 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'; 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import Papa from 'papaparse'; // <-- TAMBAHKAN BARIS IMPOR INI
 // Import Supabase Client secara eksplisit untuk Admin Client
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers'
 
 // =======================================================
 // TIPE DATA UMUM & STATE
 // =======================================================
 export type FormState = { success?: string; error?: string; } | null;
+export type SignUpFormState = FormState;
+export type SignInFormState = FormState;
 export type ClassFormState = FormState;
 export type MaterialFormState = FormState;
 export type EnrollState = FormState;
@@ -98,12 +102,8 @@ export async function createUserByAdmin(prevState: FormState, formData: FormData
 /**
  * Membuat kelas baru. Hanya bisa dilakukan oleh Guru (atau Admin).
  */
-export async function createClass(
-  prevState: ClassFormState, 
-  formData: FormData
-): Promise<ClassFormState> {
+export async function createClass(prevState: ClassFormState, formData: FormData): Promise<ClassFormState> {
   const supabase = await createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
@@ -114,23 +114,23 @@ export async function createClass(
 
   const className = formData.get('className') as string;
   const description = formData.get('description') as string;
+  const sanityProductId = formData.get('sanityProductId') as string; // Ambil ID produk
 
-  if (!className) return { error: 'Class name is required.' };
+  if (!className || !sanityProductId) return { error: 'Nama kelas dan tipe produk wajib diisi.' };
 
-  const { error } = await supabase
-    .from('classes')
-    .insert({
+  const { error } = await supabase.from('classes').insert({
       name: className,
       description: description,
-      teacher_id: user.id
-    });
+      teacher_id: user.id,
+      sanity_product_id: sanityProductId, // Simpan ID produk
+  });
   
   if (error) {
     if (error.code === '23505') return { error: 'A class with this name already exists.' };
     return { error: `Database error: ${error.message}` };
   }
 
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/kelas'); // Revalidate halaman daftar kelas
   return { success: 'Class created successfully!' };
 }
 
@@ -491,28 +491,53 @@ export async function updateUserProfile(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { type: 'profile', error: 'Not authenticated' };
 
+  // Ambil semua data dari form
   const name = formData.get('name') as string;
   const username = formData.get('username') as string;
+  const place_of_birth = formData.get('place_of_birth') as string;
+  const date_of_birth = formData.get('date_of_birth') as string;
+  const religion = formData.get('religion') as string;
+  const school_origin = formData.get('school_origin') as string;
+  const grade = formData.get('grade') as string;
+  const address = formData.get('address') as string;
+  const phone_number = formData.get('phone_number') as string;
+  const parent_name = formData.get('parent_name') as string;
+  const parent_phone_number = formData.get('parent_phone_number') as string;
 
-  if (!name || !username) return { type: 'profile', error: 'Name and username are required' };
+  if (!name || !username) return { type: 'profile', error: 'Nama dan username wajib diisi' };
 
-  // 1. Update di tabel 'profiles'
+  // Siapkan data untuk diupdate ke tabel 'profiles'
+  const profileDataToUpdate = {
+    name,
+    username,
+    place_of_birth,
+    date_of_birth: date_of_birth || null, // Pastikan bisa null jika kosong
+    religion,
+    school_origin,
+    grade,
+    address,
+    phone_number,
+    parent_name,
+    parent_phone_number
+  };
+
+  // 1. Update tabel 'profiles' dengan semua data baru
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({ name, username })
+    .update(profileDataToUpdate)
     .eq('id', user.id);
   
-  if (profileError) return { type: 'profile', error: `Profile update failed: ${profileError.message}` };
+  if (profileError) return { type: 'profile', error: `Gagal update profil: ${profileError.message}` };
 
-  // 2. Update metadata di 'auth.users'
+  // 2. Update metadata di 'auth.users' (hanya untuk data yang relevan)
   const { error: authError } = await supabase.auth.updateUser({
     data: { name, username }
   });
 
-  if (authError) return { type: 'profile', error: `Auth update failed: ${authError.message}` };
+  if (authError) return { type: 'profile', error: `Gagal update auth: ${authError.message}` };
 
   revalidatePath('/dashboard/profile');
-  return { type: 'profile', success: 'Profile updated successfully!' };
+  return { type: 'profile', success: 'Profil berhasil diperbarui!' };
 }
 
 /**
@@ -637,18 +662,23 @@ export async function changeUserPasswordByAdmin(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const supabase = await createClient();
-  // ... (tambahkan otorisasi admin seperti di action lain) ...
+  const supabase = await createClient(); // Gunakan helper untuk otorisasi
+  
+  // Otorisasi: Pastikan yang memanggil adalah admin
+  const { data: { user: adminUser } } = await supabase.auth.getUser();
+  if (!adminUser) return { error: 'Not authenticated.' };
+  const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', adminUser.id).single();
+  if (adminProfile?.role !== 'ADMIN') return { error: 'Not authorized.' };
 
   const userId = formData.get('userId') as string;
   const newPassword = formData.get('newPassword') as string;
 
   if (!userId || !newPassword || newPassword.length < 6) {
-    return { error: 'User ID and a password of at least 6 characters are required.' };
+    return { error: 'User ID dan password minimal 6 karakter wajib diisi.' };
   }
 
-  // Gunakan Supabase Admin Client untuk mengubah password pengguna lain
-  const supabaseAdmin = createSupabaseClient(
+  // [PERBAIKAN 2] - Buat Admin Client menggunakan fungsi yang diimpor dengan alias
+  const supabaseAdmin = createSupabaseAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_KEY!
   );
@@ -657,20 +687,26 @@ export async function changeUserPasswordByAdmin(
     password: newPassword
   });
 
-  if (error) return { error: `Failed to update password: ${error.message}` };
+  if (error) return { error: `Gagal mengubah password: ${error.message}` };
   
-  return { success: 'Password updated successfully!' };
+  return { success: 'Password berhasil diubah!' };
 }
 
-export async function deleteUserByAdmin(formData: FormData) {
-  'use server'
+export async function deleteUserByAdmin(formData: FormData): Promise<FormState> {
+  const supabase = await createClient(); // Gunakan helper untuk otorisasi
+  
+  // Otorisasi: Pastikan yang memanggil adalah admin
+  const { data: { user: adminUser } } = await supabase.auth.getUser();
+  if (!adminUser) return { error: 'Not authenticated.' };
+  const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', adminUser.id).single();
+  if (adminProfile?.role !== 'ADMIN') return { error: 'Not authorized.' };
+
   const userId = formData.get('userId') as string;
-  if (!userId) return;
+  if (!userId) return { error: "User ID is missing." };
+  if (userId === adminUser.id) return { error: "Admin tidak bisa menghapus akunnya sendiri." };
 
-  const supabase = await createClient();
-  // ... (tambahkan otorisasi admin) ...
-
-  const supabaseAdmin = createSupabaseClient(
+  // [PERBAIKAN 3] - Buat Admin Client menggunakan fungsi yang diimpor dengan alias
+  const supabaseAdmin = createSupabaseAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_KEY!
   );
@@ -679,9 +715,156 @@ export async function deleteUserByAdmin(formData: FormData) {
   
   if (error) {
     console.error("Error deleting user:", error);
-    // Idealnya kembalikan state error
-    return;
+    return { error: `Gagal menghapus pengguna: ${error.message}` };
   }
 
-  revalidatePath('/dashboard/user-management'); // Revalidate halaman user management
+  revalidatePath('/dashboard/user-management');
+  return { success: "Pengguna berhasil dihapus." };
+}
+
+export async function signUp(
+  prevState: SignUpFormState,
+  formData: FormData
+): Promise<SignUpFormState> {
+  // --- [PERBAIKAN UTAMA DI SINI] --- Tambahkan 'await'
+  const supabase = await createClient();
+
+  const name = formData.get('name') as string;
+  const username = formData.get('username') as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  if (!name || !username || !email || !password) {
+    return { error: 'Semua field wajib diisi.' };
+  }
+  if (password.length < 6) {
+    return { error: 'Password minimal harus 6 karakter.' };
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name,
+        username,
+      },
+    },
+  });
+
+  if (error) {
+    console.error('Sign up error:', error);
+    if (error.message.includes('unique constraint') || error.message.includes('already exists')) {
+        return { error: 'Username atau email ini sudah terdaftar. Silakan gunakan yang lain.' };
+    }
+    return { error: `Gagal mendaftar: ${error.message}` };
+  }
+
+  return { success: 'Pendaftaran berhasil! Anda akan diarahkan ke halaman login.' };
+}
+
+/**
+ * Melakukan login menggunakan username.
+ */
+export async function signInWithUsername(
+  prevState: SignInFormState,
+  formData: FormData
+): Promise<SignInFormState> {
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
+
+  if (!username || !password) {
+    return { error: 'Username dan password wajib diisi.' };
+  }
+  
+  const supabase = await createClient();
+
+  // Langkah 1: Cari email asli berdasarkan username
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('username', username.trim())
+    .single();
+
+  if (profileError || !profile || !profile.email) {
+    console.error('Profile not found or email missing for username:', username, profileError);
+    return { error: 'Username atau password salah.' };
+  }
+  
+  // Langkah 2: Lakukan login menggunakan email yang ditemukan
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: profile.email,
+    password,
+  });
+
+  if (signInError) {
+    return { error: 'Username atau password salah.' };
+  }
+
+  // Langkah 3: Jika berhasil, redirect
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
+}
+
+export async function exportOrdersToCsv(
+  prevState: CsvExportState, // Gunakan kembali tipe CsvExportState
+  formData: FormData
+): Promise<CsvExportState> {
+  const supabase = await createClient();
+  
+  // Otorisasi: Pastikan hanya admin yang bisa mengekspor
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated.' };
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'ADMIN') return { error: 'Not authorized.' };
+
+  // Ambil semua data pesanan dengan join ke profil
+  const { data: orders, error } = await supabase
+    .from('payments')
+    .select(`*, profiles ( name, username, email )`)
+    .order('created_at', { ascending: false });
+
+  if (error || !orders || orders.length === 0) {
+    return { error: 'No order data to export or failed to fetch.' };
+  }
+
+  // Ubah struktur data agar lebih ramah CSV
+  const flattenedData = orders.map(order => ({
+    order_id: order.midtrans_order_id,
+    user_name: order.profiles?.name,
+    user_username: order.profiles?.username,
+    user_email: order.profiles?.email,
+    product_name: order.product_name,
+    amount: order.amount,
+    status: order.status,
+    order_date: new Date(order.created_at).toISOString(),
+  }));
+
+  const csvString = Papa.unparse(flattenedData, { header: true });
+  const fileName = `laporan-pesanan-${new Date().toISOString().split('T')[0]}.csv`;
+
+  return { csvString, fileName };
+}
+
+export async function getUserProfileById(userId: string) {
+  'use server'
+  const supabase = await createClient();
+
+  // 1. Otorisasi: Pastikan yang memanggil adalah admin
+  const { data: { user: adminUser } } = await supabase.auth.getUser();
+  if (!adminUser) throw new Error('Not authenticated');
+  
+  const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', adminUser.id).single();
+  if (adminProfile?.role !== 'ADMIN') throw new Error('Not authorized');
+
+  // 2. Ambil data profil lengkap dari pengguna yang diminta
+  const { data: userProfile, error } = await supabase
+    .from('profiles')
+    .select('*') // Ambil semua kolom
+    .eq('id', userId)
+    .single();
+
+  if (error) throw new Error(`Failed to fetch profile: ${error.message}`);
+  
+  return userProfile;
 }

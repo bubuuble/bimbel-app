@@ -104,14 +104,13 @@ async function ClassesContent() {
   const user = await getAuthenticatedUser();
   const profile = await getUserProfile(user.id);
 
-  if (!profile) {
-    return <ProfileNotFoundCard />;
-  }
+  if (!profile) return <ProfileNotFoundCard />;
 
   switch (profile.role) {
     case 'GURU':
       return <TeacherClassesView userProfile={profile} />;
     case 'SISWA':
+      // Halaman ini sekarang akan mengambil lebih banyak data untuk siswa
       return <StudentClassesView userProfile={profile} />;
     default:
       return <AccessDeniedCard />;

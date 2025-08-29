@@ -10,6 +10,7 @@ import { urlForImage } from '@/sanity/lib/image';
 import { Product, ViewMode, CATEGORY_DESCRIPTIONS } from '@/types/product';
 import { Grid, Clock, Star, ArrowRight } from 'lucide-react';
 
+
 interface ProductCardProps {
   product: Product;
   viewMode?: ViewMode;
@@ -237,10 +238,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             color: 'white'
           }}
         >
-          <Link href={`/pembayaran?product_id=${product._id}`} className="flex items-center justify-center gap-2">
-            <span>Daftar & Bayar</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/button:translate-x-1" />
-          </Link>
         </Button>
       </div>
     </div>
