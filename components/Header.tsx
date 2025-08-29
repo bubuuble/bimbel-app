@@ -118,15 +118,27 @@ export default function Header() {
             <Link href="/dashboard">Dashboard</Link>
           </Button>
         ) : (
-          <Button asChild 
-                  className="font-medium px-3 py-2 sm:px-4 lg:px-6 text-xs sm:text-sm lg:text-base rounded-xl border-2 hover:shadow-lg transition-all duration-300 hover:scale-105"
-                  style={{
-                    backgroundColor: 'rgb(209,51,19)', 
-                    borderColor: 'rgb(209,51,19)', 
-                    color: 'white'
-                  }}>
-            <Link href="/login">Masuk</Link>
-          </Button>
+          <>
+            <Button asChild 
+                    variant="outline"
+                    className="font-medium px-3 py-2 sm:px-4 lg:px-6 text-xs sm:text-sm lg:text-base rounded-xl border-2 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                    style={{
+                      backgroundColor: 'transparent', 
+                      borderColor: 'rgb(0,75,173)', 
+                      color: 'rgb(0,75,173)'
+                    }}>
+              <Link href="/login">Masuk</Link>
+            </Button>
+            <Button asChild 
+                    className="font-medium px-3 py-2 sm:px-4 lg:px-6 text-xs sm:text-sm lg:text-base rounded-xl border-2 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                    style={{
+                      backgroundColor: 'rgb(209,51,19)', 
+                      borderColor: 'rgb(209,51,19)', 
+                      color: 'white'
+                    }}>
+              <Link href="/register">Daftar</Link>
+            </Button>
+          </>
         )}
       </div>
 
@@ -199,15 +211,27 @@ export default function Header() {
                   <Link href="/dashboard" onClick={handleMobileMenuClose}>Dashboard</Link>
                 </Button>
               ) : (
-                <Button asChild 
-                        className="w-full font-medium py-3 rounded-xl border-2 hover:shadow-lg transition-all duration-300"
-                        style={{
-                          backgroundColor: 'rgb(209,51,19)', 
-                          borderColor: 'rgb(209,51,19)', 
-                          color: 'white'
-                        }}>
-                  <Link href="/login" onClick={handleMobileMenuClose}>Masuk</Link>
-                </Button>
+                <>
+                  <Button asChild 
+                          variant="outline"
+                          className="w-full font-medium py-3 rounded-xl border-2 hover:shadow-lg transition-all duration-300"
+                          style={{
+                            backgroundColor: 'transparent', 
+                            borderColor: 'rgb(0,75,173)', 
+                            color: 'rgb(0,75,173)'
+                          }}>
+                    <Link href="/login" onClick={handleMobileMenuClose}>Masuk</Link>
+                  </Button>
+                  <Button asChild 
+                          className="w-full font-medium py-3 rounded-xl border-2 hover:shadow-lg transition-all duration-300"
+                          style={{
+                            backgroundColor: 'rgb(209,51,19)', 
+                            borderColor: 'rgb(209,51,19)', 
+                            color: 'white'
+                          }}>
+                    <Link href="/register" onClick={handleMobileMenuClose}>Daftar</Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>
