@@ -1,25 +1,27 @@
-// src/middleware.ts
+// FILE: middleware.ts (VERSI FINAL YANG SUDAH DIPERBAIKI)
+
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/middleware' // Import helper middleware
+import { createClient } from '@/lib/supabase/middleware'
 
-export const runtime = 'nodejs'; // Atau 'experimental-edge'
+// Beritahu Next.js untuk menggunakan runtime Node.js untuk kompatibilitas
+export const runtime = 'nodejs';
+
 export async function middleware(request: NextRequest) {
-  // This middleware is used to refresh the user's session cookie
-  // and handle authentication redirects.
-  const { supabase, response } = createClient(request)
+  // Langkah 1: Buat client Supabase dan siapkan respons awal
+  const { supabase, response } = createClient(request);
 
-  // Refresh session if expired - required for Server Components
-  // to get the latest session
-  await supabase.auth.getSession()
-  
-  // OPTIONAL: Auth redirection
+  // --- [PERBAIKAN UTAMA] ---
+  // Panggil getSession() HANYA SEKALI. Panggilan ini melakukan DUA hal:
+  // 1. Menyegarkan cookie sesi (menulis ke objek 'response').
+  // 2. Mengembalikan data sesi saat ini.
   const { data: { session } } = await supabase.auth.getSession();
+  // -------------------------
+
+  // Langkah 2: Gunakan data 'session' yang sudah kita dapatkan untuk logika redirect
   const { pathname } = request.nextUrl;
+  const protectedRoutes = ['/dashboard'];
 
-  // Daftar halaman yang memerlukan login
-  const protectedRoutes = ['/dashboard', '/admin'];
-
-  // Jika user belum login dan mencoba mengakses halaman yang dilindungi
+  // Logika 2a: Jika TIDAK ada sesi (pengguna belum login) dan mencoba mengakses rute yang dilindungi
   if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
     // Arahkan ke halaman login
     const url = request.nextUrl.clone();
@@ -27,7 +29,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   
-  // Jika user sudah login dan mencoba mengakses halaman login/register
+  // Logika 2b: Jika ADA sesi (pengguna sudah login) dan mencoba mengakses halaman login/register
   if (session && (pathname === '/login' || pathname === '/register')) {
     // Arahkan ke dashboard
     const url = request.nextUrl.clone();
@@ -35,18 +37,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return response
+  // Langkah 3: Jika tidak ada redirect, kembalikan 'response' asli yang sudah diperbarui dengan cookie sesi yang baru
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|image/).*)',
   ],
 }
