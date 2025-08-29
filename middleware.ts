@@ -1,48 +1,79 @@
-// FILE: middleware.ts (VERSI FINAL YANG SUDAH DIPERBAIKI)
-
+// middleware.ts - Versi Supabase yang diperbaiki
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/middleware'
-
-// Beritahu Next.js untuk menggunakan runtime Node.js untuk kompatibilitas
-export const runtime = 'nodejs';
 
 export async function middleware(request: NextRequest) {
-  // Langkah 1: Buat client Supabase dan siapkan respons awal
-  const { supabase, response } = createClient(request);
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // --- [PERBAIKAN UTAMA] ---
-  // Panggil getSession() HANYA SEKALI. Panggilan ini melakukan DUA hal:
-  // 1. Menyegarkan cookie sesi (menulis ke objek 'response').
-  // 2. Mengembalikan data sesi saat ini.
-  const { data: { session } } = await supabase.auth.getSession();
-  // -------------------------
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          // Update request cookies
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          // Update response cookies
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          // Update request cookies
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          // Update response cookies
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
-  // Langkah 2: Gunakan data 'session' yang sudah kita dapatkan untuk logika redirect
-  const { pathname } = request.nextUrl;
-  const protectedRoutes = ['/dashboard'];
+  // Get session
+  const { data: { session } } = await supabase.auth.getSession()
 
-  // Logika 2a: Jika TIDAK ada sesi (pengguna belum login) dan mencoba mengakses rute yang dilindungi
+  // Protected routes
+  const { pathname } = request.nextUrl
+  const protectedRoutes = ['/dashboard']
+  
+  // Redirect logic
   if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
-    // Arahkan ke halaman login
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
   
-  // Logika 2b: Jika ADA sesi (pengguna sudah login) dan mencoba mengakses halaman login/register
   if (session && (pathname === '/login' || pathname === '/register')) {
-    // Arahkan ke dashboard
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
   }
 
-  // Langkah 3: Jika tidak ada redirect, kembalikan 'response' asli yang sudah diperbarui dengan cookie sesi yang baru
-  return response;
+  return response
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|image/).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }

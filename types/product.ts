@@ -3,26 +3,22 @@
 export interface Product {
   _id: string;
   title: string;
-  category: 'online' | 'private' | 'regular' | 'responsive';
-  // New fields
-  shortDescription?: string;
-  description?: any[]; // Rich text blocks
-  features?: string[];
-  duration?: string;
-  targetAudience?: string;
-  featuredImage?: any; // Sanity image type
-  gallery?: Array<{
-    _key: string;
-    asset: any;
-    alt: string;
-    caption?: string;
-  }>;
-  originalPrice?: number;
-  // Existing fields
-  pricelistImage?: any; // Legacy - Sanity image type
-  altText?: string; // Legacy
+  category: string;
   price: number;
-  order?: number;
+  originalPrice?: number;
+  duration?: string;
+  shortDescription: string;
+  description: any; // Tipe 'any' atau tipe Portable Text yang lebih spesifik
+  features?: string[];
+  featuredImage?: { asset: any; alt?: string };
+  gallery?: { asset: any; alt: string }[];
+  
+  // --- [TAMBAHKAN BARIS INI] ---
+  supabaseClassId?: string; // Jadikan opsional (?) untuk keamanan
+
+  // Field legacy (jika masih ada di tipe Anda)
+  pricelistImage?: { asset: any };
+  altText?: string;
 }
 
 export interface Category {
