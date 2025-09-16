@@ -934,12 +934,10 @@ export async function addQuestionToTest(
   formData: FormData
 ): Promise<{ error?: string; newQuestion?: any }> {
   'use server'
-  console.log("--- [Server Action] addQuestionToTest Dimulai ---");
   
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    console.log("--- [Server Action] Gagal: Tidak terautentikasi ---");
     return { error: 'Not authenticated' };
   }
 
@@ -947,106 +945,100 @@ export async function addQuestionToTest(
     const testId = formData.get('testId') as string;
     const questionText = formData.get('questionText') as string;
     const type = formData.get('type') as QuestionType;
-    const marks = parseInt(formData.get('marks') as string, 10);
-    console.log("--- [Server Action] Data Form Diterima:", { testId, questionText, type, marks });
 
-    if (!testId || !questionText || !type || isNaN(marks)) {
-      console.log("--- [Server Action] Gagal: Data soal utama tidak lengkap. ---");
+    if (!testId || !questionText || !type) {
       return { error: 'Data soal utama tidak lengkap.' };
     }
 
-    console.log("--- [Server Action] Menyimpan soal utama ke DB... ---");
-    const { data: newQuestion, error: questionError } = await supabase.from('questions').insert({ test_id: testId, question_text: questionText, type, marks }).select('id').single();
+    // 1. Hitung jumlah soal yang sudah ada untuk menentukan sort_order
+    const { count, error: countError } = await supabase
+      .from('questions')
+      .select('*', { count: 'exact', head: true })
+      .eq('test_id', testId);
+
+    if (countError) throw countError;
+    const newSortOrder = count ?? 0;
+
+    // 2. Masukkan soal baru dengan 'marks' sementara (akan dihitung ulang)
+    const { data: newQuestion, error: questionError } = await supabase
+      .from('questions')
+      .insert({ 
+        test_id: testId, 
+        question_text: questionText, 
+        type, 
+        marks: 1, // Nilai sementara
+        sort_order: newSortOrder
+      })
+      .select('id')
+      .single();
+
     if (questionError) throw questionError;
     const questionId = newQuestion.id;
-    console.log("--- [Server Action] Soal utama berhasil disimpan dengan ID:", questionId);
-
+    
+    // 3. Logika untuk menyimpan detail soal (Pilihan Ganda, B/S, Menjodohkan)
     switch (type) {
-        case 'MULTIPLE_CHOICE':
-            const optionsJson = formData.get('options') as string;
-            console.log("--- [Server Action] JSON Pilihan Ganda:", optionsJson);
-            const options = JSON.parse(optionsJson);
+      case 'MULTIPLE_CHOICE':
+        const options = JSON.parse(formData.get('options') as string);
+        const optionsToInsert = options.map((opt: any) => ({ question_id: questionId, ...opt }));
+        const { error: optionsError } = await supabase.from('multiple_choice_options').insert(optionsToInsert);
+        if (optionsError) throw optionsError;
+        break;
 
-            // Validasi penting: pastikan ada setidaknya satu jawaban benar
-            if (!options.some((opt: any) => opt.is_correct)) {
-                return { error: 'Pilih setidaknya satu jawaban yang benar.' };
-            }
-
-            const optionsToInsert = options.map((opt: any) => ({ question_id: questionId, option_text: opt.option_text, is_correct: opt.is_correct }));
-            console.log("--- [Server Action] Menyimpan pilihan ganda ke DB... ---");
-            const { error: optionsError } = await supabase.from('multiple_choice_options').insert(optionsToInsert);
-            if (optionsError) throw optionsError;
-            console.log("--- [Server Action] Pilihan ganda berhasil disimpan. ---");
-            break;
-
-        case 'TRUE_FALSE':
-            const statementsJson = formData.get('statements') as string;
-            const statements = JSON.parse(statementsJson);
-            const statementsToInsert = statements.map((stmt: any) => ({ question_id: questionId, statement_text: stmt.statement_text, is_true: stmt.is_true }));
-            const { error: tfError } = await supabase.from('true_false_statements').insert(statementsToInsert);
-            if (tfError) throw tfError;
-            break;
+      case 'TRUE_FALSE':
+        const statements = JSON.parse(formData.get('statements') as string);
+        const statementsToInsert = statements.map((stmt: any) => ({ question_id: questionId, ...stmt }));
+        const { error: tfError } = await supabase.from('true_false_statements').insert(statementsToInsert);
+        if (tfError) throw tfError;
+        break;
             
-        case 'MATCHING':
-            const promptsJson = formData.get('prompts') as string;
-            const matchOptionsJson = formData.get('matchOptions') as string;
-            const pairsJson = formData.get('pairs') as string;
-            
-            const prompts = JSON.parse(promptsJson);
-            const matchOptions = JSON.parse(matchOptionsJson);
-            const pairs = JSON.parse(pairsJson);
+      case 'MATCHING':
+        const prompts = JSON.parse(formData.get('prompts') as string);
+        const matchOptions = JSON.parse(formData.get('matchOptions') as string);
+        const pairs = JSON.parse(formData.get('pairs') as string);
+        
+        const promptsToInsert = prompts.map((p: any) => ({ question_id: questionId, prompt_text: p.text }));
+        const { data: insertedPrompts, error: pError } = await supabase.from('matching_prompts').insert(promptsToInsert).select();
+        if (pError) throw pError;
 
-            // Insert prompts and get their new IDs
-            const promptsToInsert = prompts.map((p: any) => ({ question_id: questionId, prompt_text: p.text }));
-            const { data: insertedPrompts, error: pError } = await supabase.from('matching_prompts').insert(promptsToInsert).select();
-            if (pError) throw pError;
+        const optionsToInsertMatching = matchOptions.map((o: any) => ({ question_id: questionId, option_text: o.text }));
+        const { data: insertedOptions, error: oError } = await supabase.from('matching_options').insert(optionsToInsertMatching).select();
+        if (oError) throw oError;
 
-            // Insert options and get their new IDs
-            const optionsToInsertMatching = matchOptions.map((o: any) => ({ question_id: questionId, option_text: o.text }));
-            const { data: insertedOptions, error: oError } = await supabase.from('matching_options').insert(optionsToInsertMatching).select();
-            if (oError) throw oError;
+        const promptMap = new Map(insertedPrompts.map(p => [p.prompt_text, p.id]));
+        const optionMap = new Map(insertedOptions.map(o => [o.option_text, o.id]));
 
-            // Create a map for easy ID lookup
-            const promptMap = new Map(insertedPrompts.map(p => [p.prompt_text, p.id]));
-            const optionMap = new Map(insertedOptions.map(o => [o.option_text, o.id]));
+        const pairsToInsert = pairs.map((pair: any) => ({
+            question_id: questionId,
+            prompt_id: promptMap.get(pair.prompt_text),
+            option_id: optionMap.get(pair.option_text)
+        })).filter((p: any) => p.prompt_id && p.option_id);
 
-            // Prepare the correct pairs using the new IDs
-            const pairsToInsert = pairs.map((pair: any) => ({
-                question_id: questionId,
-                prompt_id: promptMap.get(pair.prompt_text),
-                option_id: optionMap.get(pair.option_text)
-            })).filter((p: { prompt_id: string | undefined, option_id: string | undefined }) => 
-                    p.prompt_id && p.option_id
-                );
-
+        if (pairsToInsert.length > 0) {
             const { error: pairError } = await supabase.from('matching_correct_pairs').insert(pairsToInsert);
             if (pairError) throw pairError;
-            break;
+        }
+        break;
     }
     
-    // 3. Ambil kembali data soal yang baru dibuat beserta relasinya
-    console.log("--- [Server Action] Mengambil data soal lengkap... ---");
+    // 4. [PERUBAHAN UTAMA] Panggil fungsi RPC untuk menghitung ulang semua poin di ujian ini
+    const { error: rpcError } = await supabase.rpc('recalculate_test_points', {
+      test_id_to_update: testId
+    });
+    if (rpcError) throw rpcError;
+
+    // 5. Ambil kembali data soal yang baru dibuat beserta relasinya untuk ditampilkan di UI
     const { data: finalNewQuestion, error: finalError } = await supabase
-    .from('questions')
-    .select(`
-        *,
-        multiple_choice_options(*),
-        true_false_statements(*),
-        matching_prompts(*),
-        matching_options(*),
-        matching_correct_pairs(*)
-    `)
-    .eq('id', questionId)
-    .single();
+        .from('questions')
+        .select(`*, multiple_choice_options(*), true_false_statements(*), matching_prompts(*), matching_options(*), matching_correct_pairs(*)`)
+        .eq('id', questionId)
+        .single();
+    if (finalError) throw finalError;
 
-if (finalError) throw finalError;
-
-console.log("--- [Server Action] Berhasil! Revalidating path... ---");
-revalidatePath(`/dashboard/class/.*/ujian/${testId}/edit`, 'page');
-return { newQuestion: finalNewQuestion };
+    revalidatePath(`/dashboard/class/.*/ujian/${testId}/edit`, 'page');
+    return { newQuestion: finalNewQuestion };
 
   } catch (err: any) {
-    console.error("--- [Server Action] TERJADI ERROR:", err);
+    console.error("Server Action Error (addQuestionToTest):", err);
     return { error: `Gagal menyimpan soal: ${err.message}` };
   }
 }
@@ -1120,6 +1112,8 @@ return { updatedQuestion };
   }
 }
 
+// FILE: lib/actions.ts
+
 export async function deleteQuestion(
     formData: FormData
 ): Promise<{ error?: string; success?: boolean }> {
@@ -1151,11 +1145,12 @@ export async function deleteQuestion(
             .eq('id', question.test_id)
             .single();
 
+        // 3. Validasi kepemilikan secara eksplisit
         if (tError || !test || test.teacher_id !== user.id) {
             return { error: 'Anda tidak berhak menghapus soal ini.' };
         }
         
-        // 3. Jika validasi lolos, hapus soal.
+        // 4. Jika validasi lolos, hapus soal. ON DELETE CASCADE akan bekerja di sini.
         const { error: deleteError } = await supabase
             .from('questions')
             .delete()
@@ -1163,10 +1158,17 @@ export async function deleteQuestion(
         
         if (deleteError) throw deleteError;
 
-        revalidatePath(`/dashboard/class/.*`, 'layout');
+        // 5. Panggil fungsi RPC untuk menghitung ulang poin.
+        const { error: rpcError } = await supabase.rpc('recalculate_test_points', {
+          test_id_to_update: question.test_id
+        });
+        if (rpcError) throw rpcError;
+
+        revalidatePath(`/dashboard/class/.*/ujian/${question.test_id}/edit`, 'page');
         return { success: true };
 
     } catch(err: any) {
+        console.error("Server Action Error (deleteQuestion):", err);
         return { error: `Gagal menghapus soal: ${err.message}` };
     }
 }
