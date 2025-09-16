@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const statusResponse = await core.transaction.notification(notificationJson);
     const { order_id, transaction_status, fraud_status } = statusResponse;
-
+    
     let newStatus: 'success' | 'pending' | 'failed' = 'pending';
     if (transaction_status == 'capture' || transaction_status == 'settlement') {
       if (fraud_status == 'accept') newStatus = 'success';

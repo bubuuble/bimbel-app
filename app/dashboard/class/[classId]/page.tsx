@@ -1,4 +1,4 @@
-// FILE: app/dashboard/class/[classId]/page.tsx
+// FILE: app/dashboard/class/[classId]/page.tsx (FINAL & DIPERBAIKI)
 
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -7,16 +7,16 @@ import { ArrowLeft, Users, BookOpen, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import TeacherClassView from "../../components/TeacherClassView";
 import StudentClassView from "../../components/StudentClassView";
 
-export default async function ClassDetailPage({ params }: { params: Promise<{ classId: string }> }) {
+// [PERBAIKAN] Mengubah cara menerima params agar lebih standar
+export default async function ClassDetailPage({ params }: { params: { classId: string } }) {
   const supabase = await createClient();
-  const { classId } = await params;
+  const { classId } = params;
 
-  // 1. User Authorization
+  // 1. Otorisasi Pengguna
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return redirect('/login');
@@ -25,23 +25,11 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <Alert variant="destructive">
-              <Shield className="h-4 w-4" />
-              <AlertTitle>Profile Not Found</AlertTitle>
-              <AlertDescription>
-                Unable to load your profile information.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="p-4"><Alert variant="destructive"><AlertTitle>Profil tidak ditemukan</AlertTitle></Alert></div>
     );
   }
 
-  // 2. Get Class Info
+  // 2. Ambil Info Kelas
   const { data: classInfo, error: classError } = await supabase
     .from('classes')
     .select('id, name, description, teacher_id')
@@ -52,7 +40,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
     notFound();
   }
 
-  // 3. Determine User Access Rights
+  // 3. Tentukan Hak Akses Pengguna
   const isTeacherOwner = profile.role === 'GURU' && classInfo.teacher_id === user.id;
   const isAdmin = profile.role === 'ADMIN';
   const canManage = isTeacherOwner || isAdmin;
@@ -65,48 +53,33 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
     .maybeSingle();
   const isEnrolledStudent = profile.role === 'SISWA' && !!enrollment;
 
-  // Access Denied UI
   if (!canManage && !isEnrolledStudent) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <Alert variant="destructive" className="mb-6">
-              <Shield className="h-4 w-4" />
-              <AlertTitle>Access Denied</AlertTitle>
-              <AlertDescription>
-                You are not authorized to view this class.
-              </AlertDescription>
-            </Alert>
-            <Button asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="p-4"><Alert variant="destructive"><AlertTitle>Akses Ditolak</AlertTitle></Alert></div>
     );
   }
 
-  // <<< PERUBAHAN DI SINI: Query untuk mengambil materi DAN file-filenya >>>
-  // 4. Get common data needed by all roles
+  // 4. Ambil data umum yang dibutuhkan semua peran
   const { data: materials } = await supabase
     .from('materials')
-    .select(`
-      *,
-      material_files ( id, file_name, file_url )
-    `)
+    .select(`*, material_files ( id, file_name, file_url )`)
     .eq('class_id', classId)
     .order('created_at', { ascending: false });
 
-  // 5. Prepare view component based on role
+  // 5. Siapkan komponen tampilan berdasarkan peran
   let viewComponent;
+
   if (canManage) {
-    // Teacher/Admin specific data
+    // Data spesifik untuk Guru/Admin
     const { data: initialSessions } = await supabase
       .from('attendance_sessions')
+      .select('*')
+      .eq('class_id', classId)
+      .order('created_at', { ascending: false });
+
+    // [PERBAIKAN] Ambil data ujian untuk kelas ini
+    const { data: tests } = await supabase
+      .from('tests')
       .select('*')
       .eq('class_id', classId)
       .order('created_at', { ascending: false });
@@ -116,48 +89,27 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
         classInfo={classInfo} 
         materials={materials || []}
         initialSessions={initialSessions || []}
+        tests={tests || []} // <-- Kirim data 'tests' ke komponen
       />
     );
   } else if (isEnrolledStudent) {
     const now = new Date().toISOString();
     
-    // Ambil SESI YANG SEDANG AKTIF SAAT INI
-    const { data: activeSession } = await supabase
-      .from('attendance_sessions')
-      .select('id, title, expires_at')
-      .eq('class_id', classId)
-      .lte('start_time', now)
-      .gte('expires_at', now)
-      .order('start_time', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    // Ambil SESI TERJADWAL BERIKUTNYA
-    const { data: scheduledSession } = await supabase
-        .from('attendance_sessions')
-        .select('id, title, start_time')
-        .eq('class_id', classId)
-        .gt('start_time', now)
-        .order('start_time', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+    // Data spesifik untuk Siswa
+    const { data: activeSession } = await supabase.from('attendance_sessions').select('id, title, expires_at').eq('class_id', classId).lte('start_time', now).gte('expires_at', now).order('start_time', { ascending: false }).limit(1).maybeSingle();
+    const { data: scheduledSession } = await supabase.from('attendance_sessions').select('id, title, start_time').eq('class_id', classId).gt('start_time', now).order('start_time', { ascending: true }).limit(1).maybeSingle();
 
     let hasAttended = false;
     if (activeSession) {
-      const { data: attendanceRecord } = await supabase
-        .from('attendance_records')
-        .select('id')
-        .eq('session_id', activeSession.id)
-        .eq('student_id', user.id)
-        .maybeSingle();
-      hasAttended = !!attendanceRecord;
+      const { count } = await supabase.from('attendance_records').select('*', { count: 'exact', head: true }).eq('session_id', activeSession.id).eq('student_id', user.id);
+      hasAttended = (count ?? 0) > 0;
     }
 
-    const { data: submissions } = await supabase
-      .from('submissions')
-      .select('id, material_id, file_url, grade, feedback')
-      .eq('student_id', user.id)
-      .eq('class_id', classId);
+    const { data: submissions } = await supabase.from('submissions').select('id, material_id, file_url, grade, feedback').eq('student_id', user.id).eq('class_id', classId);
+    
+    // [PERBAIKAN] Ambil data ujian dan data pengerjaan ujian siswa
+    const { data: tests } = await supabase.from('tests').select('*').eq('class_id', classId).order('created_at', { ascending: false });
+    const { data: testSubmissions } = await supabase.from('test_submissions').select('*').eq('student_id', user.id).eq('class_id', classId);
 
     viewComponent = (
       <StudentClassView
@@ -168,67 +120,42 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
         scheduledSession={scheduledSession || null}
         hasAttended={hasAttended}
         submissions={submissions || []}
+        tests={tests || []} // <-- Kirim data 'tests' ke komponen
+        testSubmissions={testSubmissions || []} // <-- Kirim data 'testSubmissions'
       />
     );
   }
 
-  // Get additional stats for header
+  // Ambil statistik tambahan untuk header
   const [{ count: materialCount }, { count: studentCount }] = await Promise.all([
     supabase.from('materials').select('*', { count: 'exact', head: true }).eq('class_id', classId),
     supabase.from('enrollments').select('*', { count: 'exact', head: true }).eq('class_id', classId)
   ]);
 
-  // 6. Render Page
+  // 6. Render Halaman
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <BookOpen className="w-6 h-6 text-primary" />
+    <div className="container mx-auto p-4 md:p-8 space-y-8">
+      <div>
+        <Link href="/dashboard/kelas" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-4">
+            <ArrowLeft className="w-4 h-4" /> Kembali ke Daftar Kelas
+        </Link>
+        <Card>
+            <CardHeader className="flex flex-col md:flex-row md:justify-between gap-4">
+                <div>
+                    <Badge variant={canManage ? "default" : "secondary"}>{canManage ? 'Pengajar' : 'Siswa'}</Badge>
+                    <h1 className="text-3xl font-bold tracking-tight mt-2">{classInfo.name}</h1>
+                    <p className="text-lg text-muted-foreground mt-1">{classInfo.description}</p>
                 </div>
-                <Badge variant={canManage ? "default" : "secondary"}>
-                  {canManage ? (isAdmin ? 'Admin' : 'Teacher') : 'Student'}
-                </Badge>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">{classInfo.name}</h1>
-                <p className="text-lg text-muted-foreground mt-2">{classInfo.description}</p>
-              </div>
-            </div>
-            
-            {/* Stats */}
-            <div className="flex gap-4">
-              <Card className="text-center min-w-[100px]">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-lg mx-auto mb-2">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold">{materialCount || 0}</div>
-                  <div className="text-xs text-muted-foreground">Materials</div>
-                </CardContent>
-              </Card>
-              <Card className="text-center min-w-[100px]">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg mx-auto mb-2">
-                    <Users className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div className="text-2xl font-bold">{studentCount || 0}</div>
-                  <div className="text-xs text-muted-foreground">Students</div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
+                <div className="flex gap-4 items-start">
+                    <div className="text-center"><p className="text-2xl font-bold">{materialCount || 0}</p><p className="text-xs text-muted-foreground">Materi</p></div>
+                    <div className="text-center"><p className="text-2xl font-bold">{studentCount || 0}</p><p className="text-xs text-muted-foreground">Siswa</p></div>
+                </div>
+            </CardHeader>
+        </Card>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {viewComponent}
-      </div>
+      {viewComponent}
     </div>
   );
 }

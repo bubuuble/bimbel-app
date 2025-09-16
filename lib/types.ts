@@ -69,3 +69,73 @@ export type Submission = {
   grade: number | null;
   feedback: string | null;
 };
+
+export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'MATCHING';
+
+export type Test = {
+  id: string;
+  class_id: string;
+  teacher_id: string;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  created_at: string;
+};
+
+export type MultipleChoiceOption = {
+  id: string;
+  question_id: string;
+  option_text: string;
+  is_correct: boolean;
+};
+
+export type TrueFalseStatement = {
+  id: string;
+  question_id: string;
+  statement_text: string;
+  is_true: boolean;
+};
+
+export type MatchingPrompt = {
+    id: string;
+    question_id: string;
+    prompt_text: string;
+}
+
+export type MatchingOption = {
+    id: string;
+    question_id: string;
+    option_text: string;
+}
+
+export type MatchingCorrectPair = {
+    prompt_id: string;
+    option_id: string;
+}
+
+// [PERBAIKAN UTAMA] Perbarui tipe Question untuk menyertakan semua relasi
+export type Question = {
+  id: string;
+  test_id: string;
+  question_text: string;
+  type: QuestionType;
+  marks: number;
+  sort_order: number;
+  // Semua relasi ini bersifat opsional karena tergantung pada tipe soal
+  multiple_choice_options?: MultipleChoiceOption[];
+  true_false_statements?: TrueFalseStatement[];
+  matching_prompts?: MatchingPrompt[];
+  matching_options?: MatchingOption[];
+  matching_correct_pairs?: MatchingCorrectPair[];
+};
+
+export type TestSubmission = {
+  id: string;
+  test_id: string;
+  class_id: string; // Tambahkan ini agar mudah query
+  student_id: string;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+  started_at: string;
+  completed_at: string | null;
+  total_score: number | null;
+};

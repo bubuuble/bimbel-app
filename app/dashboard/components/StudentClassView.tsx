@@ -3,23 +3,21 @@
 'use client'
 
 import type { User } from "@supabase/supabase-js";
-import type { Class, Material, Submission } from "@/lib/types";
+import { useRouter } from 'next/navigation'; // <-- Import useRouter
+import type { Class, Material, Submission, Test, TestSubmission } from "@/lib/types"; // <-- Import Test, TestSubmission
+import { startTest } from "@/lib/actions"; // <-- Import server action
 import SubmissionForm from "./SubmissionForm";
 import StudentAttendance from "./StudentAttendance";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
-// <<< PERUBAHAN 1: Impor ikon Paperclip >>>
-import { FileText, Clock, CheckCircle, AlertCircle, ExternalLink, ChevronDown, Paperclip } from "lucide-react"; 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { FileText, Clock, CheckCircle, AlertCircle, ChevronDown, Paperclip, ClipboardList } from "lucide-react"; // <-- Tambah ClipboardList
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import Link from "next/link";
 
 type Props = {
   user: User;
@@ -29,13 +27,28 @@ type Props = {
   scheduledSession: { id: string, title: string | null, start_time: string } | null;
   hasAttended: boolean;
   submissions: Pick<Submission, 'material_id' | 'id' | 'file_url' | 'grade' | 'feedback'>[];
+  tests: Test [];
+  testSubmissions: TestSubmission[];
 };
 
-export default function StudentClassView({ user, classInfo, materials, activeSession, scheduledSession, hasAttended, submissions }: Props) {
+export default function StudentClassView({ user, classInfo, materials, activeSession, scheduledSession, hasAttended, submissions, tests, testSubmissions }: Props) {
   const submissionMap = new Map(submissions.map(s => [s.material_id, s]));
+  const testSubmissionMap = new Map(testSubmissions.map(s => [s.test_id, s]));
   const now = new Date();
-  
   const [openMaterialId, setOpenMaterialId] = useState<string | null>(null);
+  const router = useRouter();
+  const [isStartingTest, setIsStartingTest] = useState<string | null>(null);
+
+  const handleStartTest = async (testId: string) => {
+    setIsStartingTest(testId);
+    const result = await startTest(testId);
+    if (result.error) {
+      alert(`Gagal memulai ujian: ${result.error}`);
+      setIsStartingTest(null);
+    } else if (result.submissionId) {
+      router.push(`/ujian/sesi/${result.submissionId}`);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -186,6 +199,62 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
               <p className="text-muted-foreground">
                 Belum ada materi atau tugas yang diunggah untuk kelas ini.
               </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+            <Separator />
+
+      {/* --- [SEKSI UJIAN BARU] --- */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+            <ClipboardList />
+            Ujian Tersedia
+        </h2>
+        {tests && tests.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tests.map(test => {
+                const submission = testSubmissionMap.get(test.id);
+                const isCompleted = submission?.status === 'COMPLETED';
+                return (
+                    <Card key={test.id}>
+                        <CardHeader>
+                            <CardTitle>{test.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-4">{test.duration_minutes} Menit</p>
+                          {isCompleted && (
+                            <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
+                               <CheckCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                Selesai dikerjakan. Skor Anda: <strong>{submission.total_score ?? 'Belum dinilai'}</strong>
+                                </AlertDescription>
+                            </Alert>
+                          )}
+                        </CardContent>
+                        <CardFooter>
+                          {isCompleted ? (
+                             <Button variant="outline" asChild className="w-full">
+                                <Link href={`/ujian/hasil/${submission.id}`}>Lihat Pembahasan</Link>
+                             </Button>
+                          ) : (
+                             <Button 
+                                onClick={() => handleStartTest(test.id)} 
+                                disabled={!!isStartingTest} 
+                                className="w-full"
+                              >
+                                {isStartingTest === test.id ? 'Memuat...' : (submission ? 'Lanjutkan Mengerjakan' : 'Mulai Kerjakan')}
+                             </Button>
+                          )}
+                        </CardFooter>
+                    </Card>
+                );
+            })}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">Belum ada ujian yang tersedia untuk kelas ini.</p>
             </CardContent>
           </Card>
         )}

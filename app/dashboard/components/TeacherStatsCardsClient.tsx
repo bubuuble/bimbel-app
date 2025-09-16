@@ -1,6 +1,8 @@
 'use client'
 
+import { useState, useEffect } from "react"; // <-- Impor hook
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton"; // <-- Impor Skeleton
 import { Users, GraduationCap, ClipboardCheck, Edit } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -16,13 +18,47 @@ interface TeacherStatsCardsClientProps {
   error?: boolean;
 }
 
+// Komponen skeleton untuk placeholder saat loading atau sebelum hydration
+function StatsSkeleton() {
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-12 mt-1" />
+                        <Skeleton className="h-3 w-32 mt-2" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}
+
+
 export default function TeacherStatsCardsClient({ stats, error }: TeacherStatsCardsClientProps) {
   const { t } = useLanguage();
-  
+  // [PERBAIKAN] State untuk melacak apakah komponen sudah 'mounted' di client
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // Efek ini hanya berjalan di sisi client, setelah render awal
+    setIsMounted(true);
+  }, []);
+
   if (error || !stats) {
-    return <p className="text-red-500">{t('teacher.stats.error')}</p>;
+    return <p className="text-red-500">Gagal memuat statistik guru.</p>;
   }
 
+  // Jika belum mounted, tampilkan skeleton agar cocok dengan render server
+  if (!isMounted) {
+    return <StatsSkeleton />;
+  }
+
+  // Setelah mounted, baru render konten yang sudah diterjemahkan
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>

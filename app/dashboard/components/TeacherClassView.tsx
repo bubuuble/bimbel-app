@@ -1,6 +1,6 @@
 // FILE: app/dashboard/components/TeacherClassView.tsx (Versi Multi-File)
 
-import type { Class, Material, AttendanceSession } from "@/lib/types";
+import type { Class, Material, AttendanceSession, Test } from "@/lib/types";
 import { deleteMaterial } from "@/lib/actions";
 import Link from "next/link";
 
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Trash2, ExternalLink, Eye, Paperclip } from "lucide-react";
+import { FileText, Trash2, ExternalLink, Eye, Paperclip, Plus, ClipboardList } from "lucide-react";
 
 import UploadMaterialForm from "./UploadMaterialForm";
 import EnrolledStudentsList from "./EnrolledStudentsList";
@@ -18,9 +18,10 @@ type Props = {
   classInfo: Pick<Class, 'id' | 'name' | 'description'>;
   materials: Material[];
   initialSessions: AttendanceSession[];
+  tests: Test[];
 };
 
-export default function TeacherClassView({ classInfo, materials, initialSessions }: Props) {
+export default function TeacherClassView({ classInfo, materials, initialSessions, tests }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -110,6 +111,57 @@ export default function TeacherClassView({ classInfo, materials, initialSessions
               ) : (
                 <p className="text-muted-foreground text-center py-8">
                   Belum ada materi yang diunggah untuk kelas ini.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Separator />
+
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" />
+                  Ujian Tryout
+                </CardTitle>
+                <Button asChild size="sm">
+                  <Link href={`/dashboard/class/${classInfo.id}/ujian/create`}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Buat Ujian Baru
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {tests && tests.length > 0 ? (
+                <div className="space-y-3">
+                  {/* [PERBAIKAN] Menambahkan tipe eksplisit untuk 'test' */}
+                  {tests.map((test: Test) => (
+                    <div key={test.id} className="p-4 border rounded-lg flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{test.title}</h3>
+                        <p className="text-sm text-muted-foreground">{test.duration_minutes} Menit</p>
+                      </div>
+                      <div className="flex gap-2">
+                         <Button variant="outline" size="sm" asChild>
+                            <Link href={`/dashboard/class/${classInfo.id}/ujian/${test.id}/hasil`}>
+                                Lihat Hasil
+                            </Link>
+                         </Button>
+                         <Button variant="default" size="sm" asChild>
+                            <Link href={`/dashboard/class/${classInfo.id}/ujian/${test.id}/edit`}>
+                                <Eye className="h-4 w-4 mr-1" />
+                                Edit Soal
+                            </Link>
+                         </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Belum ada ujian yang dibuat untuk kelas ini.
                 </p>
               )}
             </CardContent>

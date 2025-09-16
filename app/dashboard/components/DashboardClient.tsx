@@ -22,7 +22,8 @@ import {
   Calendar,
   User,
   Menu,
-  ShoppingCart
+  ShoppingCart,
+  ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -157,6 +158,9 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
             <NavSection title={t('nav.classes')}>
               <NavLink href="/dashboard/kelas" icon={BookOpen} onClick={() => setSidebarOpen(false)}>
                 {t('nav.classes')}
+              </NavLink>
+              <NavLink href="/dashboard/ujian" icon={ClipboardList} onClick={() => setSidebarOpen(false)}>
+                Ujian Tryout
               </NavLink>
             </NavSection>
           )}

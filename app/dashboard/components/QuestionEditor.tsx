@@ -1,0 +1,962 @@
+"use client";
+
+import React, { useState, useEffect, useCallback, useActionState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import type { 
+  Question, 
+  QuestionType,
+  MultipleChoiceOption,
+  TrueFalseStatement,
+  MatchingPrompt,
+  MatchingOption,
+  MatchingCorrectPair
+} from "@/lib/types";
+import { addQuestionToTest, updateQuestion, deleteQuestion } from "@/lib/actions";
+import { useFormStatus } from "react-dom";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, X, Loader2, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import DOMPurify from "dompurify";
+import dynamic from "next/dynamic";
+
+// --- HELPER TYPES ---
+type NewOption = { text: string; is_correct: boolean };
+type NewStatement = { text: string; is_true: boolean };
+type NewMatchItem = { id: string | number; text: string };
+type NewPair = { promptId: string | number; optionId: string | number | null };
+
+const ClientPagination = ({ currentPage, totalPages, onPageChange }: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center space-x-2 mt-4">
+      <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>
+        <ChevronLeft className="h-4 w-4" />
+        <span className="sr-only">Sebelumnya</span>
+      </Button>
+      <span className="text-sm font-medium text-muted-foreground">
+        Halaman {currentPage} dari {totalPages}
+      </span>
+      <Button variant="outline" size="sm" onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+        <span className="sr-only">Berikutnya</span>
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
+
+const TinyEditor = dynamic(
+  () => import("@/components/ui/tinymce-editor").then((mod) => mod.TinyEditor),
+  {
+    ssr: false, // Editor ini juga hanya bisa berjalan di client
+    loading: () => (
+      <div className="border rounded-md min-h-[500px] flex items-center justify-center">
+        <p>Memuat editor canggih...</p>
+      </div>
+    ),
+  }
+);
+
+// --- SUB-KOMPONEN FORM: Pilihan Ganda ---
+const MultipleChoiceForm = ({
+  options,
+  setOptions,
+}: {
+  options: NewOption[];
+  setOptions: React.Dispatch<React.SetStateAction<NewOption[]>>;
+}) => {
+  const [isComplex, setIsComplex] = useState(
+    options.filter((o) => o.is_correct).length > 1
+  );
+
+  // Handler ini sekarang menerima konten HTML dari TinyEditor
+  const handleOptionTextChange = (index: number, content: string) => {
+    setOptions((prev) =>
+      prev.map((o, i) => (i === index ? { ...o, text: content } : o))
+    );
+  };
+
+  const handleCorrectChange = (index: number, checked: boolean) => {
+    if (!isComplex) {
+      setOptions((prev) =>
+        prev.map((o, i) => ({ ...o, is_correct: i === index }))
+      );
+    } else {
+      setOptions((prev) =>
+        prev.map((o, i) => (i === index ? { ...o, is_correct: checked } : o))
+      );
+    }
+  };
+
+  const addOption = () =>
+    setOptions((prev) => [...prev, { text: "", is_correct: false }]);
+  const removeOption = (index: number) =>
+    setOptions((prev) => prev.filter((_, i) => i !== index));
+
+  useEffect(() => {
+    setIsComplex(options.filter((o) => o.is_correct).length > 1);
+  }, [options]);
+
+  return (
+    <div className="space-y-4 border-t pt-4">
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="isComplex"
+          checked={isComplex}
+          onCheckedChange={(c) => setIsComplex(c as boolean)}
+        />
+        <Label htmlFor="isComplex">Izinkan beberapa jawaban benar</Label>
+      </div>
+      <Label>Pilihan Jawaban</Label>
+      <div className="space-y-3">
+        {options.map((opt, index) => (
+          // [PERUBAHAN UI] Menggunakan items-start agar sejajar dengan RTE yang lebih tinggi
+          <div key={index} className="flex items-start gap-3">
+            <div className="flex items-center pt-2 gap-2">
+              {" "}
+              {/* Wrapper untuk label dan checkbox */}
+              <Label
+                htmlFor={`opt-${index}`}
+                className="flex h-9 w-9 items-center justify-center rounded-md border font-mono flex-shrink-0"
+              >
+                {String.fromCharCode(65 + index)}
+              </Label>
+              <Checkbox
+                id={`opt-${index}`}
+                checked={opt.is_correct}
+                onCheckedChange={(c) =>
+                  handleCorrectChange(index, c as boolean)
+                }
+              />
+            </div>
+
+            {/* [PERUBAHAN UTAMA] Mengganti <Input> dengan <TinyEditor> */}
+            <div className="w-full">
+              <TinyEditor
+                variant="compact"
+                value={opt.text}
+                onChange={(content) => handleOptionTextChange(index, content)}
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-destructive mt-2" // Beri sedikit margin atas
+              onClick={() => removeOption(index)}
+              disabled={options.length <= 2}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={addOption}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Tambah Pilihan
+      </Button>
+      <input
+        type="hidden"
+        name="options"
+        value={JSON.stringify(
+          options.map((o) => ({
+            option_text: o.text,
+            is_correct: o.is_correct,
+          }))
+        )}
+      />
+    </div>
+  );
+};
+
+// --- SUB-KOMPONEN FORM: Benar/Salah ---
+const TrueFalseForm = ({
+  statements,
+  setStatements,
+}: {
+  statements: NewStatement[];
+  setStatements: React.Dispatch<React.SetStateAction<NewStatement[]>>;
+}) => {
+  // Handler sekarang menerima konten HTML
+  const handleTextChange = (index: number, content: string) =>
+    setStatements((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, text: content } : s))
+    );
+
+  const handleBoolChange = (index: number, checked: boolean) =>
+    setStatements((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, is_true: checked } : s))
+    );
+
+  const addItem = () =>
+    setStatements((prev) => [...prev, { text: "", is_true: true }]);
+  const removeItem = (index: number) =>
+    setStatements((prev) => prev.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-4 border-t pt-4">
+      <Label>Daftar Pernyataan</Label>
+      <div className="space-y-3">
+        {statements.map((stmt, index) => (
+          <div key={index} className="flex items-start gap-3">
+            {/* [PERUBAHAN UTAMA] Mengganti <Input> dengan <TinyEditor> */}
+            <div className="w-full">
+              <TinyEditor
+                variant="compact"
+                value={stmt.text}
+                onChange={(content) => handleTextChange(index, content)}
+              />
+            </div>
+
+            <div className="flex flex-col items-center gap-2 pt-2">
+              {" "}
+              {/* Wrapper untuk Switch dan Tombol Hapus */}
+              <div className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                <Label htmlFor={`tf-${index}`}>Benar</Label>
+                <Switch
+                  id={`tf-${index}`}
+                  checked={stmt.is_true}
+                  onCheckedChange={(c) => handleBoolChange(index, c)}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive"
+                onClick={() => removeItem(index)}
+                disabled={statements.length <= 1}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={addItem}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Tambah Pernyataan
+      </Button>
+      <input
+        type="hidden"
+        name="statements"
+        value={JSON.stringify(
+          statements.map((s) => ({
+            statement_text: s.text,
+            is_true: s.is_true,
+          }))
+        )}
+      />
+    </div>
+  );
+};
+
+// --- SUB-KOMPONEN FORM: Menjodohkan ---
+const MatchingForm = ({
+  prompts,
+  setPrompts,
+  matchOptions,
+  setMatchOptions,
+  pairs,
+  setPairs,
+}: {
+  prompts: NewMatchItem[];
+  setPrompts: React.Dispatch<React.SetStateAction<NewMatchItem[]>>;
+  matchOptions: NewMatchItem[];
+  setMatchOptions: React.Dispatch<React.SetStateAction<NewMatchItem[]>>;
+  pairs: NewPair[];
+  setPairs: React.Dispatch<React.SetStateAction<NewPair[]>>;
+}) => {
+  const addItem = (
+    setter: React.Dispatch<React.SetStateAction<NewMatchItem[]>>
+  ) => setter((prev) => [...prev, { id: Date.now(), text: "" }]);
+
+  const removeItem = (
+    id: string | number,
+    setter: React.Dispatch<React.SetStateAction<NewMatchItem[]>>
+  ) => setter((prev) => prev.filter((item) => item.id !== id));
+
+  // Handler sekarang menerima konten HTML
+  const updateText = (
+    id: string | number,
+    content: string,
+    setter: React.Dispatch<React.SetStateAction<NewMatchItem[]>>
+  ) =>
+    setter((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, text: content } : item))
+    );
+  const updatePair = (promptId: string | number, optionId: string | number) => {
+    setPairs((prev) => {
+      const newPairs = prev.filter(p => p.promptId !== promptId);
+      return [...newPairs, { promptId, optionId }];
+    });
+  };
+
+  return (
+    <div className="space-y-4 border-t pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Kolom A (Prompts) */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold">Kolom A (Prompts)</Label>
+          {prompts.map((p) => (
+            <div key={p.id} className="space-y-2">
+              <TinyEditor
+                variant="compact"
+                value={p.text}
+                onChange={(content) => updateText(p.id, content, setPrompts)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-destructive"
+                onClick={() => removeItem(p.id, setPrompts)}
+                disabled={prompts.length <= 1}
+              >
+                <X className="h-4 w-4 mr-2" /> Hapus Prompt
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => addItem(setPrompts)}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4" /> Tambah Prompt
+          </Button>
+        </div>
+
+        {/* Kolom B (Pilihan) */}
+        <div className="space-y-4">
+          <Label className="text-lg font-semibold">Kolom B (Pilihan)</Label>
+          {matchOptions.map((o) => (
+            <div key={o.id} className="space-y-2">
+              <TinyEditor
+                variant="compact"
+                value={o.text}
+                onChange={(content) =>
+                  updateText(o.id, content, setMatchOptions)
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-destructive"
+                onClick={() => removeItem(o.id, setMatchOptions)}
+                disabled={matchOptions.length <= 1}
+              >
+                <X className="h-4 w-4 mr-2" /> Hapus Pilihan
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => addItem(setMatchOptions)}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4" /> Tambah Pilihan
+          </Button>
+        </div>
+      </div>
+      <div className="border-t pt-4 space-y-6">
+        <Label className="text-lg font-semibold">Kunci Jawaban</Label>
+        <p className="text-sm text-muted-foreground">
+          Jodohkan setiap item di Kolom A dengan satu item di Kolom B.
+        </p>
+        
+        {prompts.map((prompt) => (
+          <div key={prompt.id} className="p-4 border rounded-lg space-y-4">
+            <Label>Jodoh untuk Prompt:</Label>
+            {/* Tampilkan prompt (Kolom A) */}
+            <div className="prose dark:prose-invert max-w-none prose-sm p-3 bg-muted/50 rounded-md"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(prompt.text) }}
+            />
+
+            {/* Tampilkan semua pilihan (Kolom B) sebagai radio button */}
+            <RadioGroup
+              value={pairs.find(p => p.promptId === prompt.id)?.optionId?.toString()}
+              onValueChange={(optionId) => updatePair(prompt.id, optionId)}
+            >
+              <Label>Pilih Pasangan dari Kolom B:</Label>
+              <div className="space-y-3">
+                {matchOptions.map((option) => (
+                  <div key={option.id} className="flex items-start gap-3 p-2 border rounded-md has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
+                    <RadioGroupItem value={option.id.toString()} id={`${prompt.id}-${option.id}`} />
+                    <Label htmlFor={`${prompt.id}-${option.id}`} className="font-normal flex-1 cursor-pointer">
+                       <div className="prose dark:prose-invert max-w-none prose-sm"
+                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(option.text) }}
+                       />
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
+        ))}
+      </div>
+      <input
+        type="hidden"
+        name="prompts"
+        value={JSON.stringify(prompts.map((p) => ({ text: p.text })))}
+      />
+      <input
+        type="hidden"
+        name="matchOptions"
+        value={JSON.stringify(matchOptions.map((o) => ({ text: o.text })))}
+      />
+      <input
+        type="hidden"
+        name="pairs"
+        value={JSON.stringify(
+          // Pindahkan logika perhitungan `finalPairs` ke sini.
+          // Ini memastikan data yang paling baru yang digunakan saat form disubmit.
+          pairs.map((p) => {
+            const prompt = prompts.find((item) => item.id === p.promptId);
+            const option = matchOptions.find((item) => item.id.toString() === p.optionId?.toString());
+            if (prompt && option && prompt.text && option.text) {
+              return { prompt_text: prompt.text, option_text: option.text };
+            }
+            return null;
+          }).filter(Boolean)
+        )}
+      />
+    </div>
+  );
+};
+
+// --- KOMPONEN DETAIL SOAL (PREVIEW) ---
+function QuestionDetail({ question, questionIndex, onEdit }: {
+    question: Question; questionIndex: number; onEdit: () => void;
+}) {
+    const typeMap: Record<QuestionType, string> = { MULTIPLE_CHOICE: "Pilihan Ganda", TRUE_FALSE: "Benar/Salah", MATCHING: "Menjodohkan" };
+
+    // [PERBAIKAN UTAMA] Gunakan ADD_TAGS dan ADD_ATTR untuk MENAMBAHKAN izin, bukan menggantinya.
+    const sanitizeConfig = {
+        ADD_TAGS: ['table', 'thead', 'tbody', 'tr', 'th', 'td', 'caption'],
+        ADD_ATTR: ['colspan', 'rowspan', 'scope'],
+    };
+
+    // Fungsi helper untuk membersihkan HTML agar kode lebih rapi
+    const sanitizeHTML = (html: string | undefined | null) => {
+        // Cek apakah kode berjalan di client sebelum menggunakan DOMPurify
+        if (typeof window === 'undefined') {
+            return html || ''; // Kembalikan teks asli jika di server
+        }
+        return DOMPurify.sanitize(html || '', sanitizeConfig);
+    };
+
+    return (
+        <Card className="lg:col-span-7 sticky top-4 h-fit">
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Soal #{questionIndex}</CardTitle>
+                    <Button onClick={onEdit} variant="outline" size="sm">
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Soal
+                    </Button>
+                </div>
+                <CardDescription>
+                    <Badge variant="secondary">{typeMap[question.type]}</Badge>
+                    <span className="ml-2 text-sm text-muted-foreground">({question.marks} poin)</span>
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {/* Teks Pertanyaan */}
+                <div className="space-y-2">
+                    <Label className="text-sm font-medium">Pertanyaan</Label>
+                    <div className="p-3 bg-muted/50 rounded-md">
+                        <div 
+                            className="prose dark:prose-invert max-w-none prose-sm"
+                            dangerouslySetInnerHTML={{ __html: sanitizeHTML(question.question_text) }} 
+                        />
+                    </div>
+                </div>
+
+                {/* --- Detail Berdasarkan Tipe Soal --- */}
+                
+                {question.type === "MULTIPLE_CHOICE" && question.multiple_choice_options && (
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Pilihan Jawaban</Label>
+                        <div className="space-y-2">
+                            {question.multiple_choice_options.map((option, index) => (
+                                <div key={option.id} className={cn("flex items-start gap-3 p-2 rounded-md border", option.is_correct ? "bg-green-50 border-green-200" : "bg-gray-50")}>
+                                    <span className="flex h-6 w-6 mt-1 items-center justify-center rounded-full bg-white border text-xs font-mono flex-shrink-0">{String.fromCharCode(65 + index)}</span>
+                                    <div className="prose dark:prose-invert max-w-none prose-sm flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(option.option_text) }} />
+                                    {option.is_correct && <Badge variant="default" className="text-xs self-center">Benar</Badge>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {question.type === "TRUE_FALSE" && question.true_false_statements && (
+                     <div className="space-y-2">
+                        <Label className="text-sm font-medium">Daftar Pernyataan</Label>
+                        <div className="space-y-2">
+                            {question.true_false_statements.map((statement, index) => (
+                                <div key={statement.id} className={cn("flex items-start gap-3 p-3 rounded-md border", statement.is_true ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200")}>
+                                    <span className="flex h-6 w-6 mt-1 items-center justify-center rounded-full bg-white border text-xs font-mono flex-shrink-0">{index + 1}</span>
+                                    <div className="prose dark:prose-invert max-w-none prose-sm flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(statement.statement_text) }} />
+                                    <Badge variant={statement.is_true ? "default" : "destructive"} className="text-xs self-center">{statement.is_true ? "Benar" : "Salah"}</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {question.type === "MATCHING" && question.matching_prompts && question.matching_options && question.matching_correct_pairs && (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Kolom A (Prompts)</Label>
+                                <div className="space-y-1">
+                                    {question.matching_prompts.map((prompt, index) => (
+                                        <div key={prompt.id} className="flex items-start gap-2 p-2 bg-blue-50 border-blue-200 border rounded-md">
+                                            <span className="flex h-6 w-6 mt-1 items-center justify-center rounded-full bg-white border text-xs font-mono flex-shrink-0">{index + 1}</span>
+                                            <div className="prose dark:prose-invert max-w-none prose-sm flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(prompt.prompt_text) }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Kolom B (Pilihan)</Label>
+                                <div className="space-y-1">
+                                    {question.matching_options.map((option, index) => (
+                                        <div key={option.id} className="flex items-start gap-2 p-2 bg-gray-50 border rounded-md">
+                                            <span className="flex h-6 w-6 mt-1 items-center justify-center rounded-full bg-white border text-xs font-mono flex-shrink-0">{String.fromCharCode(65 + index)}</span>
+                                            <div className="prose dark:prose-invert max-w-none prose-sm flex-1" dangerouslySetInnerHTML={{ __html: sanitizeHTML(option.option_text) }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Kunci Jawaban</Label>
+                            <div className="space-y-1">
+                                {question.matching_correct_pairs.map((pair) => {
+                                    const prompt = question.matching_prompts?.find(p => p.id === pair.prompt_id);
+                                    const option = question.matching_options?.find(o => o.id === pair.option_id);
+                                    const promptIndex = (question.matching_prompts?.findIndex(p => p.id === pair.prompt_id) ?? -1) + 1;
+                                    const optionIndex = question.matching_options?.findIndex(o => o.id === pair.option_id) ?? -1;
+                                    const optionLetter = optionIndex !== -1 ? String.fromCharCode(65 + optionIndex) : '';
+                                    
+                                    return (
+                                        <div key={`${pair.prompt_id}-${pair.option_id}`} className="flex items-center gap-2 p-2 bg-green-50 border-green-200 border rounded-md">
+                                            <span className="text-sm font-medium">{promptIndex} → {optionLetter}</span>
+                                            <div className="text-xs text-muted-foreground flex gap-1 items-center overflow-hidden">
+                                                <div className="truncate" dangerouslySetInnerHTML={{ __html: `"` + sanitizeHTML(prompt?.prompt_text) + `"` }} />
+                                                <span>→</span>
+                                                <div className="truncate" dangerouslySetInnerHTML={{ __html: `"` + sanitizeHTML(option?.option_text) + `"` }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+// --- DAFTAR SOAL (SISI KIRI) ---
+function QuestionList({
+  questions,
+  totalQuestions,
+  selectedQuestionId,
+  onSelect,
+  onDelete,
+  currentPage,
+  itemsPerPage,
+}: {
+  questions: Question[];
+  totalQuestions: number;
+  selectedQuestionId: string | null;
+  onSelect: (question: Question) => void;
+  onDelete: (questionId: string) => void;
+  currentPage: number;
+  itemsPerPage: number;
+}) {
+  const typeMap: Record<QuestionType, string> = {
+    MULTIPLE_CHOICE: "Pilihan Ganda",
+    TRUE_FALSE: "Benar/Salah",
+    MATCHING: "Menjodohkan",
+  };
+
+  // [PERUBAHAN UTAMA] Fungsi helper untuk membersihkan dan memotong teks
+  const formatQuestionText = (html: string) => {
+    if (typeof window === 'undefined') return html; // Hindari error di server
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const plainText = doc.body.textContent || "";
+    if (plainText.length > 100) {
+      return plainText.substring(0, 100) + "...";
+    }
+    if (!plainText.trim()) {
+      return "[Soal berisi gambar/media]";
+    }
+    return plainText;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Daftar Soal ({totalQuestions})</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {questions.length > 0 ? (
+          questions.map((q, index) => (
+            <div key={q.id} className="flex items-center gap-2">
+              <button
+                onClick={() => onSelect(q)}
+                className={cn(
+                  "flex-1 text-left p-2 border rounded-md flex items-center justify-between gap-2 transition-colors overflow-hidden", // Tambah overflow-hidden untuk keamanan
+                  selectedQuestionId === q.id ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/50"
+                )}
+              >
+                {/* [PERBAIKAN UTAMA DI SINI] */}
+                <p className="font-medium text-sm truncate min-w-0"> {/* <-- Tambahkan 'min-w-0' */}
+                  {(currentPage - 1) * itemsPerPage + index + 1}. {formatQuestionText(q.question_text)}
+                </p>
+
+                <Badge variant={selectedQuestionId === q.id ? "default" : "secondary"} className="text-xs flex-shrink-0"> {/* Tambah flex-shrink-0 */}
+                  {typeMap[q.type]}
+                </Badge>
+              </button>
+              <Button
+                aria-label="Hapus Soal"
+                variant="ghost"
+                size="icon"
+                className="text-destructive h-9 w-9 flex-shrink-0"
+                onClick={() => onDelete(q.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-muted-foreground py-8">Belum ada soal.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- FORM UTAMA (SEKARANG FULLY UNCONTROLLED) ---
+function QuestionForm({ testId, selectedQuestion, onFinish, allQuestions }: any) {
+  // SEMUA state untuk form ini sekarang ada di sini. Inilah satu-satunya "sumber kebenaran".
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [questionText, setQuestionText] = useState(selectedQuestion?.question_text || '');
+  const [marks, setMarks] = useState(selectedQuestion?.marks || 1);
+  const [questionType, setQuestionType] = useState<QuestionType>(selectedQuestion?.type || 'MULTIPLE_CHOICE');
+  const [options, setOptions] = useState<NewOption[]>(selectedQuestion?.multiple_choice_options?.map((o: MultipleChoiceOption) => ({ text: o.option_text, is_correct: o.is_correct })) || [{ text: "", is_correct: true }, { text: "", is_correct: false }]);
+  const [statements, setStatements] = useState<NewStatement[]>(selectedQuestion?.true_false_statements?.map((s: TrueFalseStatement) => ({ text: s.statement_text, is_true: s.is_true })) || [{ text: "", is_true: true }]);
+  const [prompts, setPrompts] = useState<NewMatchItem[]>(selectedQuestion?.matching_prompts?.map((p: MatchingPrompt) => ({ id: p.id, text: p.prompt_text })) || [{ id: Date.now(), text: '' }]);
+  const [matchOptions, setMatchOptions] = useState<NewMatchItem[]>(selectedQuestion?.matching_options?.map((o: MatchingOption) => ({ id: o.id, text: o.option_text })) || [{ id: Date.now() + 1, text: '' }]);
+  const [pairs, setPairs] = useState<NewPair[]>(selectedQuestion?.matching_correct_pairs?.map((p: MatchingCorrectPair) => ({ promptId: p.prompt_id, optionId: p.option_id })) || []);
+  
+  const questionIndex = selectedQuestion ? allQuestions.findIndex((q: Question) => q.id === selectedQuestion.id) + 1 : 0;
+  const typeToRender = selectedQuestion ? selectedQuestion.type : questionType;
+
+  // Handler submit manual yang membaca langsung dari state
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData();
+    formData.append('testId', testId);
+    if (selectedQuestion) {
+      formData.append('questionId', selectedQuestion.id);
+    }
+    
+    // Ambil data langsung dari state yang PALING BARU
+    formData.append('questionText', questionText);
+    formData.append('marks', marks.toString());
+    formData.append('type', typeToRender);
+    formData.append('options', JSON.stringify(options.map(o => ({ option_text: o.text, is_correct: o.is_correct }))));
+    formData.append('statements', JSON.stringify(statements.map(s => ({ statement_text: s.text, is_true: s.is_true }))));
+    formData.append('prompts', JSON.stringify(prompts.map(p => ({ text: p.text }))));
+    formData.append('matchOptions', JSON.stringify(matchOptions.map(o => ({ text: o.text }))));
+    
+    const finalPairs = pairs.map(p => {
+        const prompt = prompts.find(item => item.id === p.promptId);
+        const option = matchOptions.find(item => item.id.toString() === p.optionId?.toString());
+        if (prompt && option && prompt.text && option.text) {
+          return { prompt_text: prompt.text, option_text: option.text };
+        }
+        return null;
+    }).filter(Boolean);
+    formData.append('pairs', JSON.stringify(finalPairs));
+
+    const action = selectedQuestion ? updateQuestion : addQuestionToTest;
+    const result = await action(null, formData);
+
+    if (result?.error) {
+      toast.error("Gagal", { description: result.error });
+    } else {
+      toast.success(`Soal berhasil ${selectedQuestion ? "diperbarui" : "ditambahkan"}!`);
+      onFinish();
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{selectedQuestion ? `Edit Soal #${questionIndex}` : "Tambah Soal Baru"}</CardTitle>
+        {selectedQuestion && (<Button variant="link" className="p-0 h-auto self-start" onClick={onFinish}>Batal & Kembali</Button>)}
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Teks Pertanyaan</Label>
+            <TinyEditor value={questionText} onChange={setQuestionText} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Poin</Label>
+            <Input name="marks" type="number" value={marks} onChange={(e) => setMarks(parseInt(e.target.value) || 1)} required />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Tipe Soal</Label>
+            <Select value={typeToRender} onValueChange={(v) => !selectedQuestion && setQuestionType(v as QuestionType)} disabled={!!selectedQuestion}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="MULTIPLE_CHOICE">Pilihan Ganda</SelectItem>
+                <SelectItem value="TRUE_FALSE">Benar/Salah</SelectItem>
+                <SelectItem value="MATCHING">Menjodohkan</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {typeToRender === "MULTIPLE_CHOICE" && <MultipleChoiceForm options={options} setOptions={setOptions} />}
+          {typeToRender === "TRUE_FALSE" && <TrueFalseForm statements={statements} setStatements={setStatements} />}
+          {typeToRender === 'MATCHING' && <MatchingForm prompts={prompts} setPrompts={setPrompts} matchOptions={matchOptions} setMatchOptions={setMatchOptions} pairs={pairs} setPairs={setPairs}/>}
+
+          <SubmitButton text={selectedQuestion ? "Simpan Perubahan" : "Simpan Soal"} isSubmitting={isSubmitting} />
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+// --- KOMPONEN INDUK UTAMA ---
+export default function QuestionEditor({ testId }: { testId: string }) {
+  const supabase = createClient();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [isFormActive, setIsFormActive] = useState(false);
+
+  // State untuk pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const QUESTIONS_PER_PAGE = 10;
+
+  // [PERUBAHAN] Fungsi untuk mengambil data dari Supabase di sisi client
+  const fetchQuestions = useCallback(async () => {
+    console.log("Fetching questions from client...");
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("questions")
+      .select(
+        `
+                *,
+                multiple_choice_options(*),
+                true_false_statements(*),
+                matching_prompts(*),
+                matching_options(*),
+                matching_correct_pairs(*)
+            `
+      )
+      .eq("test_id", testId)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      toast.error("Gagal memuat soal", { description: error.message });
+      setQuestions([]);
+    } else {
+      console.log("Questions fetched successfully:", data);
+      setQuestions(data as Question[]);
+    }
+    setIsLoading(false);
+  }, [testId, supabase]);
+
+  // [PERUBAHAN] Mengambil data saat komponen pertama kali dimuat
+  useEffect(() => {
+    fetchQuestions();
+  }, [fetchQuestions]);
+
+  // --- Handler UI (sebagian besar sama, beberapa dimodifikasi) ---
+  const handleQuestionSelect = (question: Question) => {
+    setSelectedQuestion(question);
+    setIsFormActive(false);
+  };
+
+  const handleAddNew = () => {
+    setSelectedQuestion(null);
+    setIsFormActive(true);
+  };
+
+  const handleEdit = () => {
+    setIsFormActive(true);
+  };
+
+  const handleFormFinish = () => {
+    setIsFormActive(false);
+    setSelectedQuestion(null);
+    // [PERUBAHAN] Panggil fetchQuestions() untuk update UI, bukan router.refresh()
+    fetchQuestions();
+  };
+
+  const handleDelete = async (questionId: string) => {
+    if (!confirm("Anda yakin ingin menghapus soal ini?")) return;
+    const formData = new FormData();
+    formData.append("questionId", questionId);
+    toast.promise(deleteQuestion(formData), {
+      loading: "Menghapus soal...",
+      success: (res) => {
+        if (res.error) throw new Error(res.error);
+        if (selectedQuestion?.id === questionId) {
+          setSelectedQuestion(null);
+          setIsFormActive(false);
+        }
+        // [PERUBAHAN] Panggil fetchQuestions() untuk update UI
+        fetchQuestions();
+        return "Soal berhasil dihapus!";
+      },
+      error: (err) => `Gagal menghapus: ${err.message}`,
+    });
+  };
+
+  const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
+  const startIndex = (currentPage - 1) * QUESTIONS_PER_PAGE;
+  const paginatedQuestions = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      const isSelectedQuestionVisible = questions.slice((page - 1) * QUESTIONS_PER_PAGE, page * QUESTIONS_PER_PAGE).some(q => q.id === selectedQuestion?.id);
+      if (!isSelectedQuestionVisible) {
+        setSelectedQuestion(null);
+        setIsFormActive(false);
+      }
+      setCurrentPage(page);
+    }
+  };
+
+  // [PERUBAHAN] Tampilkan state loading jika data belum siap
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-10 border rounded-lg bg-card">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-4 text-muted-foreground">Memuat soal...</span>
+      </div>
+    );
+  }
+
+  const questionIndex = selectedQuestion
+    ? questions.findIndex((q) => q.id === selectedQuestion.id) + 1
+    : 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Button onClick={handleAddNew}>
+          <Plus className="h-4 w-4 mr-2" />
+          Tambah Soal Baru
+        </Button>
+      </div>
+
+      {/* [LAYOUT BARU] Kiri-Kanan dengan pembagian 4/8 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 1. Sisi KIRI: Daftar Soal yang lebih ramping */}
+        <div className="lg:col-span-4">
+          <QuestionList
+            questions={paginatedQuestions}
+            totalQuestions={questions.length}
+            selectedQuestionId={selectedQuestion?.id || null}
+            onSelect={handleQuestionSelect}
+            onDelete={handleDelete}
+            // [PERBAIKAN 3] Teruskan state dan konstanta sebagai props
+            currentPage={currentPage}
+            itemsPerPage={QUESTIONS_PER_PAGE}
+          />
+          <ClientPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+
+        {/* 2. Sisi KANAN: Form/Detail yang lebih lebar */}
+        <div className="lg:col-span-8">
+          {isFormActive ? (
+            <QuestionForm
+              key={selectedQuestion ? selectedQuestion.id : "new-question"}
+              testId={testId}
+              selectedQuestion={selectedQuestion}
+              onFinish={handleFormFinish}
+              allQuestions={questions}
+            />
+          ) : selectedQuestion ? (
+            <QuestionDetail
+              question={selectedQuestion}
+              questionIndex={questionIndex}
+              onEdit={handleEdit}
+            />
+          ) : (
+            <Card className="h-full flex items-center justify-center min-h-[400px]">
+              <CardContent className="text-center">
+                <p className="text-muted-foreground">
+                  {questions.length > 0 ? "Pilih soal dari daftar di sebelah kiri." : "Belum ada soal. Klik 'Tambah Soal Baru'."}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- HELPER TOMBOL SUBMIT ---
+function SubmitButton({ text, isSubmitting }: { text: string; isSubmitting: boolean }) {
+  return (
+    <Button type="submit" disabled={isSubmitting} className="w-full">
+      {isSubmitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Proses...</>) : text}
+    </Button>
+  );
+}

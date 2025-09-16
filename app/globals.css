@@ -117,6 +117,15 @@
   body {
     @apply bg-background text-foreground;
   }
+  .list-alpha {
+    list-style-type: lower-alpha;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
 }
 
 @keyframes float {
@@ -212,4 +221,24 @@ p div[data-testid*="blockquote"] {
 
 .sanity-studio blockquote div {
   display: contents !important;
+}
+
+/* [PERBAIKAN] Tambahkan gaya agar tabel di dalam editor terlihat jelas */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid hsl(var(--border)); /* Menggunakan variabel warna border dari shadcn */
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose th {
+  background-color: hsl(var(--muted)); /* Menggunakan warna latar muted dari shadcn */
+  font-weight: 600;
 }
