@@ -10,8 +10,8 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import TeacherClassView from "../../components/TeacherClassView";
 import StudentClassView from "../../components/StudentClassView";
 
-export default async function ClassDetailPage({ params }: { params: { classId: string } }) {
-  const { classId } = params; // Baris ini sekarang menjadi valid.
+export default async function ClassDetailPage({ params }: { params: Promise<{ classId: string }> }) {
+  const { classId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {

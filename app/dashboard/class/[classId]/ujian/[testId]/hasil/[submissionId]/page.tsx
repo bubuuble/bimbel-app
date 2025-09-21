@@ -10,9 +10,9 @@ import { ArrowLeft } from "lucide-react";
 export default async function SubmissionReviewPage({ 
   params 
 }: { 
-  params: { classId: string; testId: string; submissionId: string } 
+  params: Promise<{ classId: string; testId: string; submissionId: string }> 
 }) {
-  const { classId, testId, submissionId } = params;
+  const { classId, testId, submissionId } = await params;
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();

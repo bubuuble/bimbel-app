@@ -9,9 +9,9 @@ import TestTakingInterface from "@/app/dashboard/components/TestTakingInterface"
 export default async function TakeTestPage({ 
   params 
 }: { 
-  params: { classId: string; testId: string; submissionId: string } 
+  params: Promise<{ classId: string; testId: string; submissionId: string }> 
 }) {
-  const { classId, testId, submissionId } = params; // Sekarang ini valid
+  const { classId, testId, submissionId } = await params;
   const supabase = await createClient();
   
    const { data: { user } } = await supabase.auth.getUser();

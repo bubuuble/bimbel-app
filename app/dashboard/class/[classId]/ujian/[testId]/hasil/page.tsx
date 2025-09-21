@@ -9,9 +9,9 @@ import { ArrowLeft } from "lucide-react";
 export default async function TestResultsPageForTeacher({ 
   params 
 }: { 
-  params: { classId: string; testId: string } 
+  params: Promise<{ classId: string; testId: string }> 
 }) {
-  const { classId, testId } = params;
+  const { classId, testId } = await params;
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

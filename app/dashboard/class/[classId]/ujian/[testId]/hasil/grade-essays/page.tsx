@@ -8,8 +8,8 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // [PERBAIKAN 1] Ubah cara menerima props untuk meng-await params
-export default async function GradeAllEssaysPage(props: { params: { classId: string; testId: string; } }) {
-  const { classId, testId } = props.params;
+export default async function GradeAllEssaysPage(props: { params: Promise<{ classId: string; testId: string; }> }) {
+  const { classId, testId } = await props.params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect('/login');

@@ -7,9 +7,9 @@ import TestStartInterface from "@/app/dashboard/components/TestStartInterface";
 export default async function TestStartPage({ 
   params 
 }: { 
-  params: { classId: string; testId: string } 
+  params: Promise<{ classId: string; testId: string }> 
 }) {
-  const { classId, testId } = params; // Sekarang ini valid
+  const { classId, testId } = await params;
   const supabase = await createClient();
   
   // Get current user

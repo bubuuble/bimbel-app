@@ -18,7 +18,7 @@ export default function CreateTestForm({ classId }: { classId: string }) {
     // Buat fungsi async 'action' untuk membungkus server action
     const action = async (formData: FormData) => {
         // Panggil server action dan tunggu hasilnya
-        const result = await createTest(formData);
+        const result = await createTest(null, formData);
         
         // Jika server action mengembalikan error, tampilkan
         if (result?.error) {
