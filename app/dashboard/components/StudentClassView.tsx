@@ -5,7 +5,6 @@
 import type { User } from "@supabase/supabase-js";
 import { useRouter } from 'next/navigation'; // <-- Import useRouter
 import type { Class, Material, Submission, Test, TestSubmission } from "@/lib/types"; // <-- Import Test, TestSubmission
-import { startTest } from "@/lib/actions"; // <-- Import server action
 import SubmissionForm from "./SubmissionForm";
 import StudentAttendance from "./StudentAttendance";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
-import { FileText, Clock, CheckCircle, AlertCircle, ChevronDown, Paperclip, ClipboardList } from "lucide-react"; // <-- Tambah ClipboardList
+import { FileText, Clock, CheckCircle, AlertCircle, ChevronDown, Paperclip, ClipboardList, Eye} from "lucide-react"; // <-- Tambah ClipboardList
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import Link from "next/link";
@@ -32,21 +31,16 @@ type Props = {
 };
 
 export default function StudentClassView({ user, classInfo, materials, activeSession, scheduledSession, hasAttended, submissions, tests, testSubmissions }: Props) {
-  const submissionMap = new Map(submissions.map(s => [s.material_id, s]));
   const testSubmissionMap = new Map(testSubmissions.map(s => [s.test_id, s]));
+  const submissionMap = new Map(submissions.map(s => [s.material_id, s]));
   const now = new Date();
   const [openMaterialId, setOpenMaterialId] = useState<string | null>(null);
   const router = useRouter();
-  const [isStartingTest, setIsStartingTest] = useState<string | null>(null);
 
-  const handleStartTest = async (testId: string) => {
-    setIsStartingTest(testId);
-    const result = await startTest(testId);
-    if (result.error) {
-      alert(`Gagal memulai ujian: ${result.error}`);
-      setIsStartingTest(null);
-    } else if (result.submissionId) {
-      router.push(`/ujian/sesi/${result.submissionId}`);
+  const handleResultClick = (e: React.MouseEvent<HTMLAnchorElement>, submission: TestSubmission | undefined) => {
+    if (!submission) {
+      e.preventDefault(); // Mencegah navigasi Link
+      alert("Anda harus mengerjakan ujian ini terlebih dahulu sebelum bisa melihat hasilnya.");
     }
   };
 
@@ -216,12 +210,29 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
             {tests.map(test => {
                 const submission = testSubmissionMap.get(test.id);
                 const isCompleted = submission?.status === 'COMPLETED';
+                const isInProgress = submission?.status === 'IN_PROGRESS';
+
+                // --- [PERBAIKAN 2: URL Link yang diperbaiki] ---
+                const getButtonLink = () => {
+                  if (isInProgress) {
+                    return `/dashboard/class/${classInfo.id}/ujian/${test.id}/take/${submission!.id}`;
+                  }
+                  // Untuk 'Mulai' atau 'Lihat Hasil', arahkan ke halaman 'start'
+                  // Halaman 'start' akan menampilkan info atau hasil berdasarkan status
+                  return `/dashboard/class/${classInfo.id}/ujian/${test.id}/start`;
+                };
+                
+                // Link khusus untuk tombol "Lihat Hasil"
+                const resultLink = isCompleted 
+                    ? `/dashboard/class/${classInfo.id}/ujian/${test.id}/hasil/${submission!.id}` 
+                    : '#';
+
                 return (
-                    <Card key={test.id}>
+                    <Card key={test.id} className="flex flex-col">
                         <CardHeader>
                             <CardTitle>{test.title}</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-grow">
                           <p className="text-sm text-muted-foreground mb-4">{test.duration_minutes} Menit</p>
                           {isCompleted && (
                             <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
@@ -232,31 +243,33 @@ export default function StudentClassView({ user, classInfo, materials, activeSes
                             </Alert>
                           )}
                         </CardContent>
-                        <CardFooter>
-                          {isCompleted ? (
-                             <Button variant="outline" asChild className="w-full">
-                                <Link href={`/ujian/hasil/${submission.id}`}>Lihat Pembahasan</Link>
-                             </Button>
-                          ) : (
-                             <Button 
-                                onClick={() => handleStartTest(test.id)} 
-                                disabled={!!isStartingTest} 
-                                className="w-full"
-                              >
-                                {isStartingTest === test.id ? 'Memuat...' : (submission ? 'Lanjutkan Mengerjakan' : 'Mulai Kerjakan')}
-                             </Button>
-                          )}
+                        <CardFooter className="flex flex-col gap-2">
+                           {/* Tombol Aksi Utama (Mulai atau Lanjutkan) */}
+                           <Button asChild className="w-full">
+                              <Link href={getButtonLink()}>
+                                {isInProgress ? 'Lanjutkan Ujian' : 'Mulai Ujian'}
+                              </Link>
+                           </Button>
+
+                           {/* Tombol Lihat Hasil, hanya ditampilkan jika ujian sudah pernah dikerjakan */}
+                           {submission && (
+                               <Button asChild variant="outline" className="w-full">
+                                  <Link 
+                                    href={resultLink}
+                                    onClick={(e) => handleResultClick(e, submission)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Lihat Hasil
+                                  </Link>
+                               </Button>
+                           )}
                         </CardFooter>
                     </Card>
                 );
             })}
           </div>
         ) : (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-muted-foreground">Belum ada ujian yang tersedia untuk kelas ini.</p>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="text-center py-8"><p className="text-muted-foreground">Belum ada ujian yang tersedia untuk kelas ini.</p></CardContent></Card>
         )}
       </div>
     </div>

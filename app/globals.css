@@ -125,6 +125,30 @@
 @layer components {
   .container {
     @apply max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8;
+
+    .AlertDialogContent {
+    @apply border-2 border-primary/20 shadow-2xl; /* Tambahkan border berwarna dan bayangan lebih tebal */
+    border-radius: var(--radius-xl); /* Gunakan radius yang lebih besar */
+  }
+
+  /* --- Menata background overlay --- */
+  .AlertDialogOverlay {
+    @apply backdrop-blur-sm; /* Tambahkan efek blur ke latar belakang */
+  }
+
+  /* --- Menata judul dialog --- */
+  .AlertDialogTitle {
+    @apply text-xl font-bold text-foreground; /* Buat judul lebih besar dan tebal */
+  }
+
+  /* --- Menata tombol aksi default (misal: "Lanjutkan", "Confirm") --- */
+  .AlertDialogAction {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90; /* Gaya tombol utama */
+  }
+
+  /* --- Menata tombol batal default --- */
+  .AlertDialogCancel {
+    @apply border-border hover:bg-accent; /* Gaya tombol sekunder */
   }
 }
 
@@ -241,4 +265,6 @@ p div[data-testid*="blockquote"] {
 .prose th {
   background-color: hsl(var(--muted)); /* Menggunakan warna latar muted dari shadcn */
   font-weight: 600;
+}
+
 }

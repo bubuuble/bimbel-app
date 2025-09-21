@@ -296,6 +296,53 @@ export async function enrollInClass(
   return { success: 'Successfully enrolled in the class!' };
 }
 
+export async function enrollStudentByTeacher(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const classId = formData.get('classId') as string;
+  const studentId = formData.get('studentId') as string;
+
+  if (!classId || !studentId) {
+    return { error: 'Class ID dan Student ID wajib diisi.' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user: teacher } } = await supabase.auth.getUser();
+  if (!teacher) {
+    return { error: 'Anda harus login sebagai guru.' };
+  }
+
+  // Cek duplikasi: pastikan siswa belum terdaftar
+  const { data: existingEnrollment } = await supabase
+    .from('enrollments')
+    .select('id')
+    .eq('class_id', classId)
+    .eq('student_id', studentId)
+    .maybeSingle();
+
+  if (existingEnrollment) {
+    return { error: 'Siswa ini sudah terdaftar di kelas.' };
+  }
+  
+  // Lakukan insert. RLS Policy yang baru kita buat akan memvalidasi
+  // apakah guru ini adalah pemilik kelas yang sah.
+  const { error } = await supabase
+    .from('enrollments')
+    .insert({
+      class_id: classId,
+      student_id: studentId
+    });
+
+  if (error) {
+    // Error ini bisa muncul jika RLS gagal, atau ada masalah DB lain
+    return { error: `Gagal mendaftarkan siswa: ${error.message}` };
+  }
+
+  revalidatePath(`/dashboard/class/${classId}`);
+  return { success: 'Siswa berhasil ditambahkan ke kelas!' };
+}
+
 export async function createAttendanceSession(formData: FormData) {
   'use server'
   
@@ -874,51 +921,62 @@ export async function getUserProfileById(userId: string) {
  * [GURU] Membuat ujian baru dan me-redirect ke halaman editor soal.
  * [PERBAIKAN] Menggunakan FormData sebagai input.
  */
-export async function createTest(formData: FormData): Promise<{ error?: string }> {
+export async function createTest(prevState: any, formData: FormData) {
   'use server'
+
   const classId = formData.get('classId') as string;
   const title = formData.get('title') as string;
-  const duration = parseInt(formData.get('duration') as string, 10);
-
-  // --- [DEBUG 1] --- Tambahkan console.log untuk melihat data yang masuk
-  console.log("Mencoba membuat ujian dengan data:", { classId, title, duration });
-
-  if (!classId || !title || isNaN(duration)) {
-    return { error: 'Data tidak lengkap.' };
+  const durationStr = formData.get('duration') as string;
+  const totalQuestionsStr = formData.get('total_questions') as string;
+  
+  if (!classId || !title || !durationStr || !totalQuestionsStr) {
+    return { error: 'Semua field wajib diisi.' };
   }
-
+  
+  const duration = parseInt(durationStr, 10);
+  const totalQuestions = parseInt(totalQuestionsStr, 10);
+  
+  if (isNaN(duration) || isNaN(totalQuestions) || totalQuestions <= 0 || duration <= 0) {
+    return { error: 'Durasi dan Jumlah Soal harus angka positif.' };
+  }
+  
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) {
+    return { error: 'Tidak terautentikasi.' };
+  }
   
-  const { data: classCheck } = await supabase.from('classes').select('teacher_id').eq('id', classId).single();
-  if (!classCheck || classCheck.teacher_id !== user.id) {
-    return { error: 'Not authorized to create a test in this class.'};
+  let newTestId: string;
+
+  try {
+    const pointsPerQuestion = 100 / totalQuestions;
+
+    const { data: newTest, error } = await supabase
+      .from('tests')
+      .insert({
+        class_id: classId,
+        teacher_id: user.id,
+        title,
+        duration_minutes: duration,
+        total_questions: totalQuestions,
+        points_per_question: pointsPerQuestion,
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    if (!newTest) throw new Error("Gagal membuat ujian, data tidak kembali.");
+    
+    newTestId = newTest.id;
+
+  } catch (err: any) {
+    return { error: `Gagal membuat ujian: ${err.message}` };
   }
 
-  // [PERBAIKAN UTAMA] Tambahkan 'teacher_id: user.id' ke dalam objek insert
-  const { data, error } = await supabase
-    .from('tests')
-    .insert({ 
-        class_id: classId, 
-        title, 
-        duration_minutes: duration, 
-        teacher_id: user.id // <-- INI YANG PENTING
-    })
-    .select('id')
-    .single();
-
-  // --- [DEBUG 2] --- Cek apakah ada error dari Supabase
-  if (error) {
-    console.error("Error dari Supabase saat insert ujian:", error);
-    return { error: `Gagal membuat ujian: ${error.message}` };
-  }
-
-  console.log("Ujian berhasil dibuat dengan ID:", data.id);
-  
-  revalidatePath(`/dashboard/ujian`); // Revalidate halaman utama ujian juga
+  // [PERBAIKAN UTAMA] Redirect terjadi DI LUAR blok try-catch
+  // Jika kode sampai di sini, berarti semuanya berhasil.
   revalidatePath(`/dashboard/class/${classId}`);
-  redirect(`/dashboard/class/${classId}/ujian/${data.id}/edit`);
+  redirect(`/dashboard/class/${classId}/ujian/${newTestId}/edit`);
 }
 
 
@@ -929,190 +987,196 @@ export async function createTest(formData: FormData): Promise<{ error?: string }
  * [GURU] Menambahkan soal baru ke dalam sebuah ujian.
  * Saat ini mendukung tipe 'MULTIPLE_CHOICE'.
  */
-export async function addQuestionToTest(
-  prevState: any,
-  formData: FormData
-): Promise<{ error?: string; newQuestion?: any }> {
+export async function updateQuestion(prevState: any, formData: FormData) {
   'use server'
-  
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: 'Not authenticated' };
-  }
+  if (!user) return { error: 'Tidak terautentikasi.' };
 
   try {
+    const questionId = formData.get('questionId') as string;
     const testId = formData.get('testId') as string;
     const questionText = formData.get('questionText') as string;
     const type = formData.get('type') as QuestionType;
 
-    if (!testId || !questionText || !type) {
-      return { error: 'Data soal utama tidak lengkap.' };
-    }
+    if (!questionId || !testId || !type) return { error: 'Data tidak lengkap.' };
 
-    // 1. Hitung jumlah soal yang sudah ada untuk menentukan sort_order
-    const { count, error: countError } = await supabase
-      .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('test_id', testId);
-
-    if (countError) throw countError;
-    const newSortOrder = count ?? 0;
-
-    // 2. Masukkan soal baru dengan 'marks' sementara (akan dihitung ulang)
-    const { data: newQuestion, error: questionError } = await supabase
-      .from('questions')
-      .insert({ 
-        test_id: testId, 
-        question_text: questionText, 
-        type, 
-        marks: 1, // Nilai sementara
-        sort_order: newSortOrder
-      })
-      .select('id')
-      .single();
-
-    if (questionError) throw questionError;
-    const questionId = newQuestion.id;
+    await supabase.from('questions').update({ question_text: questionText }).eq('id', questionId);
     
-    // 3. Logika untuk menyimpan detail soal (Pilihan Ganda, B/S, Menjodohkan)
+    if (type === 'MULTIPLE_CHOICE') await supabase.from('multiple_choice_options').delete().eq('question_id', questionId);
+    if (type === 'TRUE_FALSE') await supabase.from('true_false_statements').delete().eq('question_id', questionId);
+    if (type === 'MATCHING') {
+      await supabase.from('matching_correct_pairs').delete().eq('question_id', questionId);
+      await supabase.from('matching_prompts').delete().eq('question_id', questionId);
+      await supabase.from('matching_options').delete().eq('question_id', questionId);
+    }
+    if (type === 'ESSAY') {
+      await supabase.from('essay_answers').delete().eq('question_id', questionId);
+    }
+    
     switch (type) {
       case 'MULTIPLE_CHOICE':
         const options = JSON.parse(formData.get('options') as string);
-        const optionsToInsert = options.map((opt: any) => ({ question_id: questionId, ...opt }));
-        const { error: optionsError } = await supabase.from('multiple_choice_options').insert(optionsToInsert);
-        if (optionsError) throw optionsError;
+        if (options?.length > 0) {
+          // [PERBAIKAN] Konsisten dengan frontend: gunakan 'option_text'
+          const optionsToInsert = options.map((opt: any) => ({ 
+            question_id: questionId, 
+            option_text: opt.option_text, 
+            is_correct: opt.is_correct 
+          }));
+          await supabase.from('multiple_choice_options').insert(optionsToInsert);
+        }
         break;
-
       case 'TRUE_FALSE':
         const statements = JSON.parse(formData.get('statements') as string);
-        const statementsToInsert = statements.map((stmt: any) => ({ question_id: questionId, ...stmt }));
-        const { error: tfError } = await supabase.from('true_false_statements').insert(statementsToInsert);
-        if (tfError) throw tfError;
+        if (statements?.length > 0) {
+          // [PERBAIKAN] Konsisten dengan frontend: gunakan 'statement_text'
+          const statementsToInsert = statements.map((stmt: any) => ({ 
+            question_id: questionId, 
+            statement_text: stmt.statement_text, 
+            is_true: stmt.is_true 
+          }));
+          await supabase.from('true_false_statements').insert(statementsToInsert);
+        }
         break;
-            
       case 'MATCHING':
         const prompts = JSON.parse(formData.get('prompts') as string);
         const matchOptions = JSON.parse(formData.get('matchOptions') as string);
         const pairs = JSON.parse(formData.get('pairs') as string);
         
-        const promptsToInsert = prompts.map((p: any) => ({ question_id: questionId, prompt_text: p.text }));
-        const { data: insertedPrompts, error: pError } = await supabase.from('matching_prompts').insert(promptsToInsert).select();
-        if (pError) throw pError;
-
-        const optionsToInsertMatching = matchOptions.map((o: any) => ({ question_id: questionId, option_text: o.text }));
-        const { data: insertedOptions, error: oError } = await supabase.from('matching_options').insert(optionsToInsertMatching).select();
-        if (oError) throw oError;
-
-        const promptMap = new Map(insertedPrompts.map(p => [p.prompt_text, p.id]));
-        const optionMap = new Map(insertedOptions.map(o => [o.option_text, o.id]));
-
-        const pairsToInsert = pairs.map((pair: any) => ({
-            question_id: questionId,
-            prompt_id: promptMap.get(pair.prompt_text),
-            option_id: optionMap.get(pair.option_text)
-        })).filter((p: any) => p.prompt_id && p.option_id);
-
-        if (pairsToInsert.length > 0) {
-            const { error: pairError } = await supabase.from('matching_correct_pairs').insert(pairsToInsert);
-            if (pairError) throw pairError;
+        if (prompts?.length > 0 && matchOptions?.length > 0) {
+            const promptsToInsert = prompts.map((p: any) => ({ question_id: questionId, prompt_text: p.text }));
+            const { data: insertedPrompts } = await supabase.from('matching_prompts').insert(promptsToInsert).select('id, prompt_text');
+            const optionsToInsert = matchOptions.map((o: any) => ({ question_id: questionId, option_text: o.text }));
+            const { data: insertedOptions } = await supabase.from('matching_options').insert(optionsToInsert).select('id, option_text');
+            if (pairs?.length > 0 && insertedPrompts && insertedOptions) {
+                const promptMap = new Map(insertedPrompts.map((p: any) => [p.prompt_text, p.id]));
+                const optionMap = new Map(insertedOptions.map((o: any) => [o.option_text, o.id]));
+                const pairsToInsert = pairs.map((pair: any) => ({
+                    question_id: questionId,
+                    prompt_id: promptMap.get(pair.prompt_text),
+                    option_id: optionMap.get(pair.option_text)
+                })).filter((p: any) => p.prompt_id && p.option_id);
+                if (pairsToInsert.length > 0) await supabase.from('matching_correct_pairs').insert(pairsToInsert);
+            }
         }
         break;
+      case 'ESSAY':
+        const essayAnswerKey = formData.get('essayAnswerKey') as string;
+        await supabase.from('essay_answers').insert({ 
+          question_id: questionId, 
+          answer_key: essayAnswerKey || '' 
+        });
+        break;
     }
+
+    const { data: updatedQuestion } = await supabase.from('questions').select(`
+      *, 
+      multiple_choice_options(*), 
+      true_false_statements(*), 
+      matching_prompts(*), 
+      matching_options(*), 
+      matching_correct_pairs(*), 
+      essay_answer:essay_answers(*)
+    `).eq('id', questionId).single();
     
-    // 4. [PERUBAHAN UTAMA] Panggil fungsi RPC untuk menghitung ulang semua poin di ujian ini
-    const { error: rpcError } = await supabase.rpc('recalculate_test_points', {
-      test_id_to_update: testId
-    });
-    if (rpcError) throw rpcError;
-
-    // 5. Ambil kembali data soal yang baru dibuat beserta relasinya untuk ditampilkan di UI
-    const { data: finalNewQuestion, error: finalError } = await supabase
-        .from('questions')
-        .select(`*, multiple_choice_options(*), true_false_statements(*), matching_prompts(*), matching_options(*), matching_correct_pairs(*)`)
-        .eq('id', questionId)
-        .single();
-    if (finalError) throw finalError;
-
-    revalidatePath(`/dashboard/class/.*/ujian/${testId}/edit`, 'page');
-    return { newQuestion: finalNewQuestion };
+    revalidatePath(`/dashboard/class/${testId}/ujian/${testId}/edit`);
+    return { updatedQuestion };
 
   } catch (err: any) {
-    console.error("Server Action Error (addQuestionToTest):", err);
-    return { error: `Gagal menyimpan soal: ${err.message}` };
+    return { error: `Gagal memperbarui soal: ${err.message}` };
   }
 }
 
-export async function updateQuestion(
-  prevState: any,
-  formData: FormData
-): Promise<{ error?: string; updatedQuestion?: any }> {
+export async function addQuestionToTest(prevState: any, formData: FormData): Promise<{ error?: string; newQuestion?: any; }> {
   'use server'
-
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
   try {
-    const questionId = formData.get('questionId') as string;
+    const testId = formData.get('testId') as string;
     const questionText = formData.get('questionText') as string;
-    const marks = parseInt(formData.get('marks') as string, 10);
     const type = formData.get('type') as QuestionType;
+    if (!testId || !type) return { error: 'Data soal utama tidak lengkap.' };
 
-    // TODO: Validasi kepemilikan soal oleh guru
-
+    const { count } = await supabase.from('questions').select('*', { count: 'exact', head: true }).eq('test_id', testId);
+    const { data: newQuestion, error: questionError } = await supabase
+      .from('questions')
+      .insert({ test_id: testId, question_text: questionText, type, sort_order: count ?? 0 })
+      .select('id').single();
+    if (questionError) throw questionError;
+    const questionId = newQuestion.id;
+    
     switch (type) {
       case 'MULTIPLE_CHOICE':
-        const optionsJson = formData.get('options') as string;
-        const { error: mcError } = await supabase.rpc('update_multiple_choice_question', {
-            p_question_id: questionId, p_question_text: questionText, p_marks: marks, p_options: JSON.parse(optionsJson)
-        });
-        if (mcError) throw mcError;
+        const options = JSON.parse(formData.get('options') as string);
+        if (options?.length > 0) {
+          // [KONSISTEN] Gunakan struktur yang sama dengan update: 'option_text'
+          const optionsToInsert = options.map((opt: any) => ({ 
+            question_id: questionId, 
+            option_text: opt.option_text, 
+            is_correct: opt.is_correct 
+          }));
+          await supabase.from('multiple_choice_options').insert(optionsToInsert).select();
+        }
         break;
-
       case 'TRUE_FALSE':
-        const statementsJson = formData.get('statements') as string;
-        const { error: tfError } = await supabase.rpc('update_true_false_question', {
-            p_question_id: questionId, p_question_text: questionText, p_marks: marks, p_statements: JSON.parse(statementsJson)
-        });
-        if (tfError) throw tfError;
+        const statements = JSON.parse(formData.get('statements') as string);
+        if (statements?.length > 0) {
+            // [KONSISTEN] Gunakan struktur yang sama dengan update: 'statement_text'
+            const statementsToInsert = statements.map((stmt: any) => ({ 
+              question_id: questionId, 
+              statement_text: stmt.statement_text, 
+              is_true: stmt.is_true 
+            }));
+            await supabase.from('true_false_statements').insert(statementsToInsert);
+        }
         break;
-
       case 'MATCHING':
-        const promptsJson = formData.get('prompts') as string;
-        const matchOptionsJson = formData.get('matchOptions') as string;
-        const pairsJson = formData.get('pairs') as string;
-        const { error: matchError } = await supabase.rpc('update_matching_question', {
-            p_question_id: questionId, p_question_text: questionText, p_marks: marks, 
-            p_prompts: JSON.parse(promptsJson), p_options: JSON.parse(matchOptionsJson), p_pairs: JSON.parse(pairsJson)
-        });
-        if (matchError) throw matchError;
+        const prompts = JSON.parse(formData.get('prompts') as string);
+        const matchOptions = JSON.parse(formData.get('matchOptions') as string);
+        const pairs = JSON.parse(formData.get('pairs') as string);
+        if (prompts?.length > 0 && matchOptions?.length > 0) {
+            const promptsToInsert = prompts.map((p: any) => ({ question_id: questionId, prompt_text: p.text }));
+            const { data: insertedPrompts } = await supabase.from('matching_prompts').insert(promptsToInsert).select('id, prompt_text');
+            const optionsToInsert = matchOptions.map((o: any) => ({ question_id: questionId, option_text: o.text }));
+            const { data: insertedOptions } = await supabase.from('matching_options').insert(optionsToInsert).select('id, option_text');
+            if (pairs?.length > 0 && insertedPrompts && insertedOptions) {
+                const promptMap = new Map(insertedPrompts.map((p: any) => [p.prompt_text, p.id]));
+                const optionMap = new Map(insertedOptions.map((o: any) => [o.option_text, o.id]));
+                const pairsToInsert = pairs.map((pair: any) => ({
+                    question_id: questionId,
+                    prompt_id: promptMap.get(pair.prompt_text),
+                    option_id: optionMap.get(pair.option_text)
+                })).filter((p: any) => p.prompt_id && p.option_id);
+                if (pairsToInsert.length > 0) await supabase.from('matching_correct_pairs').insert(pairsToInsert);
+            }
+        }
+        break;
+      case 'ESSAY':
+        const essayAnswerKey = formData.get('essayAnswerKey') as string;
+        await supabase.from('essay_answers').insert({ question_id: questionId, answer_key: essayAnswerKey || '' });
         break;
     }
 
-    const { data: updatedQuestion } = await supabase
-    .from('questions')
-    .select(`
-        *,
-        multiple_choice_options(*),
-        true_false_statements(*),
-        matching_prompts(*),
-        matching_options(*),
-        matching_correct_pairs(*)
-    `)
-    .eq('id', questionId)
-    .single();
-
-revalidatePath(`/dashboard/class/.*`, 'layout');
-return { updatedQuestion };
-
+    const { data: finalNewQuestion } = await supabase.from('questions').select(`
+      *, 
+      multiple_choice_options(*), 
+      true_false_statements(*), 
+      matching_prompts(*), 
+      matching_options(*), 
+      matching_correct_pairs(*), 
+      essay_answer:essay_answers(*)
+    `).eq('id', questionId).single();
+    
+    revalidatePath(`/dashboard/class/${testId}/ujian/${testId}/edit`);
+    return { newQuestion: finalNewQuestion };
   } catch (err: any) {
-    console.error("Error updating question:", err);
-    return { error: `Gagal memperbarui soal: ${err.message}` };
+    return { error: `Gagal menyimpan soal: ${err.message}` };
   }
 }
 
-// FILE: lib/actions.ts
 
 export async function deleteQuestion(
     formData: FormData
@@ -1173,6 +1237,43 @@ export async function deleteQuestion(
     }
 }
 
+export async function deleteTest(formData: FormData): Promise<{ error?: string }> {
+  'use server'
+
+  const testId = formData.get('testId') as string;
+  const classId = formData.get('classId') as string;
+  if (!testId || !classId) {
+    return { error: 'ID Ujian atau Kelas tidak ditemukan.' };
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: 'Tidak terautentikasi.' };
+  }
+
+  try {
+    // Validasi kepemilikan
+    const { data: test, error: testError } = await supabase
+      .from('tests')
+      .select('teacher_id')
+      .eq('id', testId)
+      .single();
+    
+    if (testError || !test) throw new Error("Ujian tidak ditemukan.");
+    if (test.teacher_id !== user.id) return { error: 'Anda tidak berhak menghapus ujian ini.' };
+
+    // Hapus ujian (semua soal akan terhapus karena ON DELETE CASCADE)
+    const { error: deleteError } = await supabase.from('tests').delete().eq('id', testId);
+    if (deleteError) throw deleteError;
+
+  } catch (err: any) {
+    return { error: `Gagal menghapus ujian: ${err.message}` };
+  }
+
+  // Redirect kembali ke halaman kelas setelah berhasil
+  redirect(`/dashboard/class/${classId}`);
+}
 // =======================================================
 // AKSI UNTUK PENGERJAAN UJIAN (OLEH SISWA)
 // =======================================================
@@ -1187,6 +1288,19 @@ export async function startTest(testId: string): Promise<{ submissionId: string 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { submissionId: null, error: 'Not authenticated' };
 
+  // --- [PERBAIKAN 1: Ambil class_id dari tabel tests] ---
+  const { data: test, error: testError } = await supabase
+    .from('tests')
+    .select('class_id')
+    .eq('id', testId)
+    .single();
+
+  if (testError || !test) {
+    return { submissionId: null, error: 'Ujian tidak ditemukan atau gagal mengambil info kelas.' };
+  }
+  const classId = test.class_id;
+  // --------------------------------------------------------
+
   const { data: existingSubmission } = await supabase
     .from('test_submissions')
     .select('id')
@@ -1200,7 +1314,12 @@ export async function startTest(testId: string): Promise<{ submissionId: string 
 
   const { data: newSubmission, error } = await supabase
     .from('test_submissions')
-    .insert({ test_id: testId, student_id: user.id, status: 'IN_PROGRESS' })
+    .insert({ 
+        test_id: testId, 
+        student_id: user.id, 
+        status: 'IN_PROGRESS',
+        class_id: classId // <-- [PERBAIKAN 2: Simpan class_id saat membuat submission]
+    })
     .select('id')
     .single();
 
@@ -1209,6 +1328,48 @@ export async function startTest(testId: string): Promise<{ submissionId: string 
   }
   
   return { submissionId: newSubmission.id, error: null };
+}
+
+export async function gradeEssayAnswer(prevState: any, formData: FormData) {
+  'use server'
+  const answerId = formData.get('answerId') as string;
+  const scoreStr = formData.get('score') as string;
+  const submissionId = formData.get('submissionId') as string;
+  
+  const score = parseInt(scoreStr, 10);
+  if (!answerId || isNaN(score) || !submissionId) {
+    return { error: 'Data tidak valid.' };
+  }
+
+  const supabase = await createClient();
+  
+  // [PERBAIKAN 1] Tandai is_correct menjadi true jika skor > 0
+  // Ini akan memperbaiki tag "Salah" di halaman hasil siswa.
+  const { error } = await supabase
+    .from('student_answers')
+    .update({ 
+        score_awarded: score,
+        is_correct: score > 0 // Anggap benar jika diberi skor
+    })
+    .eq('id', answerId);
+
+  if (error) {
+    return { error: `Gagal menyimpan nilai: ${error.message}` };
+  }
+  
+  // Panggil RPC untuk menghitung ulang skor akhir
+  const { error: rpcError } = await supabase.rpc('recalculate_final_score', {
+    submission_id_param: submissionId
+  });
+
+  if (rpcError) {
+    return { error: `Nilai esai disimpan, tapi gagal update skor total: ${rpcError.message}` };
+  }
+  
+  // [PERBAIKAN 2] Revalidate halaman yang benar
+  // Kita revalidate halaman detail jawaban siswa agar skornya terupdate
+  revalidatePath(`/dashboard/class/.*/ujian/.*/hasil/${submissionId}`, 'page');
+  return { success: 'Nilai berhasil disimpan dan skor total diperbarui!' };
 }
 
 export async function submitAnswer(submissionId: string, questionId: string, answerData: any) {
@@ -1230,16 +1391,21 @@ export async function submitAnswer(submissionId: string, questionId: string, ans
 export async function finishTest(submissionId: string) {
     'use server'
     const supabase = await createClient();
+
     // Panggil RPC Function untuk menilai
     const { data, error } = await supabase.rpc('grade_test_submission', {
         submission_id_param: submissionId
     });
 
     if (error) {
-        console.error("Error grading submission:", error);
-        throw new Error("Failed to grade the test.");
+        console.error("Error saat menilai ujian (RPC):", error);
+        throw new Error("Gagal menilai ujian di database.");
     }
     
-    revalidatePath('/dashboard/kelas'); // atau halaman hasil
+    // [PERBAIKAN UTAMA DI SINI]
+    // Hapus revalidatePath yang lama dan ganti dengan redirect yang eksplisit.
+    // Server-side redirect akan selalu diutamakan daripada client-side router.push.
+    revalidatePath(`/dashboard/class/[classId]/ujian/[testId]/hasil/[submissionId]`, 'layout');
+
     return { finalScore: data };
 }

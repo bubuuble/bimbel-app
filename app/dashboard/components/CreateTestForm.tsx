@@ -31,17 +31,25 @@ export default function CreateTestForm({ classId }: { classId: string }) {
     };
 
     return (
-        // Gunakan fungsi pembungkus 'action' yang baru dibuat
         <form action={action} className="space-y-4">
             <input type="hidden" name="classId" value={classId} />
             <div className="space-y-2">
                 <Label htmlFor="title">Judul Ujian</Label>
                 <Input id="title" name="title" placeholder="Contoh: Ujian Tengah Semester Gasal" required />
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="duration">Durasi (dalam menit)</Label>
-                <Input id="duration" name="duration" type="number" placeholder="Contoh: 120" required />
+            
+            {/* [PERUBAHAN] Tambahkan dua input baru */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="duration">Durasi (menit)</Label>
+                    <Input id="duration" name="duration" type="number" placeholder="Contoh: 120" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="total_questions">Jumlah Soal</Label>
+                    <Input id="total_questions" name="total_questions" type="number" placeholder="Contoh: 20" required />
+                </div>
             </div>
+
             <SubmitButton />
         </form>
     );

@@ -1,7 +1,6 @@
 // FILE: app/dashboard/components/TeacherClassView.tsx (Versi Multi-File)
 
 import type { Class, Material, AttendanceSession, Test } from "@/lib/types";
-import { deleteMaterial } from "@/lib/actions";
 import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,15 +12,28 @@ import { FileText, Trash2, ExternalLink, Eye, Paperclip, Plus, ClipboardList } f
 import UploadMaterialForm from "./UploadMaterialForm";
 import EnrolledStudentsList from "./EnrolledStudentsList";
 import DeleteClassForm from "./DeleteClassForm";
+import EnrollStudentForm from "./EnrollStudentForm"; // Impor form baru
+import { deleteMaterial } from "@/lib/actions"; // Impor aksi penghapusan materi
 
+// --- [PERBAIKAN UTAMA DI SINI] ---
+
+// Tipe data untuk prop siswa yang akan ditambahkan
+type AvailableStudent = {
+  id: string;
+  name: string | null;
+  username: string | null;
+}
+
+// Perbarui tipe 'Props' untuk menyertakan 'availableStudents'
 type Props = {
   classInfo: Pick<Class, 'id' | 'name' | 'description'>;
   materials: Material[];
   initialSessions: AttendanceSession[];
   tests: Test[];
+  availableStudents: AvailableStudent[]; // <-- TAMBAHKAN BARIS INI
 };
 
-export default function TeacherClassView({ classInfo, materials, initialSessions, tests }: Props) {
+export default function TeacherClassView({ classInfo, materials, initialSessions, tests, availableStudents   }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -168,7 +180,14 @@ export default function TeacherClassView({ classInfo, materials, initialSessions
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        {/* Kolom Kanan */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* 1. Tambahkan komponen EnrollStudentForm di sini */}
+          <EnrollStudentForm
+            classId={classInfo.id}
+            availableStudents={availableStudents}
+          />
+          {/* 2. Komponen EnrolledStudentsList yang sudah ada */}
           <EnrolledStudentsList classId={classInfo.id} />
         </div>
       </div>

@@ -58,7 +58,11 @@ export default function UjianDashboardClient({ initialTests, userRole, teacherCl
                                     {userRole === 'GURU' ? (
                                         <Button asChild className="w-full"><Link href={`/dashboard/class/${test.class_id}/ujian/${test.id}/edit`}><Eye className="h-4 w-4 mr-2"/>Kelola Soal</Link></Button>
                                     ) : (
-                                        <Button asChild className="w-full"><Link href={`/ujian/mulai/${test.id}`}><Play className="h-4 w-4 mr-2"/>Mulai Ujian</Link></Button>
+                                        <Button asChild className="w-full">
+                                            <Link href={`/dashboard/class/${test.class_id}/ujian/${test.id}/start`}>
+                                                <Play className="h-4 w-4 mr-2"/>Mulai Ujian
+                                            </Link>
+                                        </Button>
                                     )}
                                 </CardFooter>
                             </Card>

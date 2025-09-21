@@ -33,7 +33,7 @@ export default function CreateTestModal({ isOpen, onClose, teacherClasses }: Pro
     const formRef = useRef<HTMLFormElement>(null);
 
     const action = async (formData: FormData) => {
-        const result = await createTest(formData);
+        const result = await createTest(null, formData);
         if (result?.error) {
             toast.error("Gagal Membuat Ujian", { description: result.error });
         } else {

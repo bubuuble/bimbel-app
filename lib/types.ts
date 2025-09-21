@@ -70,7 +70,7 @@ export type Submission = {
   feedback: string | null;
 };
 
-export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'MATCHING';
+export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'MATCHING' | 'ESSAY';
 
 export type Test = {
   id: string;
@@ -79,6 +79,8 @@ export type Test = {
   title: string;
   description: string | null;
   duration_minutes: number;
+  total_questions: number;
+  points_per_question: number;
   created_at: string;
 };
 
@@ -119,14 +121,16 @@ export type Question = {
   test_id: string;
   question_text: string;
   type: QuestionType;
-  marks: number;
+  // 'marks' sudah kita hapus dari sini, yang mana sudah benar
   sort_order: number;
-  // Semua relasi ini bersifat opsional karena tergantung pada tipe soal
   multiple_choice_options?: MultipleChoiceOption[];
   true_false_statements?: TrueFalseStatement[];
   matching_prompts?: MatchingPrompt[];
   matching_options?: MatchingOption[];
   matching_correct_pairs?: MatchingCorrectPair[];
+  
+  // Tambahkan relasi baru ini sebagai array (Supabase mengembalikannya sebagai array)
+  essay_answer?: EssayAnswer;
 };
 
 export type TestSubmission = {
@@ -138,4 +142,11 @@ export type TestSubmission = {
   started_at: string;
   completed_at: string | null;
   total_score: number | null;
+};
+
+export type EssayAnswer = {
+  id: string;
+  question_id: string;
+  answer_key: string;
+  created_at: string;
 };

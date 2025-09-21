@@ -5,92 +5,52 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import type { UserProfile } from "@/lib/types";
 import Link from "next/link";
-// --- [PERBAIKAN 1] --- Ganti useActionState menjadi useFormState
-import { useFormState, useFormStatus } from "react-dom";
-import { enrollInClass, unenrollFromClass, type EnrollState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, UserCheck, CheckCircle, BookOpen } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { UserCheck, BookOpen } from "lucide-react";
 
-// Definisikan tipe data yang akan kita gunakan
-type AvailableClass = {
-  id: string;
-  name: string;
-  description: string | null;
-  sanity_product_id: string;
-  profiles: { name: string | null; } | null; // Profil adalah objek, bukan array
-};
+// Tipe data yang dibutuhkan disederhanakan untuk menampilkan kelas dan nama guru
 type EnrolledClass = {
-  classes: { id: string, name: string } | null; // Classes adalah objek, bukan array
+  classes: { 
+    id: string; 
+    name: string;
+    description: string | null;
+    profiles: { name: string | null; } | null; // Data guru
+  } | null; 
 };
-type Entitlement = {
-  sanity_product_id: string;
-  product_name: string;
-};
-
-// ... (Komponen ClassCard tidak perlu diubah jika sudah dipindahkan ke sini)
-function ClassCard({ classInfo, onEnroll }: { classInfo: AvailableClass, onEnroll: (classId: string) => void }) {
-  const [isEnrolling, setIsEnrolling] = useState(false);
-
-  const handlePress = async () => {
-    setIsEnrolling(true);
-    await onEnroll(classInfo.id);
-    setIsEnrolling(false);
-  };
-
-  return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle>{classInfo.name}</CardTitle>
-        <CardDescription>Oleh: {classInfo.profiles?.name || 'N/A'}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-end">
-        <p className="text-sm text-muted-foreground mb-4 flex-1">{classInfo.description}</p>
-        <Button onClick={handlePress} disabled={isEnrolling} className="w-full">
-          {isEnrolling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isEnrolling ? 'Mendaftar...' : 'Daftar & Masuk'}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
 
 export default function StudentClassesView({ userProfile }: { userProfile: Pick<UserProfile, 'id'> }) {
-  const [availableClasses, setAvailableClasses] = useState<AvailableClass[]>([]);
+  // State disederhanakan: hanya untuk kelas yang sudah diikuti dan status loading
   const [enrolledClasses, setEnrolledClasses] = useState<EnrolledClass[]>([]);
-  const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
+  // Logika pengambilan data yang jauh lebih simpel
   const fetchData = useCallback(async () => {
     setLoading(true);
     
-    // 1. Ambil "tiket" kelas
-    const { data: entitlementsData } = await supabase.rpc('get_user_entitlements');
-    setEntitlements(entitlementsData || []);
-
-    // 2. Ambil kelas yang sudah diikuti
-    const { data: enrolledData } = await supabase
+    // Hanya ambil kelas tempat siswa terdaftar, dan sertakan data guru
+    const { data: enrolledData, error } = await supabase
       .from('enrollments')
-      .select(`classes!inner(id, name)`)
+      .select(`
+        classes!inner (
+          id,
+          name,
+          description,
+          profiles:teacher_id ( name )
+        )
+      `)
       .eq('student_id', userProfile.id)
-      // --- [PERBAIKAN 2] --- Gunakan .returns() untuk memaksa tipe yang benar
+      .order('name', { referencedTable: 'classes', ascending: true })
       .returns<EnrolledClass[]>();
-    setEnrolledClasses(enrolledData || []);
+      
+    if (error) {
+      console.error("Error fetching enrolled classes:", error);
+      setEnrolledClasses([]);
+    } else {
+      setEnrolledClasses(enrolledData || []);
+    }
     
-    // 3. Ambil semua kelas yang tersedia
-    const { data: allData } = await supabase
-      .from('classes')
-      .select(`id, name, description, sanity_product_id, profiles(name)`)
-      .order('name', { ascending: true })
-      // --- [PERBAIKAN 3] --- Gunakan .returns() untuk memaksa tipe yang benar
-      .returns<AvailableClass[]>();
-    setAvailableClasses(allData || []);
-
     setLoading(false);
   }, [supabase, userProfile.id]);
 
@@ -98,73 +58,73 @@ export default function StudentClassesView({ userProfile }: { userProfile: Pick<
     fetchData();
   }, [fetchData]);
 
-  const handleEnroll = async (classId: string) => {
-    const formData = new FormData();
-    formData.append('classId', classId);
-    const result = await enrollInClass(null, formData);
-    if (result?.success) {
-      alert(result.success);
-      fetchData(); // Muat ulang data
-    } else if (result?.error) {
-      alert(result.error);
-    }
-  };
-
-  if (loading) { /* ... UI Loading ... */ }
+  if (loading) {
+    return (
+        <div className="space-y-4">
+            <Card>
+                <CardHeader>
+                    <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2"></div>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="h-48 w-full bg-gray-200 rounded-lg animate-pulse"></div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-0 md:p-6 max-w-7xl space-y-8">
-      {/* Bagian 1: Kelas yang Sudah Diikuti */}
+    <div className="space-y-8">
+      {/* Komponen utama sekarang hanya menampilkan kelas yang sudah diikuti */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><UserCheck className="h-5 w-5" />Kelas yang Anda Ikuti</CardTitle>
-          <CardDescription>Ini adalah kelas-kelas yang sedang atau pernah Anda ikuti.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-primary" />
+            Kelas yang Anda Ikuti
+          </CardTitle>
+          <CardDescription>
+            Ini adalah daftar kelas di mana Anda telah ditambahkan oleh guru. Klik untuk melihat materi dan tugas.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {enrolledClasses.length > 0 ? (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrolledClasses.map(({ classes }) => classes && (
-                <div key={classes.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                  <Link href={`/dashboard/class/${classes.id}`} className="font-medium text-primary hover:underline">{classes.name}</Link>
-                  <span className="text-sm text-green-600 font-semibold">Terdaftar</span>
-                </div>
+                <Card key={classes.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{classes.name}</CardTitle>
+                    <CardDescription>
+                      Oleh: {classes.profiles?.name || 'N/A'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                     <p className="text-sm text-muted-foreground line-clamp-3">
+                        {classes.description || 'Tidak ada deskripsi untuk kelas ini.'}
+                     </p>
+                  </CardContent>
+                  <div className="p-6 pt-0">
+                    <Button asChild className="w-full">
+                      <Link href={`/dashboard/class/${classes.id}`}>
+                        Masuk Kelas
+                      </Link>
+                    </Button>
+                  </div>
+                </Card>
               ))}
             </div>
-          ) : (<p className="text-muted-foreground text-center py-4">Anda belum terdaftar di kelas manapun.</p>)}
+          ) : (
+            <div className="text-center py-12">
+                <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Belum Ada Kelas</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Anda belum ditambahkan ke kelas manapun oleh guru.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
-      <Separator />
-      {/* Bagian 2: Kelas Tersedia Berdasarkan Pembayaran */}
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold">Pendaftaran Kelas Tersedia</h2>
-          <p className="text-muted-foreground mt-1">Pilih kelas berdasarkan produk yang telah Anda bayar.</p>
-        </div>
-        {entitlements.length === 0 ? (
-          <Card className="text-center p-8 bg-gray-50">
-            <p className="text-muted-foreground">Anda tidak memiliki hak akses pendaftaran kelas. Silakan selesaikan pembayaran di halaman Produk.</p>
-          </Card>
-        ) : (
-          entitlements.map(entitlement => {
-            const matchingClasses = availableClasses.filter(c => c.sanity_product_id === entitlement.sanity_product_id);
-            return (
-              <div key={entitlement.sanity_product_id} className="space-y-4">
-                <h3 className="text-xl font-semibold flex items-center gap-2 text-green-700">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>Akses Terbuka untuk: <span className="font-bold">{entitlement.product_name}</span></span>
-                </h3>
-                {matchingClasses.length > 0 ? (
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {matchingClasses.map(cls => (
-                      <ClassCard key={cls.id} classInfo={cls} onEnroll={handleEnroll} />
-                    ))}
-                  </div>
-                ) : (<Card className="text-center p-8"><p className="text-muted-foreground">Belum ada jadwal kelas yang dibuka oleh guru untuk produk ini.</p></Card>)}
-              </div>
-            );
-          })
-        )}
-      </div>
+      {/* Bagian "Pendaftaran Kelas Tersedia" telah dihapus sepenuhnya */}
     </div>
   );
 }
