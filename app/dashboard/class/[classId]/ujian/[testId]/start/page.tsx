@@ -7,10 +7,9 @@ import TestStartInterface from "@/app/dashboard/components/TestStartInterface";
 export default async function TestStartPage({ 
   params 
 }: { 
-  // [PERBAIKAN 1] `params` tidak lagi berupa Promise
   params: { classId: string; testId: string } 
 }) {
-  const { classId, testId } = params;
+  const { classId, testId } = params; // Sekarang ini valid
   const supabase = await createClient();
   
   // Get current user

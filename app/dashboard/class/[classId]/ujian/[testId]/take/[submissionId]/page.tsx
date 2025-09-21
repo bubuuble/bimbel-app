@@ -9,20 +9,20 @@ import TestTakingInterface from "@/app/dashboard/components/TestTakingInterface"
 export default async function TakeTestPage({ 
   params 
 }: { 
-  params: { submissionId: string } 
+  params: { classId: string; testId: string; submissionId: string } 
 }) {
-  const { submissionId } = params;
+  const { classId, testId, submissionId } = params; // Sekarang ini valid
   const supabase = await createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return redirect('/login');
+   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
 
-  // 1. Verify this submission belongs to the current user
   const { data: submission } = await supabase
     .from('test_submissions')
     .select('*')
     .eq('id', submissionId)
     .eq('student_id', user.id)
+    .eq('test_id', testId)
     .single();
     
   if (!submission) notFound();
@@ -63,7 +63,7 @@ export default async function TakeTestPage({
       testData={testData}
       submission={submission}
       existingAnswers={existingAnswers || []}
-      classId={submission.class_id}
+      classId={classId} // classId dari params
     />
   );
 }
