@@ -11,10 +11,8 @@ import TeacherClassView from "../../components/TeacherClassView";
 import StudentClassView from "../../components/StudentClassView";
 
 export default async function ClassDetailPage({ params }: { params: { classId: string } }) {
+  const { classId } = params; // Baris ini sekarang menjadi valid.
   const supabase = await createClient();
-  const { classId } = params;
-
-  // 1. Otorisasi Pengguna: Pastikan ada yang login
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return redirect('/login');
