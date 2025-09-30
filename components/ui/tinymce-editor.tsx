@@ -81,7 +81,7 @@ export const TinyEditor = ({
   return (
     <Editor
       onInit={(evt, editor) => editorRef.current = editor}
-      apiKey="6a1tzlsdb6zzwqzcolnga2qt8yldsvk1qo3gj54swmf6xm4f"
+      apiKey="xb65vj9vzemtepitp7iz3gavwjktrbcwfw8d15s1ywkk2pt8"
       // Jika 'value' ada, gunakan itu (controlled). Jika tidak, jangan set apa-apa di sini.
       value={value} 
       // Jika 'onChange' ada, gunakan itu. Jika tidak, jangan set apa-apa.
