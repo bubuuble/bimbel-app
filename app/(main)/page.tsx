@@ -247,31 +247,39 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          2.  LOGO STRIP  —  greyscale on white
+          FIRST GROUP (Logos, Features, Products)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-8 overflow-hidden border-y border-border/50 bg-background">
-        <p className="text-center text-[10px] font-bold tracking-widest mb-5 uppercase text-foreground/50">
-          Alumni kami diterima di
-        </p>
-        <div
-          className="flex items-center animate-infinite-scroll"
-          style={{ animationDuration: '30s', width: 'max-content', gap: '4rem' }}
-        >
-          {[...Array(3)].flatMap((_, rep) =>
-            STATIC_LOGOS.map(logo => (
-              <div key={`${rep}-${logo.name}`} className="flex-shrink-0 flex items-center justify-center" style={{ width: logo.w, height: 48 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={logo.src} alt={logo.name} style={{ maxWidth: '100%', height: '100%', objectFit: 'contain', opacity: 0.55, filter: 'grayscale(1)' }} />
-              </div>
-            ))
-          )}
+      <section className="relative w-full overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.05]">
+          <Image src="/image/bg1.png" alt="Background" fill className="object-cover" />
         </div>
-      </section>
+        <div className="relative z-10 w-full">
+          {/* ══════════════════════════════════════════════════════════════
+              2.  LOGO STRIP  —  greyscale on white
+          ══════════════════════════════════════════════════════════════ */}
+          <section className="py-8 border-y border-border/50 bg-background/0">
+            <p className="text-center text-[10px] font-bold tracking-widest mb-5 uppercase text-foreground/50">
+              Alumni kami diterima di
+            </p>
+            <div
+              className="flex items-center animate-infinite-scroll"
+              style={{ animationDuration: '30s', width: 'max-content', gap: '4rem' }}
+            >
+              {[...Array(3)].flatMap((_, rep) =>
+                STATIC_LOGOS.map(logo => (
+                  <div key={`${rep}-${logo.name}`} className="flex-shrink-0 flex items-center justify-center" style={{ width: logo.w, height: 48 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logo.src} alt={logo.name} style={{ maxWidth: '100%', height: '100%', objectFit: 'contain', opacity: 0.55, filter: 'grayscale(1)' }} />
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
 
       {/* ══════════════════════════════════════════════════════════════
           3.  FEATURE STRIP  —  “Fitur Prioritas”
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-14 bg-background/50">
+      <section className="py-14 bg-background/30">
         <div className="container mx-auto px-6">
           <p className="text-center text-[10px] font-bold tracking-widest uppercase mb-8 text-foreground/50">Fitur Prioritas</p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -290,7 +298,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════
           4.  PRODUCTS  —  “Program Spesialisasi Eksklusif”
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-background/80">
+      <section className="py-20 bg-background/0">
         <div ref={coursesView.ref} className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Program Kami</p>
@@ -346,12 +354,22 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+        </div>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          5.  WHY BIMBEL MASTER  —  light cards on white
+          SECOND GROUP (Why Us, Testimonials, CTA)
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-background">
-        <div ref={whyView.ref} className="container mx-auto px-6">
+      <section className="relative w-full overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.09]">
+          <Image src="/image/bg2.jpg" alt="Background" fill className="object-cover" />
+        </div>
+        <div className="relative z-10 w-full">
+          {/* ══════════════════════════════════════════════════════════════
+              5.  WHY BIMBEL MASTER  —  light cards on white
+          ══════════════════════════════════════════════════════════════ */}
+          <section className="py-20 bg-background/0">
+            <div ref={whyView.ref} className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Kenapa Kami?</p>
             <h2 className="font-sans font-extrabold text-4xl md:text-5xl text-foreground">
@@ -378,7 +396,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════
           7.  TESTIMONIALS  —  chat-bubble style
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-background/50">
+      <section className="py-20 bg-background/30">
         <div ref={testiView.ref} className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Testimoni Nyata</p>
@@ -414,9 +432,9 @@ export default function HomePage() {
           8.  CTA BANNER
       ══════════════════════════════════════════════════════════════ */}
       <section
-        className="relative py-24 mx-4 sm:mx-8 mb-16 rounded-[3rem] text-foreground text-center overflow-hidden bg-gradient-to-br from-blue-100 via-rose-100 to-amber-100 shadow-xl shadow-primary/5"
+        className="relative py-24 mx-4 sm:mx-8 mb-16 rounded-[3rem] text-foreground text-center overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-xl shadow-primary/5 backdrop-blur-sm"
       >
-        <div className="absolute top-[-70px] left-[-70px] w-72 h-72 rounded-full pointer-events-none bg-white/40" />
+        <div className="absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
         <div className="absolute bottom-[-70px] right-[-70px] w-80 h-80 rounded-full pointer-events-none bg-white/40" />
         <div className="relative z-10 max-w-2xl mx-auto px-6 space-y-8">
           <p className="text-[10px] font-bold tracking-widest uppercase text-secondary">Tanya Dulu Biar Yakin!</p>
@@ -430,6 +448,8 @@ export default function HomePage() {
               Pelajari Lebih
             </Link>
           </div>
+        </div>
+      </section>
         </div>
       </section>
 
