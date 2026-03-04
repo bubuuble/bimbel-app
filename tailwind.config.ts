@@ -79,6 +79,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
+        montserrat: ["var(--font-montserrat)"],
+        serif: ["var(--font-serif)"],
       },
       keyframes: {
         "accordion-down": {

@@ -8,15 +8,17 @@ import blog from '../schemas/blog' // Skema blog untuk artikel dan tips
 
 // Object types
 import blockquote from './objects/blockquote'
+import styledText from './objects/styledText'
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     // Hanya daftarkan tipe dokumen utama
-    landingPage, 
+    landingPage,
     product,
     testimonial,
     blog,
     // Object types
     blockquote,
+    styledText,
   ],
 }

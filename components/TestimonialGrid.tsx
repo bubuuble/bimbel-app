@@ -12,7 +12,7 @@ interface TestimonialGridProps {
 
 const COLORS = [
   { bg: 'bg-blue-100',    iconColor: '#1D4ED8', starColor: '#1D4ED8' },
-  { bg: 'bg-rose-100',    iconColor: '#BE123C', starColor: '#BE123C' },
+  { bg: 'bg-rose-300',    iconColor: '#BE123C', starColor: '#BE123C' },
   { bg: 'bg-violet-100',  iconColor: '#6D28D9', starColor: '#6D28D9' },
   { bg: 'bg-emerald-100', iconColor: '#065F46', starColor: '#065F46' },
   { bg: 'bg-amber-100',   iconColor: '#92400E', starColor: '#92400E' },

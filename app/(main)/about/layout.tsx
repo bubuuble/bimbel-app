@@ -1,0 +1,1 @@
+export const metadata = { title: 'Tentang Kami - Bimbel Master', description: 'Pelajari lebih lanjut tentang Bimbel Master, visi misi kami, dan tim pengajar berpengalaman yang siap membantu kesuksesan akademik Anda.' }; export default function AboutLayout({ children }: { children: React.ReactNode }) { return <>{children}</>; }
