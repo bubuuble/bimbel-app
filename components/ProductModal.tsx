@@ -34,7 +34,7 @@ interface ProductModalProps {
 // Sub-komponen untuk seksi informasi
 const InfoSection = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
   <div>
-    <h3 className="flex items-center gap-2 text-sm font-semibold mb-3 uppercase tracking-wider" style={{color: 'rgb(0,75,173)'}}>
+    <h3 className="flex items-center gap-2 text-sm font-bold mb-3 uppercase tracking-wider text-primary">
       {icon}
       <span>{title}</span>
     </h3>
@@ -111,7 +111,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           
           {/* Header yang memenuhi syarat aksesibilitas */}
           <DialogHeader className="p-6 pb-2">
-            <DialogTitle className="text-2xl font-bold" style={{color: 'rgb(0,75,173)'}}>
+            <DialogTitle className="text-2xl font-bold text-primary">
               {product.title}
             </DialogTitle>
           </DialogHeader>
@@ -119,9 +119,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
           {/* Konten yang bisa di-scroll */}
           <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
             <InfoSection title="Harga & Status" icon={<Tag size={14} />}>
-              <div className="p-4 rounded-lg text-white" style={{backgroundColor: 'rgb(0,75,173)'}}>
+              <div className="p-4 rounded-xl text-primary-foreground bg-primary shadow-sm">
                 <p className="text-3xl font-bold">{formatPrice(product.price)}</p>
-                <div className="flex items-center gap-2 mt-2 text-sm"><Star size={14} className="fill-current text-yellow-400" /><span>Program Unggulan</span></div>
+                <div className="flex items-center gap-2 mt-2 text-sm"><Star size={14} className="fill-current text-accent" /><span>Program Unggulan</span></div>
               </div>
             </InfoSection>
 
@@ -146,12 +146,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
           </div>
 
           {/* Footer Aksi */}
-          <div className="flex-shrink-0 p-6 border-t bg-gray-50">
+          <div className="flex-shrink-0 p-6 border-t border-border/50 bg-background/50">
             <Button 
               onClick={() => onPayment(product)}
               disabled={isProcessingPayment}
-              className="w-full h-12 text-base font-bold group rounded-lg text-white"
-              style={{backgroundColor: 'rgb(209,51,19)'}}
+              className="w-full h-12 text-base font-bold group rounded-xl text-secondary-foreground bg-secondary hover:opacity-90 transition-all shadow-sm"
             >
               {isProcessingPayment ? (
                 <>

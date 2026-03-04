@@ -62,19 +62,23 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        chart: {
-          "1": "hsl(var(--chart-1))",
-          "2": "hsl(var(--chart-2))",
-          "3": "hsl(var(--chart-3))",
-          "4": "hsl(var(--chart-4))",
-          "5": "hsl(var(--chart-5))",
+        brand: {
+          navy: "#202C45",
+          purple: "#92A7D1",
+          teal: "#A5D6D9",
+          green: "#B4E1CD",
+          lightBlue: "#A1C6FC",
+          darkText: "#3A4B6B",
+          mutedText: "#6A7C9A",
         },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)"],
       },
       keyframes: {
         "accordion-down": {

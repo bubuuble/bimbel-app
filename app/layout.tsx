@@ -1,26 +1,24 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({ 
+  subsets: ["latin"], 
+  variable: '--font-sans',
+  weight: ['300', '400', '500', '600', '700', '800']
+});
 
 export const metadata: Metadata = {
   title: "Bimbel Master",
-  description: "Your Learning Partner",
+  description: "Solusi Pembelajaran Terbaik untuk Siswa Indonesia",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <main style={{ padding: '1rem' }}>
-          {children}
-        </main>
+      <body className={`${plusJakartaSans.variable} font-sans`}>
+        {children}
       </body>
     </html>
   );
