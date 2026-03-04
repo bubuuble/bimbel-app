@@ -68,10 +68,14 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-5 inset-x-0 z-[100] transition-all duration-500 px-4 flex justify-center">
+    <header
+      className={`fixed top-3 md:top-5 inset-x-0 z-[100] transition-all duration-500 px-4 flex justify-center ${
+        mobileMenuOpen ? 'opacity-0 pointer-events-none -translate-y-full' : 'opacity-100 translate-y-0'
+      }`}
+    >
       <div
         className={`
-          container max-w-7xl h-[72px] rounded-full flex items-center justify-between px-8 transition-all duration-500 border
+          container max-w-7xl h-[60px] md:h-[72px] rounded-full flex items-center justify-between px-5 md:px-8 transition-all duration-500 border
           ${
             scrolled
               ? 'bg-background/90 backdrop-blur-xl border-border shadow-lg shadow-primary/10'
@@ -80,11 +84,11 @@ export default function Header() {
         `}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/20">
-            <Image src="/image/logo/logo1.png" alt="Logo" width={36} height={36} />
+        <Link href="/" className="flex items-center gap-2 md:gap-2.5 shrink-0">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center bg-primary/20">
+            <Image src="/image/logo/logo1.png" alt="Logo" width={36} height={36} className="w-6 h-6 md:w-full md:h-full" />
           </div>
-          <span className="font-sans font-extrabold text-xl text-foreground">
+          <span className="font-sans font-extrabold text-lg md:text-xl text-foreground">
             Bimbel<span className="text-secondary">Master</span>
           </span>
         </Link>

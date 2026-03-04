@@ -12,6 +12,7 @@ import { client } from '@/sanity/lib/client';
 import { groq } from 'next-sanity';
 import { urlForImage } from '@/sanity/lib/image';
 import TestimonialGrid from '@/components/TestimonialGrid';
+import { motion } from 'framer-motion';
 import { TestimonialWithImage } from '@/types/testimonial';
 
 /* --- Types --- */
@@ -153,11 +154,6 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [heroIndex, heroImages.length, nextHero]);
 
-  const coursesView = useInView();
-  const whyView     = useInView();
-  const statsView   = useInView();
-  const testiView   = useInView();
-
   const formatPrice = (p: number) =>
     new Intl.NumberFormat('id-ID', {
       style: 'currency', currency: 'IDR',
@@ -257,7 +253,13 @@ export default function HomePage() {
           {/* ══════════════════════════════════════════════════════════════
               2.  LOGO STRIP  —  greyscale on white
           ══════════════════════════════════════════════════════════════ */}
-          <section className="py-8 border-y border-border/50 bg-background/0">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="py-8 border-y border-border/50 bg-background/0"
+          >
             <p className="text-center text-[10px] font-bold tracking-widest mb-5 uppercase text-foreground/50">
               Alumni kami diterima di
             </p>
@@ -274,12 +276,18 @@ export default function HomePage() {
                 ))
               )}
             </div>
-          </section>
+          </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════
           3.  FEATURE STRIP  —  “Fitur Prioritas”
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-14 bg-background/30">
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+        transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+        className="py-14 bg-background/30"
+      >
         <div className="container mx-auto px-6">
           <p className="text-center text-[10px] font-bold tracking-widest uppercase mb-8 text-foreground/50">Fitur Prioritas</p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -293,13 +301,19 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════
           4.  PRODUCTS  —  “Program Spesialisasi Eksklusif”
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-background/0">
-        <div ref={coursesView.ref} className="container mx-auto px-6">
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="py-20 bg-background/0"
+      >
+        <div className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Program Kami</p>
             <h2 className="font-sans font-extrabold text-4xl md:text-5xl text-foreground">
@@ -353,7 +367,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
         </div>
       </section>
 
@@ -368,8 +382,14 @@ export default function HomePage() {
           {/* ══════════════════════════════════════════════════════════════
               5.  WHY BIMBEL MASTER  —  light cards on white
           ══════════════════════════════════════════════════════════════ */}
-          <section className="py-20 bg-background/0">
-            <div ref={whyView.ref} className="container mx-auto px-6">
+          <motion.section
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="py-20 bg-background/0"
+          >
+            <div className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Kenapa Kami?</p>
             <h2 className="font-sans font-extrabold text-4xl md:text-5xl text-foreground">
@@ -391,13 +411,19 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+          </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════
           7.  TESTIMONIALS  —  chat-bubble style
       ══════════════════════════════════════════════════════════════ */}
-      <section className="py-20 bg-background/30">
-        <div ref={testiView.ref} className="container mx-auto px-6">
+      <motion.section
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="py-20 bg-background/30"
+      >
+        <div className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
             <p className="text-xs font-bold tracking-widest uppercase text-secondary">Testimoni Nyata</p>
             <h2 className="font-sans font-extrabold text-4xl md:text-5xl text-foreground">
@@ -426,12 +452,16 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════
           8.  CTA BANNER
       ══════════════════════════════════════════════════════════════ */}
-      <section
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative py-24 mx-4 sm:mx-8 mb-16 rounded-[3rem] text-foreground text-center overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-xl shadow-primary/5 backdrop-blur-sm"
       >
         <div className="absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
@@ -449,7 +479,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
         </div>
       </section>
 
