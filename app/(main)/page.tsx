@@ -326,7 +326,7 @@ export default function HomePage() {
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-foreground">
             Keunggulan Master
           </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-5xl mx-auto">
             {FEATURES.map((f: any, i: number) => {
               // Definisi icon yang lebih sesuai
               const iconMap: Record<number, any> = {
@@ -342,36 +342,12 @@ export default function HomePage() {
               
               // Warna pastel lembut
               const colorSchemes = [
-                { 
-                  bg: '#FFF8E8',  // Pastel peach/cream
-                  color: '#B8934A', 
-                  iconBg: 'rgba(184, 147, 74, 0.10)' 
-                },
-                { 
-                  bg: '#E8F8F3',  // Pastel mint
-                  color: '#5BA08A', 
-                  iconBg: 'rgba(91, 160, 138, 0.10)' 
-                },
-                { 
-                  bg: '#FEF0EE',  // Pastel blush
-                  color: '#D4806A', 
-                  iconBg: 'rgba(212, 128, 106, 0.10)' 
-                },
-                { 
-                  bg: '#E8F4F8',  // Pastel teal
-                  color: '#4A8FA8', 
-                  iconBg: 'rgba(74, 143, 168, 0.10)' 
-                },
-                { 
-                  bg: '#EBF4FF',  // Pastel sky blue
-                  color: '#5B8FC4', 
-                  iconBg: 'rgba(91, 143, 196, 0.10)' 
-                },
-                { 
-                  bg: '#F3EEFF',  // Pastel lavender
-                  color: '#9B7EC8', 
-                  iconBg: 'rgba(155, 126, 200, 0.10)' 
-                },
+                { bg: '#FFF8E8', color: '#B8934A', iconBg: 'rgba(184, 147, 74, 0.10)' },
+                { bg: '#E8F8F3', color: '#5BA08A', iconBg: 'rgba(91, 160, 138, 0.10)' },
+                { bg: '#FEF0EE', color: '#D4806A', iconBg: 'rgba(212, 128, 106, 0.10)' },
+                { bg: '#E8F4F8', color: '#4A8FA8', iconBg: 'rgba(74, 143, 168, 0.10)' },
+                { bg: '#EBF4FF', color: '#5B8FC4', iconBg: 'rgba(91, 143, 196, 0.10)' },
+                { bg: '#F3EEFF', color: '#9B7EC8', iconBg: 'rgba(155, 126, 200, 0.10)' },
               ];
               
               const scheme = colorSchemes[i % colorSchemes.length];
@@ -379,16 +355,16 @@ export default function HomePage() {
               return (
                 <div 
                   key={f._key || i} 
-                  className="flex items-center gap-4 p-5 md:p-6 rounded-3xl transition-all hover:-translate-y-1 min-h-[80px]" 
-                  style={{ backgroundColor: scheme.bg, boxShadow: `0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)` }}
+                  className="flex items-center gap-3 md:gap-4 p-3.5 md:p-6 rounded-2xl md:rounded-3xl transition-all hover:-translate-y-1" 
+                  style={{ backgroundColor: scheme.bg, boxShadow: '0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)' }}
                 >
                   <div 
-                    className="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: scheme.iconBg, boxShadow: `0 2px 8px rgba(0,0,0,0.08)` }}
+                    className="w-9 h-9 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: scheme.iconBg, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
                   >
-                    <DynamicIcon className="w-6 h-6 md:w-7 md:h-7" style={{ color: scheme.color }} />
+                    <DynamicIcon className="w-4 h-4 md:w-7 md:h-7" style={{ color: scheme.color }} />
                   </div>
-                  <span className="font-bold text-base md:text-lg leading-snug" style={{ color: scheme.color }}>
+                  <span className="font-bold text-xs md:text-lg leading-snug" style={{ color: scheme.color }}>
                     {f.label}
                   </span>
                 </div>
@@ -470,12 +446,12 @@ export default function HomePage() {
               const bg = item.bg || WHY_ITEMS[i % WHY_ITEMS.length].bg;
               const iconColor = item.iconColor || WHY_ITEMS[i % WHY_ITEMS.length].iconColor;
               return (
-                <div key={i} className={`p-10 rounded-[2.5rem] space-y-5 hover:scale-[1.02] transition-all duration-300 ${bg}`} style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)' }}>
-                  <div className="w-16 h-16 rounded-[1.25rem] flex items-center justify-center bg-white/60">
-                    <DynamicIcon className="w-8 h-8" style={{ color: iconColor }} />
+                <div key={i} className={`p-5 md:p-10 rounded-[1.75rem] md:rounded-[2.5rem] space-y-3 md:space-y-5 hover:scale-[1.02] transition-all duration-300 ${bg}`} style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)' }}>
+                  <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-[1.25rem] flex items-center justify-center bg-white/60">
+                    <DynamicIcon className="w-5 h-5 md:w-8 md:h-8" style={{ color: iconColor }} />
                   </div>
-                  <h4 className="font-sans font-bold text-xl text-foreground">{item.title}</h4>
-                  <p className="text-sm leading-relaxed text-foreground/70">{item.desc || item.description}</p>
+                  <h4 className="font-sans font-bold text-base md:text-xl text-foreground">{item.title}</h4>
+                  <p className="text-xs md:text-sm leading-relaxed text-foreground/70">{item.desc || item.description}</p>
                 </div>
               );
             })}

@@ -75,7 +75,7 @@ export default function Header() {
     >
       <div
         className={`
-          container max-w-7xl h-[60px] md:h-[72px] rounded-full flex items-center justify-between px-5 md:px-8 transition-all duration-500 border
+          container max-w-7xl h-[50px] md:h-[72px] rounded-full flex items-center justify-between px-4 md:px-8 transition-all duration-500 border
           ${
             scrolled
               ? 'bg-background/90 backdrop-blur-xl border-border shadow-lg shadow-primary/10'
@@ -85,8 +85,8 @@ export default function Header() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1 md:gap-1.5 shrink-0">
-          <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
-          <span className="font-sans font-extrabold text-lg md:text-xl text-foreground">
+          <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain" />
+          <span className="font-sans font-extrabold text-base md:text-xl text-foreground">
             Bimbel<span className="text-secondary"> Master</span>
           </span>
         </Link>

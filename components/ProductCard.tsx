@@ -138,25 +138,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="group bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.16)] transition-all duration-300 cursor-pointer border border-gray-100"
+      className="group bg-white rounded-[1.75rem] md:rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.16)] transition-all duration-300 cursor-pointer border border-gray-100"
     >
       {/* Image */}
-      <div className="relative h-64 overflow-hidden rounded-[2rem] m-4">
+      <div className="relative h-40 md:h-64 overflow-hidden rounded-[1.25rem] md:rounded-[2rem] m-3 md:m-4">
         {mainImage ? (
           <Image
             src={urlForImage(mainImage.asset).width(600).url()}
             alt={mainImage.alt || product.title || 'Product image'}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700 rounded-[2rem]"
+            className="object-cover group-hover:scale-110 transition-transform duration-700 rounded-[1.25rem] md:rounded-[2rem]"
           />
         ) : (
-          <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center rounded-[2rem]">
+          <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center rounded-[1.25rem] md:rounded-[2rem]">
             <span className="text-gray-300">No Image</span>
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-2 right-2 md:top-3 md:right-3">
           <Badge
-            className="text-xs font-semibold shadow-md bg-white px-3 py-1"
+            className="text-[10px] md:text-xs font-semibold shadow-md bg-white px-2 md:px-3 py-0.5 md:py-1"
             style={{ color: '#5B7C99' }}
           >
             {getCategoryLabel(product.category).toUpperCase()}
@@ -164,41 +164,41 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      <div className="px-6 pb-6 space-y-4">
+      <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-2 md:space-y-4">
         {/* Meta stats */}
-        <div className="flex justify-between items-center text-sm font-medium text-foreground/70">
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-secondary" />
+        <div className="flex justify-between items-center text-xs md:text-sm font-medium text-foreground/70">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3 md:w-4 md:h-4 text-secondary" />
             {product.duration || "Fleksibel"}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-[#5B7C99] line-clamp-2 min-h-[56px] leading-snug group-hover:text-primary transition-colors">
+        <h3 className="text-sm md:text-xl font-bold text-[#5B7C99] line-clamp-2 min-h-[36px] md:min-h-[56px] leading-snug group-hover:text-primary transition-colors">
           {product.title}
         </h3>
 
         {/* Short Description */}
         {(product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]) && (
-          <p className="text-sm text-foreground/60 line-clamp-2 leading-relaxed">
+          <p className="text-xs md:text-sm text-foreground/60 line-clamp-2 leading-relaxed hidden sm:block">
             {product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]}
           </p>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-6 border-t border-foreground/10">
+        <div className="flex items-center justify-between pt-3 md:pt-6 border-t border-foreground/10">
           <div>
             {product.originalPrice && (
-              <span className="block text-xs text-foreground/40 line-through">{formatPrice(product.originalPrice)}</span>
+              <span className="block text-[10px] md:text-xs text-foreground/40 line-through">{formatPrice(product.originalPrice)}</span>
             )}
-            <p className="text-xl font-bold text-primary">{formatPrice(product.price)}</p>
+            <p className="text-sm md:text-xl font-bold text-primary">{formatPrice(product.price)}</p>
           </div>
           <Link
             href={`/pembayaran?product_id=${product._id}`}
             onClick={(e) => e.stopPropagation()}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
           </Link>
         </div>
       </div>
