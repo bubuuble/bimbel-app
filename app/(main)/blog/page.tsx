@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, User, Clock, ArrowRight, BookOpen, TrendingUp, Users } from 'lucide-react';
 import { client } from '@/sanity/lib/client';
+import { Badge } from '@/components/ui/badge';
 
 const FEATURED_POST_QUERY = `
   *[_type == "blog" && featured == true] | order(_createdAt desc)[0] {
@@ -102,9 +103,9 @@ export default async function BlogPage() {
             <div className="container mx-auto">
               <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <div className="space-y-6">
-                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-accent/20 text-accent-foreground font-sans">
+                  <Badge className="px-4 py-1.5 text-xs font-bold rounded-full">
                     Artikel Unggulan
-                  </span>
+                  </Badge>
                   <h2 className="font-sans font-extrabold text-3xl md:text-4xl leading-tight text-foreground">
                     {featuredPost.title}
                   </h2>

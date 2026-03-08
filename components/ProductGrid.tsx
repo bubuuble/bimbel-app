@@ -19,7 +19,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   onProductClick
 }) => {
   const gridClasses = viewMode === "grid" 
-    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8" 
+    ? "flex flex-wrap justify-center gap-6 md:gap-8" 
     : "space-y-6";
 
   return (
@@ -27,7 +27,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       {products.map((product, index) => (
         <div
           key={`${product._id}-${selectedCategory}`}
-          className="animate-fade-in-up"
+          className={`animate-fade-in-up ${viewMode === "grid" ? "w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)]" : "w-full"}`}
           style={{
             animationDelay: `${index * 0.1}s`,
             animationFillMode: 'both'

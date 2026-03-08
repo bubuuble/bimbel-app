@@ -53,10 +53,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const getCategoryColor = (category: string) => {
     const colorMap: { [key: string]: string } = {
-      "online": "var(--primary)", // Soft Blue
-      "private": "var(--secondary)", // Soft Pink
-      "regular": "var(--accent)", // Soft Orange
-      "responsive": "#F87171" // Matching theme red/peach
+      "online": "var(--primary)",
+      "private": "var(--secondary)",
+      "regular": "var(--accent)",
+      "responsive": "#F87171"
     };
     return colorMap[category] || "var(--muted-foreground)";
   };
@@ -66,28 +66,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return (
       <div
         onClick={onClick}
-        className="group bg-card rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer flex flex-col md:flex-row border border-border/50"
+        className="group bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.16)] transition-all duration-300 cursor-pointer flex flex-col md:flex-row border border-gray-100"
       >
         {/* Image */}
-        <div className="relative md:w-1/3 h-56 md:h-auto overflow-hidden flex-shrink-0">
+        <div className="relative md:w-1/3 h-56 md:h-auto overflow-hidden flex-shrink-0 rounded-[2rem] m-4">
           {mainImage ? (
             <Image
               src={urlForImage(mainImage.asset).width(600).height(400).url()}
               alt={mainImage.alt || product.title || 'Product image'}
               fill
-              className="object-cover group-hover:scale-110 transition-transform duration-700"
+              className="object-cover group-hover:scale-110 transition-transform duration-700 rounded-[2rem]"
             />
           ) : (
-            <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center">
+            <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center rounded-[2rem]">
               <span className="text-gray-300">No Image</span>
             </div>
           )}
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-3 right-3">
             <Badge
-              className="text-xs font-semibold shadow-md bg-secondary text-secondary-foreground"
-              style={{ backgroundColor: `hsl(${getCategoryColor(product.category)})`, color: 'rgb(58 75 107)' }}
+              className="text-xs font-semibold shadow-md bg-white px-3 py-1"
+              style={{ color: '#5B7C99' }}
             >
-              {getCategoryLabel(product.category)}
+              {getCategoryLabel(product.category).toUpperCase()}
             </Badge>
           </div>
         </div>
@@ -105,7 +105,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {product.duration || "Fleksibel"}
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+            <h3 className="text-2xl font-bold text-[#5B7C99] group-hover:text-primary transition-colors">
               {product.title}
             </h3>
             <p className="text-foreground/70 line-clamp-2">
@@ -113,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between pt-4 border-t border-foreground/10">
             <div className="flex items-center gap-3">
               {product.originalPrice && (
                 <span className="text-sm text-foreground/40 line-through">{formatPrice(product.originalPrice)}</span>
@@ -138,39 +138,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="group bg-card rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer border border-border/50"
+      className="group bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.10)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.16)] transition-all duration-300 cursor-pointer border border-gray-100"
     >
       {/* Image */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-64 overflow-hidden rounded-[2rem] m-4">
         {mainImage ? (
           <Image
             src={urlForImage(mainImage.asset).width(600).url()}
             alt={mainImage.alt || product.title || 'Product image'}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
+            className="object-cover group-hover:scale-110 transition-transform duration-700 rounded-[2rem]"
           />
         ) : (
-          <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center">
+          <div className="w-full h-full bg-[#F0F3FF] flex items-center justify-center rounded-[2rem]">
             <span className="text-gray-300">No Image</span>
           </div>
         )}
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-3 right-3">
           <Badge
-            className="text-xs font-semibold shadow-md bg-secondary text-secondary-foreground"
-            style={{ backgroundColor: `hsl(${getCategoryColor(product.category)})`, color: 'rgb(58 75 107)' }}
+            className="text-xs font-semibold shadow-md bg-white px-3 py-1"
+            style={{ color: '#5B7C99' }}
           >
-            {getCategoryLabel(product.category)}
+            {getCategoryLabel(product.category).toUpperCase()}
           </Badge>
         </div>
       </div>
 
-      <div className="p-8 space-y-4">
+      <div className="px-6 pb-6 space-y-4">
         {/* Meta stats */}
         <div className="flex justify-between items-center text-sm font-medium text-foreground/70">
-          <span className="flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-primary" />
-            5,957 Students
-          </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-4 h-4 text-secondary" />
             {product.duration || "Fleksibel"}
@@ -178,12 +174,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-foreground line-clamp-2 min-h-[56px] leading-snug group-hover:text-primary transition-colors">
+        <h3 className="text-xl font-bold text-[#5B7C99] line-clamp-2 min-h-[56px] leading-snug group-hover:text-primary transition-colors">
           {product.title}
         </h3>
 
+        {/* Short Description */}
+        {(product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]) && (
+          <p className="text-sm text-foreground/60 line-clamp-2 leading-relaxed">
+            {product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]}
+          </p>
+        )}
+
         {/* Footer */}
-        <div className="flex items-center justify-between pt-6 border-t border-border/50">
+        <div className="flex items-center justify-between pt-6 border-t border-foreground/10">
           <div>
             {product.originalPrice && (
               <span className="block text-xs text-foreground/40 line-through">{formatPrice(product.originalPrice)}</span>

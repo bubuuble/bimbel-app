@@ -51,7 +51,7 @@ export default async function TestimoniPage() {
             {[
               { value: `${testimonialsWithUrls.length}+`, label: 'Testimoni Siswa', bg: 'bg-primary/10', color: 'text-primary' },
               { value: `${testimonialsWithUrls.filter(t => t.featured).length}+`, label: 'Prestasi Unggulan', bg: 'bg-secondary/10', color: 'text-secondary' },
-              { value: avgRating, label: 'Rating Rata-rata', bg: 'bg-accent/20', color: 'text-accent' },
+              { value: avgRating, label: 'Rating Rata-rata', bg: 'bg-secondary/20', color: 'text-accent' },
             ].map((s, i) => (
               <div key={i} className={`rounded-[2rem] p-6 text-center shadow-sm border border-border/50 ${s.bg}`}>
                 <div className={`text-3xl font-sans font-extrabold mb-1 ${s.color}`}>{s.value}</div>

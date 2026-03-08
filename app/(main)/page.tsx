@@ -18,8 +18,10 @@ import { client } from '@/sanity/lib/client';
 import { groq } from 'next-sanity';
 import { urlForImage } from '@/sanity/lib/image';
 import TestimonialGrid from '@/components/TestimonialGrid';
+import ProductGrid from '@/components/ProductGrid';
 import { motion } from 'framer-motion';
 import { TestimonialWithImage } from '@/types/testimonial';
+import { Product } from '@/types/product';
 
 /* --- Types --- */
 interface StyledTextData {
@@ -35,31 +37,14 @@ interface LandingData {
   heroTitle?: StyledTextData | string;
   heroDescription?: string;
   heroImages: Array<{ asset: any; alt?: string }>;
-  supportersSubtitle?: StyledTextData | string;
-  supporters?: Array<{ _key: string; name: string; logo: any }>;
-  featuresSubtitle?: StyledTextData | string;
-  featuresList?: Array<{ _key: string; label: string; icon: string }>;
   productsSubtitle?: StyledTextData | string;
   productsTitle?: StyledTextData | string;
   productsDescription?: string;
-  whySubtitle?: StyledTextData | string;
-  whyTitle?: StyledTextData | string;
-  whyDescription?: string;
-  whyList?: Array<{ _key: string; title: string; description: string; icon: string }>;
   testimonialsSubtitle?: StyledTextData | string;
   testimonialsTitle?: StyledTextData | string;
   testimonialsDescription?: string;
-  ctaSubtitle?: StyledTextData | string;
-  ctaTitle?: StyledTextData | string;
-  ctaDescription?: string;
-  ctaButtons?: Array<{ _key: string; label: string; url: string; style: string }>;
 }
-interface Product {
-  _id: string; title: string; category: string; shortDescription: string;
-  price: number; originalPrice?: number;
-  featuredImage: { asset: any; alt?: string };
-  duration?: string; targetAudience?: string;
-}
+
 interface Testimonial {
   _id: string; _type?: "testimonial"; name: string; testimonial: string;
   image?: { asset: any; alt?: string };
@@ -71,12 +56,8 @@ interface Testimonial {
 const LANDING_QUERY = groq`*[_type == "landingPage"][0]{
   heroTitle, heroDescription,
   heroImages[]{ asset, alt },
-  supportersSubtitle, supporters[]{ _key, name, logo },
-  featuresSubtitle, featuresList[]{ _key, label, icon },
   productsSubtitle, productsTitle, productsDescription,
-  whySubtitle, whyTitle, whyDescription, whyList[]{ _key, title, description, icon },
-  testimonialsSubtitle, testimonialsTitle, testimonialsDescription,
-  ctaSubtitle, ctaTitle, ctaDescription, ctaButtons[]{ _key, label, url, style }
+  testimonialsSubtitle, testimonialsTitle, testimonialsDescription
 }`;
 const PRODUCTS_QUERY = groq`*[_type == "product" && featured == true] | order(order asc) [0..5]{
   _id, title, category, shortDescription, price, originalPrice,
@@ -96,10 +77,12 @@ const STATIC_LOGOS = [
 
 /* ─────────── Feature strip ─────────── */
 const FEATURES = [
-  { Icon: BookOpen,      label: 'Bimbingan Privat', bg: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { Icon: Target,        label: 'Try Out Rutin',    bg: 'var(--secondary)', color: 'var(--secondary-foreground)' },
-  { Icon: GraduationCap, label: 'Akses Materi',     bg: 'var(--primary)', color: 'var(--primary-foreground)' },
-  { Icon: Zap,           label: 'Konsultasi Guru',  bg: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+  { Icon: Star,          label: 'Metode Belajar Terbaik',                bg: 'var(--primary)', color: 'var(--primary-foreground)' },
+  { Icon: Users,         label: 'Pengajar 100% Alumni UI & PTN Favorit', bg: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+  { Icon: Target,        label: 'Try-Out Rutin Basis Komputer',               bg: 'var(--primary)', color: 'var(--primary-foreground)' },
+  { Icon: Zap,           label: 'Cara Termudah & Tercepat',              bg: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+  { Icon: BookOpen,      label: 'Modul Lengkap, Sistematis & Prediktif', bg: 'var(--primary)', color: 'var(--primary-foreground)' },
+  { Icon: Award,         label: 'Harga Termurah & Kualitas Terbaik',     bg: 'var(--secondary)', color: 'var(--secondary-foreground)' },
 ];
 
 /* ─────────── Why cards ─────────── */
@@ -256,19 +239,19 @@ export default function HomePage() {
           <>
             <button
               onClick={prevHero}
-              className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              className="absolute left-2 md:left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.4)' }}
               aria-label="Previous slide"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </button>
             <button
               onClick={nextHero}
-              className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
               style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.4)' }}
               aria-label="Next slide"
             >
-              <ChevronRight className="w-6 h-6 text-white" />
+              <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </button>
           </>
         )}
@@ -299,7 +282,7 @@ export default function HomePage() {
       <section className="relative w-full overflow-hidden">
         <div className="relative z-10 w-full">
           {/* ══════════════════════════════════════════════════════════════
-              2.  LOGO STRIP  —  greyscale on white
+              2.  LOGO STRIP  —  colored
           ══════════════════════════════════════════════════════════════ */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -310,19 +293,19 @@ export default function HomePage() {
           >
             <StyledText
               as="p"
-              data={landing?.supportersSubtitle || "Alumni kami diterima di"}
+              data={"Alumni kami diterima di"}
               wrapperClass="text-center text-[10px] font-bold tracking-widest mb-5 uppercase text-foreground/50"
             />
             <div
-              className="flex items-center animate-infinite-scroll"
-              style={{ animationDuration: '30s', width: 'max-content', gap: '4rem' }}
+              className="flex items-center animate-infinite-scroll hover:[animation-play-state:paused]"
+              style={{ animationDuration: '60s', width: 'max-content', gap: '2.5rem' }}
             >
-              {[...Array(3)].flatMap((_, rep) => {
-                const logs = landing?.supporters?.length ? landing.supporters : STATIC_LOGOS;
+              {[...Array(10)].flatMap((_, rep) => {
+                const logs = STATIC_LOGOS;
                 return logs.map((logo: any, idx) => (
-                  <div key={`${rep}-${logo._key || idx}`} className="flex-shrink-0 flex items-center justify-center" style={{ height: 48 }}>
+                  <div key={`${rep}-${idx}`} className="flex-shrink-0 flex items-center justify-center" style={{ height: 48 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={logo.logo?.asset ? urlForImage(logo.logo).width(200).url() : logo.src} alt={logo.name} style={{ maxWidth: '100%', height: '100%', objectFit: 'contain', opacity: 0.55, filter: 'grayscale(1)' }} />
+                    <img src={logo.src} alt={logo.name} style={{ maxWidth: '100%', height: '100%', objectFit: 'contain', opacity: 1 }} />
                   </div>
                 ));
               })}
@@ -330,7 +313,7 @@ export default function HomePage() {
           </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════
-          3.  FEATURE STRIP  —  “Fitur Prioritas”
+          3.  FEATURE STRIP  —  "Fitur Prioritas"
       ══════════════════════════════════════════════════════════════ */}
       <motion.section
         initial={{ opacity: 0, y: 30 }}
@@ -340,22 +323,74 @@ export default function HomePage() {
         className="py-14"
       >
         <div className="container mx-auto px-6">
-          <StyledText
-            as="p"
-            data={landing?.featuresSubtitle || "Fitur Prioritas"}
-            wrapperClass="text-center text-[10px] font-bold tracking-widest uppercase mb-8 text-foreground/50"
-          />
-          <div className="flex flex-wrap justify-center gap-4">
-            {(landing?.featuresList?.length ? landing.featuresList : FEATURES as any).map((f: any, i: number) => {
-              const DynamicIcon = getIcon(f.icon?.trim()) || BookOpen;
-              const bgColor = FEATURES[i % FEATURES.length]?.bg || 'var(--primary)';
-              const color = FEATURES[i % FEATURES.length]?.color || 'var(--primary-foreground)';
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-foreground">
+            Keunggulan Master
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
+            {FEATURES.map((f: any, i: number) => {
+              // Definisi icon yang lebih sesuai
+              const iconMap: Record<number, any> = {
+                0: UserCheck,      // Metode Belajar Terbaik
+                1: Target,         // Pengajar Alumni
+                2: BookOpen,       // Try-Out Rutin
+                3: Zap,            // Cara Termudah
+                4: BookOpen,       // Modul Lengkap
+                5: Award,          // Harga Termurah
+              };
+              
+              const DynamicIcon = iconMap[i] || f.Icon || getIcon(f.icon?.trim()) || BookOpen;
+              
+              // Warna pastel lembut
+              const colorSchemes = [
+                { 
+                  bg: '#FFF8E8',  // Pastel peach/cream
+                  color: '#B8934A', 
+                  iconBg: 'rgba(184, 147, 74, 0.10)' 
+                },
+                { 
+                  bg: '#E8F8F3',  // Pastel mint
+                  color: '#5BA08A', 
+                  iconBg: 'rgba(91, 160, 138, 0.10)' 
+                },
+                { 
+                  bg: '#FEF0EE',  // Pastel blush
+                  color: '#D4806A', 
+                  iconBg: 'rgba(212, 128, 106, 0.10)' 
+                },
+                { 
+                  bg: '#E8F4F8',  // Pastel teal
+                  color: '#4A8FA8', 
+                  iconBg: 'rgba(74, 143, 168, 0.10)' 
+                },
+                { 
+                  bg: '#EBF4FF',  // Pastel sky blue
+                  color: '#5B8FC4', 
+                  iconBg: 'rgba(91, 143, 196, 0.10)' 
+                },
+                { 
+                  bg: '#F3EEFF',  // Pastel lavender
+                  color: '#9B7EC8', 
+                  iconBg: 'rgba(155, 126, 200, 0.10)' 
+                },
+              ];
+              
+              const scheme = colorSchemes[i % colorSchemes.length];
+              
               return (
-                <div key={f._key || i} className="flex items-center gap-3 px-6 py-4 rounded-full shadow-sm hover:shadow-md transition-shadow" style={{ background: bgColor, minWidth: 190 }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
-                    <DynamicIcon className="w-5 h-5" style={{ color }} />
+                <div 
+                  key={f._key || i} 
+                  className="flex items-center gap-4 p-5 md:p-6 rounded-3xl transition-all hover:-translate-y-1 min-h-[80px]" 
+                  style={{ backgroundColor: scheme.bg, boxShadow: `0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)` }}
+                >
+                  <div 
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: scheme.iconBg, boxShadow: `0 2px 8px rgba(0,0,0,0.08)` }}
+                  >
+                    <DynamicIcon className="w-6 h-6 md:w-7 md:h-7" style={{ color: scheme.color }} />
                   </div>
-                  <span className="font-semibold text-sm" style={{ color }}>{f.label}</span>
+                  <span className="font-bold text-base md:text-lg leading-snug" style={{ color: scheme.color }}>
+                    {f.label}
+                  </span>
                 </div>
               );
             })}
@@ -375,10 +410,9 @@ export default function HomePage() {
       >
         <div className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
-            <StyledText as="p" data={landing?.productsSubtitle || "Program Kami"} wrapperClass="text-xs font-bold tracking-widest uppercase text-secondary" />
             <StyledText
               as="h2"
-              data={landing?.productsTitle || { text: 'Program Spesialisasi', highlightText: 'Eksklusif', highlightColor: 'text-primary' }}
+              data={landing?.productsTitle || { text: 'Program', highlightText: 'Eksklusif', highlightColor: 'text-primary' }}
               wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground"
             />
             <p className="text-lg max-w-xl mx-auto text-foreground/70">
@@ -386,41 +420,15 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((p, i) => {
-              const pal = CARD_PALETTES[i % CARD_PALETTES.length];
-              return (
-                <div key={p._id} className={`group rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 flex flex-col ${pal.bg}`}>
-                  {p.featuredImage?.asset && (
-                    <div className="relative h-48 overflow-hidden rounded-t-[2rem]">
-                      <Image src={urlForImage(p.featuredImage).width(500).height(300).url()} alt={p.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                  )}
-                  <div className="p-8 flex flex-col flex-1 gap-4">
-                    <span className={`inline-block self-start px-3 py-1 text-xs font-bold rounded-full shadow-sm ${pal.badge} text-foreground`}>
-                      {getCategoryLabel(p.category)}
-                    </span>
-                    <h3 className="font-sans font-bold text-xl leading-snug text-foreground group-hover:text-primary transition-colors">{p.title}</h3>
-                    {p.shortDescription && (
-                      <p className="text-sm line-clamp-2 text-foreground/70">{p.shortDescription}</p>
-                    )}
-                    <div className="flex items-center gap-3 text-xs font-medium text-foreground/60">
-                      <span className="flex items-center gap-1"><Users className="w-4 h-4" style={{ color: pal.iconColor }} /> 1.200+ Siswa</span>
-                      {p.duration && <span className="flex items-center gap-1"><Clock className="w-4 h-4" style={{ color: pal.iconColor }} /> {p.duration}</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-6 mt-auto border-t border-foreground/10">
-                      <div>
-                        {p.originalPrice && <span className="block text-xs line-through text-foreground/40">{formatPrice(p.originalPrice)}</span>}
-                        <span className="font-bold text-xl" style={{ color: pal.iconColor }}>{formatPrice(p.price)}</span>
-                      </div>
-                      <Link href={`/pembayaran?product_id=${p._id}`} className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 hover:bg-white transition-all shadow-sm" style={{ color: pal.iconColor }}>
-                        <ArrowRight className="w-5 h-5" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mt-8">
+            <ProductGrid 
+              products={products} 
+              viewMode="grid" 
+              selectedCategory="all" 
+              onProductClick={(p) => { 
+                window.location.href = `/product`; 
+              }} 
+            />
           </div>
 
           <div className="text-center mt-12">
@@ -450,19 +458,19 @@ export default function HomePage() {
           >
             <div className="container mx-auto px-6">
           <div className="text-center mb-14 space-y-3">
-            <StyledText as="p" data={landing?.whySubtitle || "Kenapa Kami?"} wrapperClass="text-xs font-bold tracking-widest uppercase text-secondary" />
-            <StyledText as="h2" data={landing?.whyTitle || { text: 'Kenapa', highlightText: 'Bimbel Master?' }} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground" />
+            <StyledText as="p" data={"Kenapa Kami?"} wrapperClass="text-xs font-bold tracking-widest uppercase text-secondary" />
+            <StyledText as="h2" data={{ text: 'Kenapa', highlightText: 'Bimbel Master?' }} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground" />
             <p className="text-lg max-w-xl mx-auto text-foreground/70">
-              {landing?.whyDescription || "Kombinasi pendekatan tradisional dan teknologi modern untuk pengalaman belajar yang optimal."}
+              Kombinasi pendekatan tradisional dan teknologi modern untuk pengalaman belajar yang optimal.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {(landing?.whyList?.length ? landing.whyList : WHY_ITEMS as any).map((item: any, i: number) => {
-              const DynamicIcon = getIcon(item.icon?.trim()) || BookOpen;
+            {WHY_ITEMS.map((item: any, i: number) => {
+              const DynamicIcon = item.Icon || getIcon(item.icon?.trim()) || BookOpen;
               const bg = item.bg || WHY_ITEMS[i % WHY_ITEMS.length].bg;
               const iconColor = item.iconColor || WHY_ITEMS[i % WHY_ITEMS.length].iconColor;
               return (
-                <div key={item._key || i} className={`p-10 rounded-[2.5rem] space-y-5 hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ${bg}`}>
+                <div key={i} className={`p-10 rounded-[2.5rem] space-y-5 hover:scale-[1.02] transition-all duration-300 ${bg}`} style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)' }}>
                   <div className="w-16 h-16 rounded-[1.25rem] flex items-center justify-center bg-white/60">
                     <DynamicIcon className="w-8 h-8" style={{ color: iconColor }} />
                   </div>
@@ -496,7 +504,7 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                <TestimonialGrid testimonials={testimonials.map(t => ({
+                <TestimonialGrid tilted testimonials={testimonials.map(t => ({
                   ...t,
                   imageUrl: t.image ? urlForImage(t.image).width(400).url() : undefined,
                   imageAlt: t.image?.alt || t.name,
@@ -529,26 +537,20 @@ export default function HomePage() {
         <div className="absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
         <div className="absolute bottom-[-70px] right-[-70px] w-80 h-80 rounded-full pointer-events-none bg-white/40" />
         <div className="relative z-10 max-w-2xl mx-auto px-6 space-y-8">
-          <StyledText as="p" data={landing?.ctaSubtitle || "Tanya Dulu Biar Yakin!"} wrapperClass="text-[10px] font-bold tracking-widest uppercase text-secondary" />
-          <StyledText as="h2" data={landing?.ctaTitle || "Siap Mulai Perjalanan Belajarmu?"} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl leading-tight text-foreground" />
+          <StyledText as="p" data={"Tanya Dulu Biar Yakin!"} wrapperClass="text-[10px] font-bold tracking-widest uppercase text-secondary" />
+          <StyledText as="h2" data={"Siap Mulai Perjalanan Belajarmu?"} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl leading-tight text-foreground" />
           <p className="text-lg text-foreground/80">
-            {landing?.ctaDescription || "Bergabunglah dengan 1.200+ siswa yang telah mempercayakan bimbingan mereka kepada kami."}
+            Bergabunglah dengan 1.200+ siswa yang telah mempercayakan bimbingan mereka kepada kami.
           </p>
           <div className="flex flex-wrap justify-center gap-4 pt-4">
-            {landing?.ctaButtons?.length ? landing.ctaButtons.map((btn) => (
-              <Link key={btn._key} href={btn.url || "#"} className={btn.style === 'outline' ? "inline-flex items-center gap-2 border-2 border-primary/30 rounded-full px-8 py-4 font-bold text-primary hover:bg-primary/10 transition-all" : "inline-flex items-center gap-2 bg-primary rounded-full px-8 py-4 font-bold text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all shadow-md"}>
-                {btn.label} {btn.style !== 'outline' && <ArrowRight className="w-5 h-5" />}
+            <>
+              <Link href="/product" className="inline-flex items-center gap-2 bg-primary rounded-full px-8 py-4 font-bold text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all shadow-md">
+                Daftar Sekarang <ArrowRight className="w-5 h-5" />
               </Link>
-            )) : (
-              <>
-                <Link href="/product" className="inline-flex items-center gap-2 bg-primary rounded-full px-8 py-4 font-bold text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all shadow-md">
-                  Daftar Sekarang <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link href="/about" className="inline-flex items-center gap-2 border-2 border-primary/30 rounded-full px-8 py-4 font-bold text-primary hover:bg-primary/10 transition-all">
-                  Pelajari Lebih
-                </Link>
-              </>
-            )}
+              <Link href="/about" className="inline-flex items-center gap-2 border-2 border-primary/30 rounded-full px-8 py-4 font-bold text-primary hover:bg-primary/10 transition-all">
+                Pelajari Lebih
+              </Link>
+            </>
           </div>
         </div>
       </motion.section>

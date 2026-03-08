@@ -84,12 +84,10 @@ export default function Header() {
         `}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 md:gap-2.5 shrink-0">
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center bg-primary/20">
-            <Image src="/image/logo/logo1.png" alt="Logo" width={36} height={36} className="w-6 h-6 md:w-full md:h-full" />
-          </div>
+        <Link href="/" className="flex items-center gap-1 md:gap-1.5 shrink-0">
+          <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
           <span className="font-sans font-extrabold text-lg md:text-xl text-foreground">
-            Bimbel<span className="text-secondary">Master</span>
+            Bimbel<span className="text-secondary"> Master</span>
           </span>
         </Link>
 
@@ -131,11 +129,11 @@ export default function Header() {
 
         {/* Mobile toggle */}
         <button
-          className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+          className="lg:hidden flex items-center justify-center pt-1 text-primary transition-opacity hover:opacity-70"
           onClick={() => setMobileMenuOpen(true)}
           aria-label="Open menu"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-7 h-7" />
         </button>
       </div>
 
@@ -147,7 +145,7 @@ export default function Header() {
             {/* Drawer header */}
             <div className="px-6 py-5 border-b border-border">
               <span className="font-sans font-extrabold text-xl text-foreground">
-                Bimbel<span className="text-secondary">Master</span>
+                Bimbel<span className="text-secondary"> Master</span>
               </span>
             </div>
 
