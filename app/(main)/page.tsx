@@ -284,7 +284,7 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "0px 0px -60px 0px" }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="py-6 md:py-20"
+        className="py-2 md:py-7"
       >
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center text-center gap-3 md:gap-6 max-w-5xl mx-auto">
@@ -333,7 +333,6 @@ export default function HomePage() {
                 Konsultasi Gratis
               </span>
             </div>
-
           </div>
         </div>
       </motion.section>
@@ -351,7 +350,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -50px 0px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="py-8 border-y border-border/50"
+            className="py-4 border-y border-border/50"
           >
             <StyledText
               as="p"
@@ -382,7 +381,7 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "0px 0px -100px 0px" }}
         transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-        className="py-14"
+        className="py-8"
       >
         <div className="container mx-auto px-6">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-foreground">
