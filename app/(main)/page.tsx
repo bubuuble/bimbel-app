@@ -293,7 +293,7 @@ export default function HomePage() {
             <h2 className="font-extrabold text-2xl md:text-6xl leading-tight text-foreground drop-shadow-sm md:drop-shadow-none">
               Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
               <br />
-              <span className="text-secondary/80 drop-shadow-md md:drop-shadow-none">
+              <span className="text-secondary/80 drop-shadow-md md:drop-shadow-none text-3xl md:text-7xl">
                 Master Solusinya!
               </span>
             </h2>
@@ -303,25 +303,27 @@ export default function HomePage() {
 
             {/* Email form */}
             <form
-              className="w-full max-w-xl flex flex-col sm:flex-row gap-2"
+              className="w-full max-w-xl"
               onSubmit={(e) => {
                 e.preventDefault();
                 const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
                 window.location.href = `/register?email=${encodeURIComponent(email)}`;
               }}
             >
-              <input
-                type="email"
-                placeholder="Masukkan email Anda"
-                required
-                className="flex-1 px-4 py-2.5 md:px-5 md:py-3.5 rounded-full border border-border/40 bg-white text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
-              />
-              <button
-                type="submit"
-                className="flex-shrink-0 bg-primary text-primary-foreground px-5 py-2.5 md:px-7 md:py-3.5 rounded-full font-bold text-sm hover:bg-primary/90 hover:scale-105 transition-all shadow-md whitespace-nowrap"
-              >
-                Mulai Sekarang
-              </button>
+              <div className="flex items-center bg-white rounded-full border border-border/40 shadow-sm p-1.5">
+                <input
+                  type="email"
+                  placeholder="Masukkan email Anda"
+                  required
+                  className="flex-1 px-4 py-2 bg-transparent text-foreground placeholder:text-foreground/40 text-sm focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="flex-shrink-0 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary/90 hover:scale-105 transition-all shadow-md whitespace-nowrap"
+                >
+                  Mulai Sekarang
+                </button>
+              </div>
             </form>
 
             {/* Trust badge */}
