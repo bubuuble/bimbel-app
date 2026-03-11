@@ -277,6 +277,66 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
+          1.5  LEAD CAPTURE  —  CTA singkat + email form
+      ══════════════════════════════════════════════════════════════ */}
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="py-12 md:py-20"
+      >
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col items-center text-center gap-6 max-w-5xl mx-auto">
+
+            {/* Headline + description */}
+            <h2 className="font-extrabold text-4xl md:text-6xl leading-tight text-foreground">
+              Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
+              <br />
+              <span className="text-secondary/80">
+                Master Solusinya!
+              </span>
+            </h2>
+            <p className="text-foreground/60 text-base md:text-lg leading-relaxed max-w-3xl">
+              Belajar lebih mudah dengan metode <span className="font-semibold text-foreground/80 italic">The Simple Learning</span>,dibimbing tutor berpengalaman alumni UI & PTN favorit untuk meningkatkan nilai dan tembus PTN impian.
+            </p>
+
+            {/* Email form */}
+            <form
+              className="w-full max-w-xl flex flex-col sm:flex-row gap-2.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
+                window.location.href = `/register?email=${encodeURIComponent(email)}`;
+              }}
+            >
+              <input
+                type="email"
+                placeholder="Masukkan email Anda"
+                required
+                className="flex-1 px-5 py-3.5 rounded-full border border-border/40 bg-white text-foreground placeholder:text-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+              />
+              <button
+                type="submit"
+                className="flex-shrink-0 bg-primary text-primary-foreground px-7 py-3.5 rounded-full font-bold text-sm hover:bg-primary/90 hover:scale-105 transition-all shadow-md whitespace-nowrap"
+              >
+                Mulai Sekarang
+              </button>
+            </form>
+
+            {/* Trust badge */}
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/50">
+                Konsultasi Gratis
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ══════════════════════════════════════════════════════════════
           FIRST GROUP (Logos, Features, Products)
       ══════════════════════════════════════════════════════════════ */}
       <section className="relative w-full overflow-hidden">
