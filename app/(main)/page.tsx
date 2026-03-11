@@ -290,10 +290,10 @@ export default function HomePage() {
           <div className="flex flex-col items-center text-center gap-3 md:gap-6 max-w-5xl mx-auto">
 
             {/* Headline + description */}
-            <h2 className="font-extrabold text-2xl md:text-6xl leading-tight text-foreground drop-shadow-sm md:drop-shadow-none">
+            <h2 className="font-extrabold text-2xl md:text-6xl leading-tight text-foreground drop-shadow-sm">
               Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
               <br />
-              <span className="text-secondary/80 drop-shadow-md md:drop-shadow-none text-3xl md:text-7xl">
+              <span className="text-secondary/80 drop-shadow-md text-3xl md:text-7xl">
                 Master Solusinya!
               </span>
             </h2>
