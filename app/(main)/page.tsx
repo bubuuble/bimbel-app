@@ -69,10 +69,16 @@ const TESTIMONIALS_QUERY = groq`*[_type == "testimonial" && featured == true][0.
 
 /* ─────────── Static logos ─────────── */
 const STATIC_LOGOS = [
-  { name: 'Universitas Indonesia',      src: '/image/supporters/ui.png',   w: 120 },
-  { name: 'Institut Teknologi Bandung', src: '/image/supporters/itb.png',  w: 120 },
-  { name: 'Universitas Brawijaya',      src: '/image/supporters/braw.png', w: 120 },
-  { name: 'Universitas Gadjah Mada',    src: '/image/supporters/ugm1.png', w: 120 },
+  { name: 'Universitas Gadjah Mada',              src: '/image/supporters/ugm.png',  w: 120 },
+  { name: 'Universitas Indonesia',                src: '/image/supporters/ui.png',    w: 120 },
+  { name: 'Institut Teknologi Bandung',           src: '/image/supporters/itb.png',   w: 120 },
+  { name: 'IPB University',                       src: '/image/supporters/ipb.png',   w: 120 },
+  { name: 'Universitas Padjadjaran',              src: '/image/supporters/unpad.png', w: 120 },
+  { name: 'Universitas Hasanuddin',               src: '/image/supporters/Unhas.png', w: 120 },
+  { name: 'Universitas Airlangga',                src: '/image/supporters/unair.png', w: 120 },
+  { name: 'Universitas Brawijaya',                src: '/image/supporters/braw.png',  w: 120 },
+  { name: 'Universitas Diponegoro',               src: '/image/supporters/undip.png', w: 120 },
+  { name: 'Institut Teknologi Sepuluh Nopember',  src: '/image/supporters/its.png',   w: 120 },
 ];
 
 /* ─────────── Feature strip ─────────── */
@@ -284,7 +290,7 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "0px 0px -60px 0px" }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="py-2 md:py-7"
+        className="pt-8 pb-2 md:pt-16 md:pb-7"
       >
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center text-center gap-3 md:gap-6 max-w-5xl mx-auto">
@@ -354,7 +360,7 @@ export default function HomePage() {
           >
             <StyledText
               as="p"
-              data={"Alumni kami diterima di"}
+              data={"17.836 ALUMNI KAMI DITERIMA DI PTN FAVORIT"}
               wrapperClass="text-center text-[10px] font-bold tracking-widest mb-5 uppercase text-foreground/50"
             />
             <div
@@ -364,7 +370,7 @@ export default function HomePage() {
               {[...Array(10)].flatMap((_, rep) => {
                 const logs = STATIC_LOGOS;
                 return logs.map((logo: any, idx) => (
-                  <div key={`${rep}-${idx}`} className="flex-shrink-0 flex items-center justify-center" style={{ height: 48 }}>
+                  <div key={`${rep}-${idx}`} className="flex-shrink-0 flex items-center justify-center" style={{ height: 64 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={logo.src} alt={logo.name} style={{ maxWidth: '100%', height: '100%', objectFit: 'contain', opacity: 1 }} />
                   </div>
