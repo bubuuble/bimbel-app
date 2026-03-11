@@ -180,7 +180,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Short Description */}
         {(product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]) && (
-          <p className="text-xs md:text-sm text-foreground/60 line-clamp-2 leading-relaxed hidden sm:block">
+          <p className="text-xs md:text-sm text-foreground/60 line-clamp-2 leading-relaxed">
             {product.shortDescription || CATEGORY_DESCRIPTIONS[product.category]}
           </p>
         )}
