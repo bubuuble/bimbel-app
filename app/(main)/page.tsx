@@ -741,93 +741,23 @@ export default function HomePage() {
             className="pb-12"
           >
             <div className="w-full overflow-visible px-4 md:px-12">
-              <div className="grid md:grid-cols-2 gap-5 md:gap-14 items-center">
-                {/* Left: main image + thumbnails */}
-                <div className="space-y-2">
-                  <div
-                    className="rounded-xl md:rounded-2xl overflow-hidden w-full"
-                    style={{ aspectRatio: "16/9" }}
-                  >
-                    <img
-                      key={facilityIndex}
-                      src={FACILITY_IMAGES[facilityIndex].src}
-                      alt={FACILITY_IMAGES[facilityIndex].alt}
-                      className="w-full h-full object-cover transition-opacity duration-300"
-                    />
-                  </div>
-
-                  {/* Thumbnails — mobile: 3 visible + arrows | desktop: all visible */}
-
-                  {/* Mobile: 3 thumbnails + arrow navigation */}
-                  <div className="flex items-center justify-center gap-2 py-1.5 md:hidden">
-                    <button
-                      onClick={() => setThumbOffset((o) => Math.max(0, o - 1))}
-                      disabled={thumbOffset === 0}
-                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
-                      aria-label="Previous thumbnails"
-                    >
-                      <ChevronLeft className="w-4 h-4 text-white" />
-                    </button>
-                    <div className="flex gap-1.5">
-                      {FACILITY_IMAGES.slice(thumbOffset, thumbOffset + 3).map((img, j) => {
-                        const i = thumbOffset + j;
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => setFacilityIndex(i)}
-                            className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                              i === facilityIndex
-                                ? "border-primary ring-2 ring-primary/30 scale-105"
-                                : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
-                            }`}
-                            style={{ width: 64, height: 64 }}
-                            aria-label={img.alt}
-                          >
-                            <img
-                              src={img.src}
-                              alt={img.alt}
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => setThumbOffset((o) => Math.min(FACILITY_IMAGES.length - 3, o + 1))}
-                      disabled={thumbOffset >= FACILITY_IMAGES.length - 3}
-                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
-                      aria-label="Next thumbnails"
-                    >
-                      <ChevronRight className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-
-                  {/* Desktop: all thumbnails shown at once */}
-                  <div className="hidden md:flex flex-wrap gap-2 py-1.5 justify-center">
-                    {FACILITY_IMAGES.map((img, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setFacilityIndex(i)}
-                        className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          i === facilityIndex
-                            ? "border-primary ring-2 ring-primary/30 scale-105"
-                            : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
-                        }`}
-                        style={{ width: 72, height: 72 }}
-                        aria-label={img.alt}
-                      >
-                        <img
-                          src={img.src}
-                          alt={img.alt}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
+              {/* Grid: image (left) vs right content — heights match so button aligns with image bottom */}
+              <div className="grid md:grid-cols-2 gap-5 md:gap-14">
+                {/* Left: main image only (thumbnails moved below) */}
+                <div
+                  className="rounded-xl md:rounded-2xl overflow-hidden w-full"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <img
+                    key={facilityIndex}
+                    src={FACILITY_IMAGES[facilityIndex].src}
+                    alt={FACILITY_IMAGES[facilityIndex].alt}
+                    className="w-full h-full object-cover transition-opacity duration-300"
+                  />
                 </div>
 
-                {/* Right: checklist + buttons */}
-                <div className="space-y-3 md:space-y-6">
+                {/* Right: checklist + button pinned to bottom */}
+                <div className="flex flex-col gap-3 md:gap-6">
                   <h2 className="font-bold text-base md:text-3xl text-foreground leading-snug">
                     Fasilitas Bimbel Master
                   </h2>
@@ -841,7 +771,7 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="space-y-2 pt-1">
+                  <div className="mt-auto space-y-2 pt-1">
                     <Link
                       href="/product"
                       className="block w-full text-center font-bold py-2.5 md:py-4 rounded-full transition-all hover:scale-[1.02] shadow-md text-white text-xs md:text-base"
@@ -851,6 +781,70 @@ export default function HomePage() {
                     </Link>
                   </div>
                 </div>
+              </div>
+
+              {/* Thumbnails — below grid, aligned under image (left half) */}
+
+              {/* Mobile: 3 visible + arrows, centered */}
+              <div className="flex items-center justify-center gap-2 py-1.5 mt-2 md:hidden">
+                <button
+                  onClick={() => setThumbOffset((o) => Math.max(0, o - 1))}
+                  disabled={thumbOffset === 0}
+                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
+                  aria-label="Previous thumbnails"
+                >
+                  <ChevronLeft className="w-4 h-4 text-white" />
+                </button>
+                <div className="flex gap-1.5">
+                  {FACILITY_IMAGES.slice(thumbOffset, thumbOffset + 3).map((img, j) => {
+                    const i = thumbOffset + j;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setFacilityIndex(i)}
+                        className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                          i === facilityIndex
+                            ? "border-primary ring-2 ring-primary/30 scale-105"
+                            : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
+                        }`}
+                        style={{ width: 64, height: 64 }}
+                        aria-label={img.alt}
+                      >
+                        <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setThumbOffset((o) => Math.min(FACILITY_IMAGES.length - 3, o + 1))}
+                  disabled={thumbOffset >= FACILITY_IMAGES.length - 3}
+                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
+                  aria-label="Next thumbnails"
+                >
+                  <ChevronRight className="w-4 h-4 text-white" />
+                </button>
+              </div>
+
+              {/* Desktop: thumbnails under left image column only */}
+              <div className="hidden md:grid md:grid-cols-2 md:gap-14 mt-2">
+                <div className="flex flex-wrap gap-2 py-1.5 justify-center">
+                  {FACILITY_IMAGES.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setFacilityIndex(i)}
+                      className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                        i === facilityIndex
+                          ? "border-primary ring-2 ring-primary/30 scale-105"
+                          : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
+                      }`}
+                      style={{ width: 72, height: 72 }}
+                      aria-label={img.alt}
+                    >
+                      <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+                <div /> {/* spacer — keeps thumbnails under left column only */}
               </div>
             </div>
           </motion.section>

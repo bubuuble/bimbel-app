@@ -1,8 +1,8 @@
-// middleware.ts - Versi Supabase yang diperbaiki
+// proxy.ts - Versi Supabase yang diperbaiki
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -55,14 +55,14 @@ export async function middleware(request: NextRequest) {
   // Protected routes
   const { pathname } = request.nextUrl
   const protectedRoutes = ['/dashboard']
-  
+
   // Redirect logic
   if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
-  
+
   if (session && (pathname === '/login' || pathname === '/register')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
