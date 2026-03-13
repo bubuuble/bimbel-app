@@ -25,7 +25,7 @@ export default async function OrderManagementPage() {
   }
 
   return (
-    <div className="container mx-auto p-0 sm:p-4">
+    <div className="space-y-6 sm:space-y-8">
       <OrderManagementClient initialOrders={initialOrders || []} />
     </div>
   );

@@ -9,27 +9,20 @@ export default async function UserManagementPage() {
   const { data: profiles } = await supabase.rpc('get_all_users');
   
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Manage and monitor user accounts across your platform.
-        </p>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-400 p-6 sm:p-8 text-white shadow-lg">
+        <div className="relative z-10">
+          <p className="text-rose-100 text-sm font-medium mb-1">Admin</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Manajemen Pengguna</h1>
+          <p className="text-rose-100 mt-1 text-sm">Kelola akun pengguna, ubah peran, dan tambah admin baru.</p>
+        </div>
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 pointer-events-none" />
       </div>
-      
-      <Separator />
-      
-      <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl">All Users</CardTitle>
-          <CardDescription className="text-sm">
-            View and manage all registered users in the system.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0">
-          <UserManagementClient initialProfiles={profiles || []} />
-        </CardContent>
-      </Card>
+
+      <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <UserManagementClient initialProfiles={profiles || []} />
+      </div>
     </div>
   );
 }

@@ -19,8 +19,14 @@ export default function DeleteTestButton({ testId, classId }: { testId: string; 
     >
       <input type="hidden" name="testId" value={testId} />
       <input type="hidden" name="classId" value={classId} />
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        {pending ? "Menghapus..." : "Hapus Ujian Ini"}
+      <Button 
+        type="submit" 
+        variant="ghost" 
+        size="sm" 
+        disabled={pending}
+        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-semibold"
+      >
+        {pending ? "Menghapus..." : "Hapus Ujian"}
       </Button>
     </form>
   );

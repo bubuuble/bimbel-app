@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from "react"; // <-- Impor hook
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton"; // <-- Impor Skeleton
+import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Users, GraduationCap, ClipboardCheck, Edit } from "lucide-react";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -18,89 +17,89 @@ interface TeacherStatsCardsClientProps {
   error?: boolean;
 }
 
-// Komponen skeleton untuk placeholder saat loading atau sebelum hydration
-function StatsSkeleton() {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-                <Card key={i}>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-4 rounded-full" />
-                    </CardHeader>
-                    <CardContent>
-                        <Skeleton className="h-8 w-12 mt-1" />
-                        <Skeleton className="h-3 w-32 mt-2" />
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
-}
-
+const getCards = (stats: TeacherStats | null, labels: Record<string, string>) => [
+  {
+    label: labels.totalClasses,
+    sub: labels.classesYouTeach,
+    value: stats?.total_kelas ?? 0,
+    icon: GraduationCap,
+    gradient: "from-indigo-400 to-blue-500",
+  },
+  {
+    label: labels.totalStudents,
+    sub: labels.uniqueStudents,
+    value: stats?.total_siswa ?? 0,
+    icon: Users,
+    gradient: "from-teal-400 to-emerald-500",
+  },
+  {
+    label: labels.totalTasks,
+    sub: labels.tasksGiven,
+    value: stats?.total_tugas ?? 0,
+    icon: ClipboardCheck,
+    gradient: "from-violet-400 to-purple-500",
+  },
+  {
+    label: labels.needGrading,
+    sub: labels.awaitingGrade,
+    value: stats?.perlu_dinilai ?? 0,
+    icon: Edit,
+    gradient: "from-amber-400 to-orange-500",
+  },
+];
 
 export default function TeacherStatsCardsClient({ stats, error }: TeacherStatsCardsClientProps) {
   const { t } = useLanguage();
-  // [PERBAIKAN] State untuk melacak apakah komponen sudah 'mounted' di client
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    // Efek ini hanya berjalan di sisi client, setelah render awal
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
   if (error || !stats) {
-    return <p className="text-red-500">Gagal memuat statistik guru.</p>;
+    return <p className="text-red-500 text-sm">Gagal memuat statistik guru.</p>;
   }
 
-  // Jika belum mounted, tampilkan skeleton agar cocok dengan render server
-  if (!isMounted) {
-    return <StatsSkeleton />;
-  }
+  const labels = {
+    totalClasses: t('teacher.stats.totalClasses'),
+    classesYouTeach: t('teacher.stats.classesYouTeach'),
+    totalStudents: t('teacher.stats.totalStudents'),
+    uniqueStudents: t('teacher.stats.uniqueStudents'),
+    totalTasks: t('teacher.stats.totalTasks'),
+    tasksGiven: t('teacher.stats.tasksGiven'),
+    needGrading: t('teacher.stats.needGrading'),
+    awaitingGrade: t('teacher.stats.awaitingGrade'),
+  };
 
-  // Setelah mounted, baru render konten yang sudah diterjemahkan
+  const cards = getCards(stats, labels);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">{t('teacher.stats.totalClasses')}</CardTitle>
-          <GraduationCap className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{stats.total_kelas}</div>
-          <CardDescription>{t('teacher.stats.classesYouTeach')}</CardDescription>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">{t('teacher.stats.totalStudents')}</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">{stats.total_siswa}</div>
-          <CardDescription>{t('teacher.stats.uniqueStudents')}</CardDescription>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">{t('teacher.stats.totalTasks')}</CardTitle>
-          <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total_tugas}</div>
-          <CardDescription>{t('teacher.stats.tasksGiven')}</CardDescription>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">{t('teacher.stats.needGrading')}</CardTitle>
-          <Edit className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-orange-600">{stats.perlu_dinilai}</div>
-          <CardDescription>{t('teacher.stats.awaitingGrade')}</CardDescription>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <div
+            key={card.label}
+            className="rounded-2xl bg-white border border-slate-100 p-5 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+          >
+            <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${card.gradient} text-white shadow-sm`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            {!isMounted ? (
+              <>
+                <Skeleton className="h-7 w-12 mb-1" />
+                <Skeleton className="h-3 w-20" />
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold text-slate-800 tabular-nums">
+                  {card.value.toLocaleString('id-ID')}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">{card.label}</p>
+                <p className="text-[11px] text-slate-300 mt-0.5">{card.sub}</p>
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

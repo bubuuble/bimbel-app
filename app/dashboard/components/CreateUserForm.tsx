@@ -14,8 +14,8 @@ import { toast } from "sonner";
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full">
-      {pending ? "Creating..." : "Create User"}
+    <Button type="submit" disabled={pending} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 font-semibold">
+      {pending ? "Menyimpan..." : "Tambah Pengguna"}
     </Button>
   );
 }
@@ -36,45 +36,42 @@ export default function CreateUserForm() {
   }, [state]);
 
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle>Create New User</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form ref={formRef} action={formAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input type="text" name="name" id="name" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input type="text" name="username" id="username" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input type="password" name="password" id="password" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select name="role" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="SISWA">Siswa</SelectItem>
-                <SelectItem value="GURU">Guru</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <SubmitButton />
-          {state?.error && (
-            <Alert variant="destructive">
-              <AlertDescription>{state.error}</AlertDescription>
+    <form ref={formRef} action={formAction} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-1.5">
+        <Label htmlFor="name" className="text-xs font-medium text-slate-600">Nama Lengkap</Label>
+        <Input type="text" name="name" id="name" required className="rounded-xl border-slate-200 text-sm focus:border-indigo-400 focus:ring-indigo-400 h-10" />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="username" className="text-xs font-medium text-slate-600">Username</Label>
+        <Input type="text" name="username" id="username" required className="rounded-xl border-slate-200 text-sm focus:border-indigo-400 focus:ring-indigo-400 h-10" />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="password" className="text-xs font-medium text-slate-600">Password Sementara</Label>
+        <Input type="password" name="password" id="password" required className="rounded-xl border-slate-200 text-sm focus:border-indigo-400 focus:ring-indigo-400 h-10" />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="role" className="text-xs font-medium text-slate-600">Peran Pengguna</Label>
+        <Select name="role" required>
+            <SelectTrigger className="rounded-xl border-slate-200 text-sm focus:border-indigo-400 focus:ring-indigo-400 h-10">
+            <SelectValue placeholder="Pilih peran dari daftar" />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="SISWA">Siswa</SelectItem>
+            <SelectItem value="GURU">Guru</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            </SelectContent>
+        </Select>
+        </div>
+        <div className="md:col-span-2">
+            <SubmitButton />
+        </div>
+        {state?.error && (
+        <div className="md:col-span-2 mt-2">
+            <Alert variant="destructive" className="rounded-xl bg-rose-50 border-rose-200 text-rose-700">
+                <AlertDescription className="text-sm font-medium">{state.error}</AlertDescription>
             </Alert>
-          )}
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+        )}
+    </form>
   );
 }

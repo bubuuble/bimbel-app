@@ -58,16 +58,18 @@ export default async function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl p-0 md:p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Profil Saya</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Kirim semua data ke komponen klien */}
-          <ProfileClient user={userData} />
-        </CardContent>
-      </Card>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-400 p-6 sm:p-8 text-white shadow-lg">
+        <div className="relative z-10">
+          <p className="text-indigo-100 text-sm font-medium mb-1">Pengaturan</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Profil Saya</h1>
+          <p className="text-indigo-100 mt-1 text-sm">Kelola informasi pribadi, kontak, dan pengaturan akun Anda.</p>
+        </div>
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 pointer-events-none" />
+      </div>
+
+      <ProfileClient user={userData} />
     </div>
   );
 }

@@ -23,7 +23,7 @@ export default function NotificationModal({
 }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] p-0 fixed top-16 right-4 translate-x-0 translate-y-0">
+      <DialogContent className="sm:max-w-md max-h-[80vh] p-0 fixed top-16 right-4 translate-x-0 translate-y-0 rounded-2xl overflow-hidden shadow-2xl border-none">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Notifikasi</DialogTitle>
         </DialogHeader>

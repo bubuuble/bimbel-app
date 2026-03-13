@@ -83,89 +83,91 @@ export default function SubmissionForm({ materialId, studentId, classId, existin
 
   if (existingSubmission) {
     return (
-      <Card className="mt-2">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
-              <FileText className="w-3 h-3 mr-1" />
-              Submitted
+      <div className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge className="bg-green-100 hover:bg-green-100 text-green-700 border-none font-medium px-3 py-1 rounded-lg">
+              <FileText className="w-4 h-4 mr-1.5" />
+              Tugas Dikumpulkan
             </Badge>
           </div>
-          <CardDescription>
-            You have already submitted this assignment.
+          <p className="text-slate-600 text-sm">
+            Anda telah mengumpulkan tugas ini.
             {existingSubmission.file_url && (
-              <Button variant="link" className="p-0 h-auto ml-1" asChild>
+              <Button variant="link" className="p-0 h-auto ml-1 text-indigo-600 font-semibold" asChild>
                 <a href={existingSubmission.file_url} target="_blank" rel="noopener noreferrer">
-                  View your submission
+                  Lihat file Anda
                 </a>
               </Button>
             )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </div>
+        <div className="p-5 sm:p-6">
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                Resubmit Assignment
-                <ChevronDown className="h-4 w-4" />
+              <Button variant="outline" className="w-full justify-between h-12 rounded-xl border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 hover:text-slate-900">
+                Kumpulkan Ulang Tugas
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="resubmit-file">Upload New File</Label>
+              <form onSubmit={handleSubmit} className="space-y-5 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="space-y-1.5">
+                  <Label htmlFor="resubmit-file" className="text-sm font-semibold text-slate-700">Pilih File Baru</Label>
                   <Input 
                     id="resubmit-file"
                     type="file" 
                     onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} 
                     required 
+                    className="h-11 rounded-xl bg-white border-slate-200 cursor-pointer text-slate-600 file:bg-slate-100 file:text-slate-700 file:border-0 file:rounded-lg file:px-4 file:py-1 file:mr-4 file:-ml-1 hover:file:bg-slate-200"
                   />
                 </div>
-                <Button type="submit" disabled={isUploading} className="w-full">
+                <Button type="submit" disabled={isUploading} className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm">
                   <Upload className="w-4 h-4 mr-2" />
-                  {isUploading ? 'Uploading...' : 'Resubmit Assignment'}
+                  {isUploading ? 'Mengunggah...' : 'Kumpulkan Ulang'}
                 </Button>
                 {error && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="rounded-xl">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
               </form>
             </CollapsibleContent>
           </Collapsible>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
   
   return (
-    <Card className="mt-2">
-      <CardHeader>
-        <CardTitle className="text-lg">Submit Assignment</CardTitle>
-        <CardDescription>Upload your assignment file below</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="assignment-file">Upload Your Answer</Label>
+    <div className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50">
+        <h3 className="text-lg font-bold text-slate-800 tracking-tight">Kumpulkan Tugas</h3>
+        <p className="text-sm text-slate-500 mt-1">Unggah file jawaban tugas Anda di bawah ini</p>
+      </div>
+      <div className="p-5 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="assignment-file" className="text-sm font-semibold text-slate-700">Pilih File Jawaban</Label>
             <Input 
               id="assignment-file"
               type="file" 
               onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} 
               required 
+              className="h-11 rounded-xl border-slate-200 cursor-pointer text-slate-600 file:bg-slate-100 file:text-slate-700 file:border-0 file:rounded-lg file:px-4 file:py-1 file:mr-4 file:-ml-1 hover:file:bg-slate-200"
             />
           </div>
-          <Button type="submit" disabled={isUploading} className="w-full">
+          <Button type="submit" disabled={isUploading} className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm">
             <Upload className="w-4 h-4 mr-2" />
-            {isUploading ? 'Uploading...' : 'Submit Assignment'}
+            {isUploading ? 'Mengunggah...' : 'Kumpulkan Tugas'}
           </Button>
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="rounded-xl">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

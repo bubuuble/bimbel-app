@@ -24,7 +24,7 @@ export default function MarkAsReadButton({ notificationId }: { notificationId: s
             disabled={isPending}
             variant="outline"
             size="sm"
-            className="h-8 px-3 text-xs"
+            className="h-9 px-4 text-xs font-medium rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
         >
             {isPending ? (
                 <>

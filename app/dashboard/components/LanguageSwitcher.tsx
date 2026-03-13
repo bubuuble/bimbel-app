@@ -27,9 +27,9 @@ export default function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 h-9 rounded-lg border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition-all focus-visible:ring-indigo-500">
           <Globe className="h-4 w-4" />
-          <span className="text-sm">{languages[currentLanguage].flag}</span>
+          <span className="text-sm font-medium">{languages[currentLanguage].flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

@@ -18,9 +18,9 @@
   --secondary: 0 96% 64%;
   /* Red (#FB4C4C) */
   --secondary-foreground: 0 0% 100%;
-  --muted: 350 50% 95%;
-  /* Muted Peach */
-  --muted-foreground: 219 20% 50%;
+  --muted: 220 14% 94%;
+  /* Neutral Slate */
+  --muted-foreground: 220 10% 50%;
   --accent: 28 100% 95%;
   /* Soft Orange */
   --accent-foreground: 219 29% 32%;
@@ -85,7 +85,7 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-blue-100 via-rose-100 to-amber-100 text-foreground font-sans min-h-screen;
+    @apply bg-slate-50 text-foreground font-sans min-h-screen;
   }
 
   .list-alpha {

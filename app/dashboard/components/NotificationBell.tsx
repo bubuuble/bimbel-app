@@ -100,51 +100,50 @@ export default function NotificationBell() {
     </Button>
 
     {isOpen && (
-    <Card className="absolute right-0 top-12 w-80 shadow-lg border z-50">
-      <CardHeader className="pb-3">
-      <CardTitle className="text-sm font-medium">Notifikasi</CardTitle>
-      </CardHeader>
-      <Separator />
-      <CardContent className="p-0">
-      {loading ? (
-        <div className="p-4 text-center text-sm text-muted-foreground">
-        Memuat notifikasi...
+      <div className="absolute right-0 top-12 w-80 bg-white shadow-xl border border-slate-100 rounded-2xl z-50 overflow-hidden text-left">
+        <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+          <h3 className="text-sm font-bold text-slate-800">Notifikasi</h3>
         </div>
-      ) : notifications.length > 0 ? (
-        <ScrollArea className="h-80">
-        {notifications.map((notif, index) => (
-          <div key={notif.id}>
-          <div className={`p-4 ${!notif.is_read ? 'bg-blue-50/50' : ''}`}>
-            <p className="text-sm text-foreground mb-1">{notif.message}</p>
-            <p className="text-xs text-muted-foreground mb-2">
-            {new Date(notif.created_at).toLocaleString()}
-            </p>
-            <div className="flex items-center gap-2">
-            {notif.link && (
-              <Link
-              href={notif.link}
-              onClick={() => setIsOpen(false)}
-              className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-              >
-              Lihat Detail
-              </Link>
-            )}
-            {!notif.is_read && (
-              <MarkAsReadButton notificationId={notif.id} />
-            )}
+        <div className="p-0">
+        {loading ? (
+          <div className="p-6 text-center text-sm text-slate-500">
+          Memuat notifikasi...
+          </div>
+        ) : notifications.length > 0 ? (
+          <ScrollArea className="h-80">
+          {notifications.map((notif, index) => (
+            <div key={notif.id}>
+            <div className={`p-4 transition-colors ${!notif.is_read ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}>
+              <p className="text-sm text-slate-700 mb-1.5 leading-snug">{notif.message}</p>
+              <p className="text-xs text-slate-400 mb-2">
+              {new Date(notif.created_at).toLocaleString('id-ID')}
+              </p>
+              <div className="flex items-center gap-3">
+              {notif.link && (
+                <Link
+                href={notif.link}
+                onClick={() => setIsOpen(false)}
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                Lihat Detail
+                </Link>
+              )}
+              {!notif.is_read && (
+                <MarkAsReadButton notificationId={notif.id} />
+              )}
+              </div>
             </div>
+            {index < notifications.length - 1 && <Separator className="bg-slate-50" />}
+            </div>
+          ))}
+          </ScrollArea>
+        ) : (
+          <div className="p-6 text-center text-sm text-slate-500">
+          Tidak ada notifikasi.
           </div>
-          {index < notifications.length - 1 && <Separator />}
-          </div>
-        ))}
-        </ScrollArea>
-      ) : (
-        <div className="p-4 text-center text-sm text-muted-foreground">
-        Tidak ada notifikasi.
+        )}
         </div>
-      )}
-      </CardContent>
-    </Card>
+      </div>
     )}
   </div>
   );

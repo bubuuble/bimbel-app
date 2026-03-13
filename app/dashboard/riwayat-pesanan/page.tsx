@@ -22,7 +22,7 @@ export default async function RiwayatPesananPage() {
 
   // Kirim data awal sebagai prop ke komponen klien
   return (
-    <div className="container mx-auto p-0 sm:p-4">
+    <div className="space-y-6 sm:space-y-8">
       <RiwayatPesananClient initialPayments={initialPayments || []} />
     </div>
   );

@@ -1,15 +1,10 @@
-// src/app/dashboard/siswa/ClassCard.tsx
 'use client'
-import { useActionState } from "react";
+
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { enrollInClass, type EnrollState } from '@/lib/actions';
-import { useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { User, BookOpen } from "lucide-react";
 
-// Tipe data untuk properti komponen
 type ClassInfo = {
   id: string;
   name: string;
@@ -17,46 +12,74 @@ type ClassInfo = {
   profiles: { name: string | null } | null;
 };
 
+const classColors = [
+  'from-indigo-400 to-blue-500',
+  'from-teal-400 to-emerald-500',
+  'from-violet-400 to-purple-500',
+  'from-rose-400 to-pink-500',
+  'from-amber-400 to-orange-500',
+];
+
 function EnrollButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full text-sm">
-      {pending ? 'Enrolling...' : 'Enroll'}
-    </Button>
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white transition-all hover:bg-indigo-700 disabled:opacity-60"
+    >
+      {pending ? 'Mendaftar...' : 'Daftar Sekarang'}
+    </button>
   );
 }
 
-// Ini adalah komponen untuk satu kartu kelas
-export default function ClassCard({ classInfo }: { classInfo: ClassInfo }) {
+export default function ClassCard({
+  classInfo,
+  index = 0,
+}: {
+  classInfo: ClassInfo;
+  index?: number;
+}) {
   const initialState: EnrollState = null;
   const [state, formAction] = useActionState(enrollInClass, initialState);
+  const gradient = classColors[index % classColors.length];
 
-  // Tampilkan alert saat ada hasil dari server action
   useEffect(() => {
     if (state?.success) alert(state.success);
     if (state?.error) alert(state.error);
   }, [state]);
 
   return (
-    <Card className="w-full">
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle className="text-base sm:text-lg">{classInfo.name}</CardTitle>
-        <CardDescription className="flex items-center gap-2 text-sm">
-          <User className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span>Teacher: {classInfo.profiles?.name || 'N/A'}</span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-6 pt-0">
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          {classInfo.description || 'No description available.'}
+    <div className="group rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden hover:-translate-y-0.5">
+      {/* Colored top strip */}
+      <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
+
+      <div className="p-5">
+        {/* Icon + Title */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white text-sm font-bold shadow-sm`}>
+            {classInfo.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800 leading-tight">{classInfo.name}</h3>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <User className="h-3 w-3 text-slate-400" />
+              <span className="text-xs text-slate-500">{classInfo.profiles?.name || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-4">
+          {classInfo.description || 'Tidak ada deskripsi.'}
         </p>
-      </CardContent>
-      <CardFooter className="p-4 sm:p-6 pt-0">
-        <form action={formAction} className="w-full">
+
+        {/* Enroll form */}
+        <form action={formAction}>
           <input type="hidden" name="classId" value={classInfo.id} />
           <EnrollButton />
         </form>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

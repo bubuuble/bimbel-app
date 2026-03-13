@@ -54,11 +54,10 @@ export default function OrderManagementClient({ initialOrders }: OrderManagement
 
   // Fungsi untuk render badge status
   const getStatusBadge = (status: Order['status']) => {
-    // ... (fungsi yang sama seperti di RiwayatPesananClient)
     switch (status) {
-      case 'success': return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Success</Badge>;
-      case 'pending': return <Badge variant="secondary">Pending</Badge>;
-      default: return <Badge variant="destructive">Failed/Expired</Badge>;
+      case 'success': return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">Success</span>;
+      case 'pending': return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pending</span>;
+      default: return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">Failed/Expired</span>;
     }
   };
 
@@ -71,56 +70,60 @@ export default function OrderManagementClient({ initialOrders }: OrderManagement
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/30">
           <div className="flex items-center gap-3">
-            <ShoppingCart className="h-6 w-6" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
+                <ShoppingCart className="h-5 w-5" />
+            </div>
             <div>
-              <CardTitle>Manajemen Pesanan</CardTitle>
-              <CardDescription>Lihat dan kelola semua transaksi pengguna.</CardDescription>
+              <h2 className="text-base font-semibold text-slate-800">Manajemen Pesanan</h2>
+              <p className="text-xs text-slate-500">Lihat dan kelola semua transaksi pengguna.</p>
             </div>
           </div>
-          <Input 
-            placeholder="Cari Order ID, Nama, Produk..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-xs"
-          />
-          <ExportOrdersButton />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Input 
+                placeholder="Cari Order ID, Nama, Produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-xs rounded-xl border-slate-200 text-sm focus:border-indigo-400 focus:ring-indigo-400"
+              />
+              <ExportOrdersButton />
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="border rounded-lg overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Pengguna</TableHead>
-                <TableHead>Produk</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Jumlah</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => (
-                <TableRow key={order.midtrans_order_id}>
-                  <TableCell className="font-mono text-xs">{order.midtrans_order_id}</TableCell>
-                  <TableCell className="font-medium">{order.profiles?.name || order.profiles?.username || 'N/A'}</TableCell>
-                  <TableCell>{order.product_name || 'N/A'}</TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleString('id-ID')}</TableCell>
-                  <TableCell>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(order.amount)}</TableCell>
-                  <TableCell>{getStatusBadge(order.status)}</TableCell>
+        <div className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="border-b-slate-100 hover:bg-transparent">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Order ID</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Pengguna</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Produk</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Tanggal</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Jumlah</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.map((order) => (
+                  <TableRow key={order.midtrans_order_id} className="border-b-slate-50 hover:bg-slate-50/50 transition-colors">
+                    <TableCell className="font-mono text-xs text-slate-500 px-6 py-3">{order.midtrans_order_id}</TableCell>
+                    <TableCell className="font-medium text-slate-700 px-6 py-3">{order.profiles?.name || order.profiles?.username || 'N/A'}</TableCell>
+                    <TableCell className="text-slate-600 px-6 py-3">{order.product_name || 'N/A'}</TableCell>
+                    <TableCell className="text-slate-600 text-sm px-6 py-3">{new Date(order.created_at).toLocaleString('id-ID')}</TableCell>
+                    <TableCell className="font-medium text-slate-700 px-6 py-3">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(order.amount)}</TableCell>
+                    <TableCell className="px-6 py-3">{getStatusBadge(order.status)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {filteredOrders.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+                <p className="text-sm">Tidak ada pesanan ditemukan.</p>
+            </div>
+          )}
         </div>
-        {filteredOrders.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Tidak ada pesanan ditemukan.</p>
-        )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }

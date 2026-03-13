@@ -51,7 +51,7 @@ export default async function UjianDashboardPage() {
     }
 
     return (
-        <div className="container mx-auto p-4 md:p-6">
+        <div className="space-y-6 sm:space-y-8">
             <UjianDashboardClient 
                 initialTests={tests}
                 userRole={profile.role}

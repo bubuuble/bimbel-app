@@ -11,7 +11,7 @@ import { toast } from "sonner"; // Asumsi Anda menggunakan sonner
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} size="sm">
+    <Button type="submit" disabled={pending} size="sm" className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all shadow-sm">
       {pending ? (
         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mengekspor...</>
       ) : (

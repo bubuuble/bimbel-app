@@ -4,10 +4,10 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FilePenLine } from "lucide-react"; // Ikon untuk tombol nilai
+import { cn } from "@/lib/utils";
 
 type Props = {
   submissions: any[];
@@ -27,16 +27,16 @@ export default function TeacherTestResultsView({ submissions, testInfo }: Props)
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-            <CardTitle>Peringkat Siswa</CardTitle>
-            <CardDescription>Daftar siswa yang telah menyelesaikan ujian. Klik baris untuk melihat detail.</CardDescription>
+            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Peringkat Siswa</h3>
+            <p className="text-sm text-slate-500 mt-1">Daftar siswa yang telah menyelesaikan ujian. Klik baris untuk melihat detail.</p>
         </div>
         {/* --- [PERBAIKAN UTAMA DI SINI] --- */}
         {/* Tombol ini akan muncul di pojok kanan atas jika ada soal esai */}
         {testInfo.has_essays && (
-            <Button asChild>
+            <Button asChild className="rounded-xl h-10 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm">
                 {/* Link ini mengarah ke halaman penilaian esai kolektif */}
                 <Link href={`./hasil/grade-essays`}>
                     <FilePenLine className="h-4 w-4 mr-2" />
@@ -44,20 +44,25 @@ export default function TeacherTestResultsView({ submissions, testInfo }: Props)
                 </Link>
             </Button>
         )}
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-0 sm:p-6">
         {submissions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Belum ada siswa yang menyelesaikan ujian ini.</p>
+            <div className="text-center py-12 px-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400 mb-4">
+                <FilePenLine className="h-6 w-6" />
+              </div>
+              <p className="text-slate-500 font-medium">Belum ada siswa yang menyelesaikan ujian ini.</p>
+            </div>
         ) : (
-            <div className="border rounded-lg">
+            <div className="overflow-x-auto border-t sm:border border-slate-100 sm:rounded-xl">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[50px]">Peringkat</TableHead>
-                            <TableHead>Nama Siswa</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Tanggal Selesai</TableHead>
-                            <TableHead className="text-right">Skor</TableHead>
+                    <TableHeader className="bg-slate-50/80">
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-[60px] text-center font-semibold text-slate-600">No</TableHead>
+                            <TableHead className="font-semibold text-slate-600">Nama Siswa</TableHead>
+                            <TableHead className="font-semibold text-slate-600">Status</TableHead>
+                            <TableHead className="font-semibold text-slate-600">Selesai</TableHead>
+                            <TableHead className="text-right font-semibold text-slate-600 pr-6">Skor</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -65,23 +70,23 @@ export default function TeacherTestResultsView({ submissions, testInfo }: Props)
                         <TableRow 
                             key={sub.id} 
                             onClick={() => handleRowClick(sub.id)}
-                            className="cursor-pointer hover:bg-muted/50"
+                            className="cursor-pointer hover:bg-indigo-50/50 transition-colors border-slate-100"
                         >
-                        <TableCell className="font-medium text-center">{index + 1}</TableCell>
+                        <TableCell className="font-medium text-center text-slate-500">{index + 1}</TableCell>
                         <TableCell>
-                            <div className="font-medium">{sub.profiles.name || sub.profiles.username}</div>
-                            <div className="text-sm text-muted-foreground">@{sub.profiles.username}</div>
+                            <div className="font-bold text-slate-800">{sub.profiles.name || sub.profiles.username}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">@{sub.profiles.username}</div>
                         </TableCell>
                         <TableCell>
-                            <Badge variant={sub.status === 'COMPLETED' ? 'default' : 'secondary'}>
-                            {sub.status === 'COMPLETED' ? 'Selesai' : 'Berlangsung'}
+                            <Badge className={cn("rounded-md border-none font-medium px-2.5 py-1", sub.status === 'COMPLETED' ? "bg-teal-50 text-teal-700" : "bg-amber-50 text-amber-700")}>
+                                {sub.status === 'COMPLETED' ? 'Selesai' : 'Berlangsung'}
                             </Badge>
                         </TableCell>
-                        <TableCell>
-                            {sub.completed_at ? new Date(sub.completed_at).toLocaleString('id-ID') : '-'}
+                        <TableCell className="text-sm text-slate-600">
+                            {sub.completed_at ? new Date(sub.completed_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'}) : '-'}
                         </TableCell>
-                        <TableCell className="text-right font-bold text-lg text-blue-600">
-                            {sub.total_score ?? '-'}
+                        <TableCell className="text-right pr-6">
+                            <span className="font-bold text-lg text-indigo-600">{sub.total_score ?? '-'}</span>
                         </TableCell>
                         </TableRow>
                     ))}
@@ -89,7 +94,7 @@ export default function TeacherTestResultsView({ submissions, testInfo }: Props)
                 </Table>
             </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

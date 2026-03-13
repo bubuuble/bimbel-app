@@ -47,42 +47,26 @@ async function getUserProfile(userId: string): Promise<UserProfile | null> {
 
 function AccessDeniedCard() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-center text-destructive text-lg sm:text-xl">
-            Akses Ditolak
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0">
-          <Alert>
-            <AlertDescription className="text-sm">
-              Halaman ini hanya tersedia untuk Guru dan Siswa.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50 py-16 text-center">
+      <h3 className="text-sm font-semibold text-red-600 mb-2">Akses Ditolak</h3>
+      <Alert className="max-w-md bg-white">
+        <AlertDescription className="text-sm text-slate-600">
+          Halaman ini hanya tersedia untuk Guru dan Siswa.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
 
 function ProfileNotFoundCard() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-center text-destructive text-lg sm:text-xl">
-            Profil Tidak Ditemukan
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0">
-          <Alert>
-            <AlertDescription className="text-sm">
-              Silakan hubungi administrator untuk mengatur profil Anda.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-amber-200 bg-amber-50 py-16 text-center">
+      <h3 className="text-sm font-semibold text-amber-600 mb-2">Profil Tidak Ditemukan</h3>
+      <Alert className="max-w-md bg-white">
+        <AlertDescription className="text-sm text-slate-600">
+          Silakan hubungi administrator untuk mengatur profil Anda.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }

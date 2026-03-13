@@ -86,35 +86,37 @@ export default async function KehadiranPage({ searchParams }: { searchParams: Pr
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Riwayat Kehadiran</h1>
-        <p className="text-muted-foreground mt-2">
-          Lihat dan filter catatan kehadiran Anda di semua sesi pembelajaran.
-        </p>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-500 to-indigo-400 p-6 sm:p-8 text-white shadow-lg">
+        <div className="relative z-10">
+          <p className="text-cyan-100 text-sm font-medium mb-1">Siswa</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Riwayat Kehadiran</h1>
+          <p className="text-cyan-100 mt-1 text-sm">Lihat catatan kehadiran Anda di semua sesi pembelajaran.</p>
+        </div>
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 pointer-events-none" />
       </div>
 
       {/* Render Komponen Filter */}
       <AttendanceFilter classes={classOptions} selectedClassId={selectedClassId} />
 
-      {/* Tampilkan Hasil */}
       {history.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CalendarDays className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-muted-foreground">
-              {selectedClassId ? 'Tidak ada riwayat kehadiran di kelas ini' : 'Anda belum pernah melakukan absensi'}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {selectedClassId ? 'Coba pilih kelas lain atau reset filter.' : 'Mulai bergabung dengan sesi pembelajaran untuk melihat riwayat.'}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100 mb-4">
+            <CalendarDays className="h-6 w-6 text-cyan-500" />
+          </div>
+          <p className="text-sm font-medium text-slate-500">
+            {selectedClassId ? 'Tidak ada riwayat kehadiran di kelas ini' : 'Anda belum pernah melakukan absensi'}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            {selectedClassId ? 'Coba pilih kelas lain atau reset filter.' : 'Mulai bergabung dengan sesi pembelajaran untuk melihat riwayat.'}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {history.map((rec, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
+            <div key={index} className="rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+              <div className="p-5 sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
                     <h3 className="font-semibold text-lg">
@@ -135,8 +137,8 @@ export default async function KehadiranPage({ searchParams }: { searchParams: Pr
                   <div className="text-right space-y-2">
                     <div>
                       <Badge 
-                        variant={rec.status === 'HADIR' ? 'default' : 'secondary'}
-                        className={rec.status === 'HADIR' ? 'bg-green-100 text-green-800 hover:bg-green-200' : ''}
+                        variant="outline"
+                        className={rec.status === 'HADIR' ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-amber-50 text-amber-700 border-amber-200'}
                       >
                         {rec.status}
                       </Badge>
@@ -148,8 +150,8 @@ export default async function KehadiranPage({ searchParams }: { searchParams: Pr
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

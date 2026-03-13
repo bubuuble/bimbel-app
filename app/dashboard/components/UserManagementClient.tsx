@@ -55,34 +55,42 @@ function UserRow({
 
     return (
         <TableRow>
-            <TableCell className="font-medium">
-                <button onClick={() => onSelectProfile(profile.id)} className="text-blue-600 hover:underline text-left">
-                    {profile.name}
+            <TableCell className="px-6 py-3 font-medium">
+                <button onClick={() => onSelectProfile(profile.id)} className="text-indigo-600 hover:text-indigo-800 hover:underline text-left">
+                    {profile.name || "Tanpa Nama"}
                 </button>
             </TableCell>
-            <TableCell>{profile.username}</TableCell>
-            <TableCell><Badge variant={profile.role === 'ADMIN' ? 'destructive' : profile.role === 'GURU' ? 'default' : 'secondary'}>{profile.role}</Badge></TableCell>
-            <TableCell>
+            <TableCell className="px-6 py-3 text-slate-600">{profile.username}</TableCell>
+            <TableCell className="px-6 py-3">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    profile.role === 'ADMIN' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 
+                    profile.role === 'GURU' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 
+                    'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                    {profile.role}
+                </span>
+            </TableCell>
+            <TableCell className="px-6 py-3">
                 <form action={changeRoleAction} className="flex items-center gap-2">
                     <input type="hidden" name="userId" value={profile.id} />
                     <Select name="newRole" defaultValue={profile.role} disabled={profile.role === 'ADMIN'}>
-                        <SelectTrigger className="w-32 h-9"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-28 h-8 text-xs rounded-lg border-slate-200"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="SISWA">Siswa</SelectItem>
-                            <SelectItem value="GURU">Guru</SelectItem>
-                            <SelectItem value="ADMIN">Admin</SelectItem>
+                            <SelectItem value="SISWA" className="text-xs">Siswa</SelectItem>
+                            <SelectItem value="GURU" className="text-xs">Guru</SelectItem>
+                            <SelectItem value="ADMIN" className="text-xs">Admin</SelectItem>
                         </SelectContent>
                     </Select>
-                    {profile.role !== 'ADMIN' && <Button type="submit" size="sm" className="h-9 w-9 p-0"><Save className="h-4 w-4" /></Button>}
+                    {profile.role !== 'ADMIN' && <Button type="submit" size="sm" className="h-8 w-8 p-0 rounded-lg bg-indigo-600 hover:bg-indigo-700"><Save className="h-4 w-4" /></Button>}
                 </form>
             </TableCell>
-            <TableCell>
+            <TableCell className="px-6 py-3">
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => onChangePassword(profile)} disabled={profile.role === 'ADMIN'} variant="outline" size="sm">
-                        <Edit className="h-4 w-4 mr-1" /> Ubah Password
+                    <Button onClick={() => onChangePassword(profile)} disabled={profile.role === 'ADMIN'} variant="outline" size="sm" className="h-8 rounded-lg text-xs font-medium border-slate-200 text-slate-600">
+                        <Edit className="h-3.5 w-3.5 mr-1.5" /> Password
                     </Button>
-                    <Button onClick={handleDelete} disabled={profile.role === 'ADMIN'} variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4 mr-1" /> Hapus
+                    <Button onClick={handleDelete} disabled={profile.role === 'ADMIN'} variant="outline" size="sm" className="h-8 rounded-lg text-xs font-medium border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Hapus
                     </Button>
                 </div>
             </TableCell>
@@ -132,36 +140,37 @@ export default function UserManagementClient({ initialProfiles }: { initialProfi
 
     return (
         <>
-            <div className="space-y-8">
-                <Card>
-                    <CardHeader><CardTitle>Manajemen Pengguna</CardTitle></CardHeader>
-                    <CardContent>
-                        <div className="border rounded-lg overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nama (Klik untuk Detail)</TableHead>
-                                        <TableHead>Username</TableHead>
-                                        <TableHead>Peran</TableHead>
-                                        <TableHead>Ubah Peran</TableHead>
-                                        <TableHead>Tindakan</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {profiles.map((profile) => (
-                                        <UserRow 
-                                            key={profile.id} 
-                                            profile={profile} 
-                                            onSelectProfile={handleSelectProfile}
-                                            onChangePassword={handleOpenPasswordModal}
-                                        />
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card><CardHeader><CardTitle>Tambah Pengguna Baru</CardTitle></CardHeader><CardContent><CreateUserForm /></CardContent></Card>
+            <div className="space-y-6">
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader className="bg-slate-50/50">
+                            <TableRow className="border-b-slate-100 hover:bg-transparent">
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Nama (Klik untuk Detail)</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Username</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Peran</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Ubah Peran</TableHead>
+                                <TableHead className="text-xs font-semibold uppercase tracking-wider text-slate-500 h-10 px-6">Tindakan</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {profiles.map((profile) => (
+                                <UserRow 
+                                    key={profile.id} 
+                                    profile={profile} 
+                                    onSelectProfile={handleSelectProfile}
+                                    onChangePassword={handleOpenPasswordModal}
+                                />
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                <div className="mt-8 border-t border-slate-100 p-6 sm:p-8 bg-slate-50/50">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 tracking-tight">Tambah Pengguna Baru</h3>
+                    <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <CreateUserForm />
+                    </div>
+                </div>
             </div>
             
             <UserProfileModal 

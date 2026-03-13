@@ -32,23 +32,15 @@ export default async function GlobalAbsensiPage({ searchParams }: { searchParams
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   if (profile?.role !== 'GURU') {
     return (
-      <div className="container mx-auto py-8">
-        <Card className="max-w-md mx-auto">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-red-600" />
-            </div>
-            <CardTitle className="text-red-600">Akses Ditolak</CardTitle>
-            <CardDescription>
-              Halaman ini hanya untuk Guru.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button asChild>
-              <Link href="/dashboard">Kembali ke Dashboard</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50 py-16 text-center">
+        <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+          <AlertCircle className="w-6 h-6 text-red-600" />
+        </div>
+        <h3 className="text-sm font-semibold text-red-600">Akses Ditolak</h3>
+        <p className="text-xs text-red-500 mt-1 mb-6">Halaman ini hanya untuk Guru.</p>
+        <Button asChild className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold">
+          <Link href="/dashboard">Kembali ke Dashboard</Link>
+        </Button>
       </div>
     );
   }
@@ -78,7 +70,7 @@ export default async function GlobalAbsensiPage({ searchParams }: { searchParams
     .returns<SessionWithClass[]>();
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="space-y-6 sm:space-y-8">
       <TeacherGlobalAttendanceManager 
         teacherClasses={teacherClasses || []}
         initialSessions={initialSessions || []}

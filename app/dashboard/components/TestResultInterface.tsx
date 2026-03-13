@@ -167,74 +167,83 @@ export default function TestResultInterface({ submission, questions, studentAnsw
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
         {/* --- Card Skor Utama (Desain Baru) --- */}
-        <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-          <CardHeader className="text-center p-6">
-            <p className="text-sm font-medium text-blue-200">Hasil Ujian</p>
-            <CardTitle className="text-3xl sm:text-4xl font-bold">{submission.tests.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center p-6">
-            <CardDescription className="text-base text-blue-100">Skor Akhir Anda</CardDescription>
-            <p className="text-6xl sm:text-7xl font-bold tracking-tighter">{submission.total_score ?? 0}</p>
-            <p className="text-blue-200">dari 100 poin</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-indigo-600 text-white shadow-lg relative">
+          <div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>
+          <div className="relative z-10 p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white backdrop-blur-md mb-2">
+              <FileText className="w-4 h-4" />
+              <span className="text-sm font-medium tracking-wide">Hasil Ujian</span>
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">{submission.tests.title}</h1>
+            <div className="bg-white/10 p-6 sm:p-8 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-sm mt-4">
+              <p className="text-base sm:text-lg font-medium text-white/80 uppercase tracking-widest mb-2">Skor Akhir Anda</p>
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-7xl sm:text-8xl font-black tracking-tighter">{submission.total_score ?? 0}</span>
+                <span className="text-xl sm:text-2xl font-bold text-white/60">/100</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* --- Pembahasan Soal --- */}
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Pembahasan Soal</h2>
-          <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                 <CheckCircle className="h-5 w-5" />
+             </div>
+             <h2 className="text-2xl font-bold text-slate-800">Pembahasan Soal</h2>
+          </div>
+          
+          <div className="grid gap-6">
             {questions.map((q, index) => {
               const studentAns = studentAnswerMap.get(q.id);
               
               // --- [MAIN FIX HERE for the status BADGE] ---
               const getStatusBadge = () => {
                 if (!studentAns) {
-                    return <Badge variant="secondary">Tidak Dijawab</Badge>;
+                    return <Badge variant="secondary" className="rounded-lg h-7 px-3 bg-slate-100 text-slate-600 border-none">Tidak Dijawab</Badge>;
                 }
                 if (q.type === 'ESSAY') {
                     // For essays, show "Dinilai" and the score awarded
                     return (
-                        <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
+                        <Badge className="rounded-lg h-7 px-3 bg-indigo-100 text-indigo-700 border-none font-semibold">
                            Dinilai: {studentAns.score_awarded ?? 0} poin
                         </Badge>
                     );
                 }
                 // For other types, use the is_correct flag
                 if (studentAns.is_correct === true) {
-                    return <Badge className="bg-green-100 text-green-800 border border-green-200">Benar</Badge>;
+                    return <Badge className="rounded-lg h-7 px-3 bg-teal-100 text-teal-700 border-none font-semibold">Benar</Badge>;
                 }
-                return <Badge variant="destructive">Salah</Badge>;
+                return <Badge variant="destructive" className="rounded-lg h-7 px-3 bg-rose-100 text-rose-700 border-none font-semibold">Salah</Badge>;
               };
 
               return (
-                <Card key={q.id} className="shadow-sm bg-white">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <p className="font-semibold text-lg text-gray-800">Soal #{index + 1}</p>
-                      {getStatusBadge()}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-md border text-gray-700">
-                        <SafeHTMLRenderer html={q.question_text} className="prose prose-sm max-w-none"/>
+                <div key={q.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50 flex flex-wrap justify-between items-center gap-4">
+                    <p className="font-bold text-lg text-slate-800">Soal #{index + 1}</p>
+                    {getStatusBadge()}
+                  </div>
+                  <div className="p-5 sm:p-6 space-y-6">
+                    <div className="prose prose-slate max-w-none text-slate-800 leading-relaxed text-base">
+                        <SafeHTMLRenderer html={q.question_text} />
                     </div>
                     {renderAnswerContent(q)}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )
             })}
           </div>
         </div>
         
         {/* Tombol Kembali (Desain Baru) */}
-        <div className="text-center py-4">
-            <Button asChild size="lg" className="bg-gray-800 hover:bg-black text-white rounded-full px-8">
+        <div className="text-center pt-4 pb-12">
+            <Button asChild size="lg" className="h-14 rounded-full bg-slate-900 hover:bg-black text-white px-8 font-semibold shadow-md hover:shadow-lg transition-all">
                 <Link href={`/dashboard/class/${classId}`}>
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Kembali ke Kelas
+                    Kembali ke Kelas <ArrowRight className="h-5 w-5 ml-2" />
                 </Link>
             </Button>
         </div>

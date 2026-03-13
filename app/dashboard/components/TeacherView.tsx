@@ -31,7 +31,7 @@ export default async function TeacherView({ userProfile }: { userProfile: UserPr
     const { data: teacherClasses } = await supabase.from('classes').select('id, name').eq('teacher_id', userProfile.id);
 
     return (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-6 sm:space-y-8">
             <TeacherHeaderClient userName={userProfile.name || 'User'} />
 
             <Suspense fallback={<Skeleton className="h-48 sm:h-64" />}>

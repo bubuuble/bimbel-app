@@ -24,34 +24,36 @@ export default async function NotificationData() {
         <div className="space-y-4">
             {notifications && notifications.length > 0 ? (
                 notifications.map(notif => (
-                    <Card key={notif.id} className={`transition-colors ${
-                        !notif.is_read ? 'bg-blue-50 border-blue-200' : ''
+                    <div key={notif.id} className={`bg-white rounded-2xl border shadow-sm transition-all overflow-hidden ${
+                        !notif.is_read ? 'border-indigo-100 ring-1 ring-indigo-50/50' : 'border-slate-100'
                     }`}>
-                        <CardContent className="p-4">
+                        <div className={`p-5 sm:p-6 ${!notif.is_read ? 'bg-indigo-50/30' : ''}`}>
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Bell className="h-4 w-4 text-muted-foreground" />
+                                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${!notif.is_read ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                                            <Bell className="h-4 w-4" />
+                                        </div>
                                         {!notif.is_read && (
-                                            <Badge variant="secondary" className="text-xs">
+                                            <Badge className="bg-indigo-100 hover:bg-indigo-100 text-indigo-700 border-none font-medium px-2 py-0.5 rounded-md text-xs">
                                                 Baru
                                             </Badge>
                                         )}
                                     </div>
-                                    <p className="text-sm text-foreground mb-2">
+                                    <p className="text-sm font-medium text-slate-800 mb-1">
                                         {notif.message}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {new Date(notif.created_at).toLocaleString()}
+                                    <p className="text-xs text-slate-500">
+                                        {new Date(notif.created_at).toLocaleString('id-ID')}
                                     </p>
                                 </div>
                             </div>
                             
-                            <div className="flex gap-2 mt-4">
+                            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100/60">
                                 {notif.link && (
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={notif.link} className="flex items-center gap-2">
-                                            <ExternalLink className="h-3 w-3" />
+                                    <Button variant="outline" size="sm" asChild className="h-9 rounded-lg shadow-sm border-slate-200">
+                                        <Link href={notif.link} className="flex items-center gap-2 text-slate-700">
+                                            <ExternalLink className="h-3.5 w-3.5" />
                                             Lihat Detail
                                         </Link>
                                     </Button>
@@ -60,16 +62,16 @@ export default async function NotificationData() {
                                     <MarkAsReadButton notificationId={notif.id} />
                                 )}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 ))
             ) : (
-                <Card>
-                    <CardContent className="p-8 text-center">
-                        <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">Tidak ada notifikasi.</p>
-                    </CardContent>
-                </Card>
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 mx-auto mb-4 border border-slate-100 shadow-sm">
+                        <Bell className="h-7 w-7" />
+                    </div>
+                    <p className="text-slate-500 font-medium">Tidak ada notifikasi.</p>
+                </div>
             )}
         </div>
     );

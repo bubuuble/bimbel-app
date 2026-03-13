@@ -13,7 +13,15 @@ type TeacherClass = { id: string; name: string };
 
 function SubmitButton() {
     const { pending } = useFormStatus();
-    return <Button type="submit" disabled={pending}>{pending ? "Membuka..." : "Buka Absensi Sekarang (15 Menit)"}</Button>
+    return (
+      <Button 
+        type="submit" 
+        disabled={pending}
+        className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all"
+      >
+        {pending ? <span className="animate-pulse">Membuka...</span> : "Buka Absensi Sekarang (15 Menit)"}
+      </Button>
+    )
 }
 
 export default function QuickAttendanceForm({ classes }: { classes: TeacherClass[] }) {
@@ -37,33 +45,41 @@ export default function QuickAttendanceForm({ classes }: { classes: TeacherClass
     }
     
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <CalendarPlus className="h-5 w-5" />
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/30">
+                <h2 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                    <CalendarPlus className="h-5 w-5 text-indigo-500" />
                     <span>Absensi Cepat</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </h2>
+            </div>
+            <div className="p-5 sm:p-6">
                 <form action={formAction} className="space-y-4">
-                    <div>
-                        <label htmlFor="quick-classId" className="text-sm font-medium">Pilih Kelas</label>
+                    <div className="space-y-1.5">
+                        <label htmlFor="quick-classId" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Pilih Kelas</label>
                         <Select name="classId" required>
-                            <SelectTrigger id="quick-classId">
+                            <SelectTrigger id="quick-classId" className="h-11 rounded-xl border-slate-200">
                                 <SelectValue placeholder="Pilih kelas untuk absensi..." />
                             </SelectTrigger>
-                            <SelectContent>
-                                {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                            <SelectContent className="rounded-xl">
+                                {classes.map(c => <SelectItem key={c.id} value={c.id} className="rounded-lg cursor-pointer">{c.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div>
-                        <label htmlFor="quick-sessionTitle" className="text-sm font-medium">Judul Sesi (Otomatis)</label>
-                        <Input id="quick-sessionTitle" name="sessionTitle" required defaultValue={`Absensi Cepat - ${new Date().toLocaleDateString('id-ID')}`} />
+                    <div className="space-y-1.5">
+                        <label htmlFor="quick-sessionTitle" className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Judul Sesi (Otomatis)</label>
+                        <Input 
+                          id="quick-sessionTitle" 
+                          name="sessionTitle" 
+                          required 
+                          defaultValue={`Absensi Cepat - ${new Date().toLocaleDateString('id-ID')}`} 
+                          className="h-11 rounded-xl border-slate-200 focus:border-indigo-400 focus:ring-indigo-400"
+                        />
                     </div>
-                    <SubmitButton />
+                    <div className="pt-2">
+                      <SubmitButton />
+                    </div>
                 </form>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

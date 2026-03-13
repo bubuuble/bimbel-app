@@ -35,46 +35,46 @@ export default function AttendanceFilter({ classes, selectedClassId }: Attendanc
   }
 
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-      <CardContent className="p-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Filter className="w-5 h-5 text-blue-600" />
+    <div className="rounded-2xl bg-indigo-50/50 border border-indigo-100 shadow-sm overflow-hidden mb-6">
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 text-indigo-600">
+              <Filter className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Filter Kehadiran</h3>
-              <p className="text-sm text-gray-600">Pilih kelas untuk melihat riwayat</p>
+              <h3 className="font-semibold text-slate-800">Filter Kehadiran</h3>
+              <p className="text-xs font-medium text-slate-500">Pilih kelas untuk melihat riwayat</p>
             </div>
           </div>
           
-          <div className="flex-1 min-w-[250px] ml-auto">
+          <div className="flex-1 w-full sm:min-w-[250px] sm:ml-auto">
             <Select
               value={selectedClassId || 'all'}
               onValueChange={handleClassChange}
             >
-              <SelectTrigger className="w-full bg-white border-gray-300 hover:border-blue-400 focus:border-blue-500">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-gray-500" />
+              <SelectTrigger className="w-full h-11 rounded-xl bg-white border-slate-200 hover:border-indigo-300 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400">
+                <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
+                  <BookOpen className="w-4 h-4 shrink-0" />
                   <SelectValue placeholder="Pilih kelas..." />
                 </div>
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                <SelectItem value="all" className="hover:bg-blue-50">
+              <SelectContent className="rounded-xl border border-slate-200 shadow-xl bg-white">
+                <SelectItem value="all" className="rounded-lg cursor-pointer my-0.5 focus:bg-indigo-50 focus:text-indigo-900">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <span>Semua Kelas</span>
+                    <div className="w-2 h-2 bg-slate-300 rounded-full shrink-0"></div>
+                    <span className="font-medium text-sm">Semua Kelas</span>
                   </div>
                 </SelectItem>
                 {classes.map((classOption) => (
                   <SelectItem 
                     key={classOption.id} 
                     value={classOption.id}
-                    className="hover:bg-blue-50"
+                    className="rounded-lg cursor-pointer my-0.5 focus:bg-indigo-50 focus:text-indigo-900"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span>{classOption.name}</span>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full shrink-0"></div>
+                      <span className="font-medium text-sm">{classOption.name}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -82,7 +82,7 @@ export default function AttendanceFilter({ classes, selectedClassId }: Attendanc
             </Select>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

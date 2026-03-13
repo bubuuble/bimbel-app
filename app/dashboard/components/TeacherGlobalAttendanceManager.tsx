@@ -42,27 +42,33 @@ function SubmitButton({ text }: { text: string }) {
 
 function SessionRow({ session, onSelect, isSelected }: { session: SessionWithClass, onSelect: () => void, isSelected: boolean }) {
   return (
-    <Card 
+    <div 
       className={cn(
-        "cursor-pointer transition-colors hover:bg-accent/50",
-        isSelected && "ring-2 ring-primary bg-accent"
+        "cursor-pointer transition-all duration-200 border rounded-xl overflow-hidden bg-white hover:border-indigo-200 hover:shadow-sm",
+        isSelected ? "ring-2 ring-indigo-500 border-indigo-200 bg-indigo-50/30" : "border-slate-100"
       )}
       onClick={onSelect}
     >
-      <CardContent className="p-4">
-        <div className="space-y-2">
-          <h4 className="font-semibold text-sm">{session.title}</h4>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Users className="h-3 w-3" />
-            <span>{session.classes?.name || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <CalendarDays className="h-3 w-3" />
-            <span>{new Date(session.start_time).toLocaleString()}</span>
+      <div className="p-4 sm:p-5">
+        <div className="space-y-3">
+          <h4 className="font-bold text-slate-800 text-sm leading-tight">{session.title}</h4>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-500">
+                <Users className="h-3.5 w-3.5" />
+              </div>
+              <span className="truncate">{session.classes?.name || 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-teal-50 text-teal-600">
+                <CalendarDays className="h-3.5 w-3.5" />
+              </div>
+              <span>{new Date(session.start_time).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -104,18 +110,15 @@ export default function TeacherGlobalAttendanceManager({
   };
   
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
-      <div className="flex items-center gap-2">
-        <Clock className="h-6 w-6" />
-        <h1 className="text-3xl font-bold">Manajemen Absensi</h1>
-      </div>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header section is now handled by the page wrapper's banner, removing local header */}
       
       {teacherClasses.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Buat Sesi Absensi Baru</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/30">
+            <h2 className="text-base font-semibold text-slate-800">Buat Sesi Absensi Baru</h2>
+          </div>
+          <div className="p-5 sm:p-6">
             <form 
               ref={formRef} 
               action={async (formData) => {
@@ -159,8 +162,8 @@ export default function TeacherGlobalAttendanceManager({
               
               <SubmitButton text="Jadwalkan Sesi (Aktif 15 Menit)" />
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : (
         <Alert>
           <AlertCircle className="h-4 w-4" />
@@ -170,15 +173,15 @@ export default function TeacherGlobalAttendanceManager({
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
         <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Riwayat Sesi</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden lg:sticky lg:top-4">
+            <div className="p-5 border-b border-slate-50 bg-slate-50/30">
+              <h2 className="text-base font-semibold text-slate-800">Riwayat Sesi</h2>
+            </div>
+            <div className="p-5">
               {initialSessions.length > 0 ? (
-                <ScrollArea className="h-[500px] pr-4">
+                <ScrollArea className="h-[500px] pr-4 -mr-4">
                   <div className="space-y-3">
                     {initialSessions.map(session => (
                       <SessionRow 
@@ -191,30 +194,33 @@ export default function TeacherGlobalAttendanceManager({
                   </div>
                 </ScrollArea>
               ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  Belum ada sesi yang dibuat.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-500 bg-slate-50/50 rounded-xl border border-slate-100 border-dashed">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm mb-3">
+                        <CalendarDays className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-medium text-sm">Belum ada sesi yang dibuat.</p>
+                  </div>
+                )}
+            </div>
+          </div>
           <PaginationControls currentPage={currentPage} totalPages={totalPages} />
         </div>
         
         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Detail Laporan</CardTitle>
+          <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+            <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+                <h2 className="text-base font-semibold text-slate-800">Detail Laporan</h2>
                 {selectedSessionId && reportData.length > 0 && (
                   <ExportButton sessionId={selectedSessionId} />
                 )}
-              </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="p-0">
               {!selectedSessionId ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Pilih sesi untuk melihat laporan kehadiran</p>
+                <div className="flex flex-col items-center justify-center py-20 px-4 text-center text-slate-500 bg-slate-50/30 m-6 rounded-2xl border border-slate-100 border-dashed">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm mb-4">
+                      <Users className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <p className="font-medium">Pilih sesi untuk melihat laporan detail kehadiran</p>
                 </div>
               ) : isLoadingReport ? (
                 <div className="text-center py-12">
@@ -227,36 +233,64 @@ export default function TeacherGlobalAttendanceManager({
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               ) : reportData.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Belum ada data kehadiran untuk sesi ini</p>
-                </div>
+                  <div className="flex flex-col items-center justify-center py-20 px-4 text-center text-slate-500 bg-slate-50/30 m-6 rounded-2xl border border-slate-100 border-dashed">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm mb-4">
+                        <AlertCircle className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <p className="font-medium">Belum ada data kehadiran untuk sesi ini</p>
+                  </div>
               ) : (
                 <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {reportData.map((row, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{row.student_name || 'N/A'}</p>
-                          <p className="text-sm text-muted-foreground">@{row.student_username || 'N/A'}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant={row.status === 'hadir' ? 'default' : 'secondary'}>
-                            {row.status}
-                          </Badge>
-                          {row.submitted_at && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(row.submitted_at).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="min-w-full">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
+                        <tr>
+                          <th className="px-6 py-4 font-semibold text-slate-600 text-xs uppercase tracking-wider border-b border-slate-100">Siswa</th>
+                          <th className="px-6 py-4 font-semibold text-slate-600 text-xs uppercase tracking-wider border-b border-slate-100 text-right">Status & Waktu</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {reportData.map((row, index) => (
+                          <tr key={index} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs">
+                                  {row.student_name ? row.student_name.charAt(0).toUpperCase() : '?'}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-800">{row.student_name || 'N/A'}</p>
+                                  <p className="text-xs font-medium text-slate-500">@{row.student_username || 'N/A'}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex flex-col items-end gap-1.5">
+                                <span className={cn(
+                                  "inline-flex items-center justify-center px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md border",
+                                  row.status === 'hadir' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                  row.status === 'izin' ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                  row.status === 'sakit' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                  "bg-rose-50 text-rose-700 border-rose-200"
+                                )}>
+                                  {row.status}
+                                </span>
+                                {row.submitted_at && (
+                                  <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {new Date(row.submitted_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </ScrollArea>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

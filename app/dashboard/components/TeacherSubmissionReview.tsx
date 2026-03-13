@@ -124,35 +124,35 @@ export default function TeacherSubmissionReview({ submission, questions, student
 
   return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader className="flex flex-row justify-between items-center">
-                    <div>
-                        <CardTitle>Detail Jawaban: {submission.profiles.name}</CardTitle>
-                        <CardDescription>Ujian: {submission.tests.title} | Skor: <span className="font-bold text-blue-600 text-lg">{submission.total_score}</span></CardDescription>
-                    </div>
-                </CardHeader>
-            </Card>
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-6 sm:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Detail Jawaban: {submission.profiles.name}</h2>
+                <div className="flex flex-wrap items-center gap-3 mt-3">
+                  <span className="text-slate-500">Ujian: <span className="font-semibold text-slate-700">{submission.tests.title}</span></span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-slate-500">Skor: <span className="font-bold text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{submission.total_score}</span></span>
+                </div>
+            </div>
         
         {questions.map((q, index) => {
             const studentAns = studentAnswerMap.get(q.id);
             return (
-                <Card key={q.id}>
-                    <CardHeader>
-                        <div className="flex justify-between items-center">
-                            <CardTitle className="text-lg">Soal #{index + 1}</CardTitle>
-                            {studentAns?.is_correct === true && <Badge className="bg-green-600 hover:bg-green-600 text-white">Benar</Badge>}
-                            {studentAns?.is_correct === false && <Badge variant="destructive">Salah</Badge>}
-                            {!studentAns && <Badge variant="secondary">Tidak Dijawab</Badge>}
+                <div key={q.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center flex-wrap gap-4">
+                        <h3 className="text-lg font-bold text-slate-800">Soal #{index + 1}</h3>
+                        {studentAns?.is_correct === true && <Badge className="rounded-lg h-7 px-3 bg-teal-100 hover:bg-teal-100 text-teal-700 border-none font-semibold">Benar</Badge>}
+                        {studentAns?.is_correct === false && <Badge variant="destructive" className="rounded-lg h-7 px-3 bg-rose-100 hover:bg-rose-100 text-rose-700 border-none font-semibold">Salah</Badge>}
+                        {!studentAns && <Badge variant="secondary" className="rounded-lg h-7 px-3 bg-slate-100 hover:bg-slate-100 text-slate-600 border-none font-medium">Tidak Dijawab</Badge>}
+                    </div>
+                    <div className="p-5 sm:p-6 space-y-6">
+                        <div className="prose prose-slate max-w-none text-slate-800 leading-relaxed text-base p-5 bg-slate-50/80 rounded-xl border border-slate-100">
+                            <SafeHTMLRenderer html={q.question_text} />
                         </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <SafeHTMLRenderer html={q.question_text} className="p-4 bg-gray-50 rounded-md border prose prose-sm max-w-none"/>
-                        <div className="space-y-2">
-                           <p className="text-sm font-semibold text-gray-600">Jawaban:</p>
+                        <div className="space-y-3">
+                           <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest pl-1">Jawaban</p>
                            {renderAnswerDetails(q)}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             )
         })}
     </div>

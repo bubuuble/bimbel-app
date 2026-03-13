@@ -20,7 +20,7 @@ type Submission = {
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm px-6">
         {pending ? "Menyimpan..." : "Simpan Nilai"}
       </Button>
     );
@@ -31,15 +31,15 @@ export default function GradeSubmissionForm({ submission, classId }: { submissio
   const [feedback, setFeedback] = useState(submission.feedback || '');
 
   return (
-    <Card className="mt-4">
-      <CardContent className="p-6">
-        <form action={gradeSubmission} className="space-y-4">
+    <div className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="p-6">
+        <form action={gradeSubmission} className="space-y-6">
           <input type="hidden" name="submissionId" value={submission.id} />
           <input type="hidden" name="classId" value={classId} />
           <input type="hidden" name="materialId" value={submission.material_id} />
 
           <div className="grid grid-cols-[100px_1fr] gap-4 items-center">
-            <Label htmlFor={`grade-${submission.id}`}>Nilai (0-100)</Label>
+            <Label htmlFor={`grade-${submission.id}`} className="font-semibold text-slate-700">Nilai (0-100)</Label>
             <Input 
               type="number" 
               id={`grade-${submission.id}`} 
@@ -49,9 +49,10 @@ export default function GradeSubmissionForm({ submission, classId }: { submissio
               min="0" 
               max="100" 
               required 
+              className="h-11 rounded-xl border-slate-200 focus-visible:ring-indigo-500"
             />
             
-            <Label htmlFor={`feedback-${submission.id}`}>Umpan Balik</Label>
+            <Label htmlFor={`feedback-${submission.id}`} className="font-semibold text-slate-700 mt-2">Umpan Balik</Label>
             <Textarea 
               id={`feedback-${submission.id}`} 
               name="feedback" 
@@ -59,14 +60,15 @@ export default function GradeSubmissionForm({ submission, classId }: { submissio
               onChange={(e) => setFeedback(e.target.value)}
               rows={3} 
               placeholder="Tulis umpan balik (opsional)..."
+              className="rounded-xl border-slate-200 focus-visible:ring-indigo-500 resize-none"
             />
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2 border-t border-slate-50">
             <SubmitButton />
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

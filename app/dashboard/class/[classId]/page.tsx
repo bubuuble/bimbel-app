@@ -54,10 +54,12 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
   // Jika pengguna bukan pengelola dan juga bukan siswa terdaftar, tolak akses
   if (!canManage && !isEnrolledStudent) {
     return (
-        <div className="p-4">
-            <Alert variant="destructive"><AlertTitle>Akses Ditolak</AlertTitle></Alert>
-            <p>Anda tidak memiliki izin untuk melihat halaman ini.</p>
+      <div className="space-y-6 sm:space-y-8">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50 py-16 text-center">
+          <h3 className="text-sm font-semibold text-red-600 mb-2">Akses Ditolak</h3>
+          <p className="text-xs text-red-500">Anda tidak memiliki izin untuk melihat halaman ini.</p>
         </div>
+      </div>
     );
   }
 
@@ -174,33 +176,32 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ cl
 
   // 7. Render Halaman Lengkap
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header Halaman */}
       <div>
-        <Link href="/dashboard/kelas" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2 mb-4">
+        <Link href="/dashboard/kelas" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1.5 mb-4">
             <ArrowLeft className="w-4 h-4" /> Kembali ke Daftar Kelas
         </Link>
-        <Card>
-            <CardHeader className="flex flex-col md:flex-row md:justify-between gap-4">
-                <div>
-                    <Badge variant={canManage ? "default" : "secondary"}>
-                        {canManage ? 'Mode Pengajar' : 'Mode Siswa'}
-                    </Badge>
-                    <h1 className="text-3xl font-bold tracking-tight mt-2">{classInfo.name}</h1>
-                    <p className="text-lg text-muted-foreground mt-1">{classInfo.description}</p>
-                </div>
-                <div className="flex gap-4 items-start pt-2">
-                    <div className="text-center">
-                        <p className="text-2xl font-bold">{materialCount || 0}</p>
-                        <p className="text-xs text-muted-foreground">Materi</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-2xl font-bold">{studentCount || 0}</p>
-                        <p className="text-xs text-muted-foreground">Siswa</p>
-                    </div>
-                </div>
-            </CardHeader>
-        </Card>
+        
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <Badge variant="outline" className={`mb-3 ${canManage ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-teal-50 text-teal-700 border-teal-200'}`}>
+                {canManage ? 'Mode Pengajar / Admin' : 'Mode Siswa'}
+            </Badge>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800">{classInfo.name}</h1>
+            <p className="text-sm text-slate-500 mt-1 max-w-xl line-clamp-2">{classInfo.description || 'Tidak ada deskripsi'}</p>
+          </div>
+          <div className="flex gap-8 shrink-0">
+            <div className="text-center">
+                <p className="text-2xl font-bold text-slate-800">{materialCount || 0}</p>
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest mt-1">Materi</p>
+            </div>
+            <div className="text-center">
+                <p className="text-2xl font-bold text-slate-800">{studentCount || 0}</p>
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest mt-1">Siswa</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Konten Utama (berdasarkan peran pengguna) */}

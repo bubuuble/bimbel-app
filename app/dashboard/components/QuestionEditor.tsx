@@ -547,23 +547,21 @@ function QuestionDetail({
   };
 
   return (
-    <Card className="lg:col-span-8 sticky top-4 h-fit">
-      <CardHeader>
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden lg:col-span-8 sticky top-4 h-fit">
+      <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50">
         <div className="flex items-center justify-between">
-          <CardTitle>Soal #{questionIndex}</CardTitle>
-          <Button onClick={onEdit} variant="outline" size="sm">
+          <h3 className="text-lg font-bold text-slate-800">Soal #{questionIndex}</h3>
+          <Button onClick={onEdit} variant="outline" size="sm" className="h-9 rounded-lg">
             <Edit className="h-4 w-4 mr-2" />
             Edit Soal
           </Button>
         </div>
-        <CardDescription>
-          <Badge variant="secondary">{typeMap[question.type]}</Badge>
-          <span className="ml-2 text-sm text-muted-foreground">
-            ({Number(testInfo.points_per_question).toFixed(2)} poin)
-          </span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        <div className="mt-2 text-sm text-slate-500">
+          <Badge className="bg-indigo-100 hover:bg-indigo-100 text-indigo-700 border-none font-medium px-2 py-0.5 rounded-md">{typeMap[question.type]}</Badge>
+          <span className="ml-2">({Number(testInfo.points_per_question).toFixed(2)} poin)</span>
+        </div>
+      </div>
+      <div className="p-5 sm:p-6 space-y-6">
         {/* Teks Pertanyaan Utama */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Pertanyaan</Label>
@@ -668,17 +666,17 @@ function QuestionDetail({
         {question.type === "ESSAY" && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Kunci Jawaban</Label>
-            <div className="p-3 bg-muted/50 rounded-md">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div 
-                    className="prose dark:prose-invert max-w-none prose-sm"
+                    className="prose dark:prose-invert max-w-none prose-sm text-slate-700"
                     // [PERBAIKAN KUNCI] Akses elemen pertama dari array essay_answer
                     dangerouslySetInnerHTML={{ __html: sanitizeHTML(question.essay_answer?.answer_key) }}
                 />
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 // --- DAFTAR SOAL (SISI KIRI) ---
@@ -734,32 +732,29 @@ function QuestionList({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Daftar Soal ({totalQuestions})</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50">
+        <h3 className="text-lg font-bold text-slate-800">Daftar Soal ({totalQuestions})</h3>
+      </div>
+      <div className="p-5 sm:p-6 space-y-3">
         {questions.length > 0 ? (
           questions.map((q, index) => (
             <div key={q.id} className="flex items-center gap-2">
               <button
                 onClick={() => onSelect(q)}
                 className={cn(
-                  "flex-1 text-left p-2 border rounded-md flex items-center justify-between gap-2 transition-colors overflow-hidden",
+                  "flex-1 text-left p-3 border rounded-xl flex items-center justify-between gap-3 transition-colors overflow-hidden",
                   selectedQuestionId === q.id
-                    ? "ring-2 ring-primary bg-primary/5"
-                    : "hover:bg-muted/50"
+                    ? "ring-2 ring-indigo-500 border-indigo-200 bg-indigo-50/50 text-indigo-700"
+                    : "hover:bg-slate-50 border-slate-200 text-slate-700"
                 )}
               >
-                <p className="font-medium text-sm truncate min-w-0">
+                <p className="font-semibold text-sm truncate min-w-0">
                   {(currentPage - 1) * itemsPerPage + index + 1}.{" "}
                   {formatQuestionText(q.question_text)}
                 </p>
                 <Badge
-                  variant={
-                    selectedQuestionId === q.id ? "default" : "secondary"
-                  }
-                  className="text-xs flex-shrink-0"
+                  className={cn("text-xs flex-shrink-0 border-none font-medium px-2 py-0.5 rounded-md", selectedQuestionId === q.id ? "bg-indigo-200 text-indigo-800 hover:bg-indigo-200" : "bg-slate-100 text-slate-600 hover:bg-slate-100")}
                 >
                   {typeMap[q.type]}
                 </Badge>
@@ -780,8 +775,8 @@ function QuestionList({
             Belum ada soal.
           </p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -902,13 +897,13 @@ function QuestionForm({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{selectedQuestion ? `Edit Soal #${questionIndex}` : "Tambah Soal Baru"}</CardTitle>
-        {selectedQuestion && (<Button variant="link" className="p-0 h-auto self-start" onClick={onFinish}>Batal & Kembali</Button>)}
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="p-5 sm:p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
+        <h3 className="text-lg font-bold text-slate-800">{selectedQuestion ? `Edit Soal #${questionIndex}` : "Tambah Soal Baru"}</h3>
+        {selectedQuestion && (<Button variant="link" className="p-0 h-auto self-start text-slate-500 hover:text-slate-700" onClick={onFinish}>Batal & Kembali</Button>)}
+      </div>
+      <div className="p-5 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label>Teks Pertanyaan</Label>
             <TinyEditor value={questionText} onChange={setQuestionText} />
@@ -946,8 +941,8 @@ function QuestionForm({
 
           <SubmitButton text={selectedQuestion ? "Simpan Perubahan" : "Simpan Soal"} isSubmitting={isSubmitting} />
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -1095,9 +1090,9 @@ export default function QuestionEditor({
 
   const questionLimitReached = questions.length >= testInfo.total_questions;
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <Button onClick={handleAddNew} disabled={questionLimitReached}>
+        <Button onClick={handleAddNew} disabled={questionLimitReached} className="h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm px-6">
           <Plus className="h-4 w-4 mr-2" />
           Tambah Soal Baru
         </Button>
@@ -1148,15 +1143,15 @@ export default function QuestionEditor({
               testInfo={testInfo} // Kirim data testInfo ke QuestionDetail
             />
           ) : (
-            <Card className="h-full flex items-center justify-center min-h-[400px]">
-              <CardContent className="text-center">
-                <p className="text-muted-foreground">
+            <div className="h-full flex items-center justify-center min-h-[400px] bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <div className="text-center p-8">
+                <p className="text-slate-500 font-medium">
                   {questions.length > 0
                     ? "Pilih soal dari daftar di sebelah kiri."
                     : "Belum ada soal. Klik 'Tambah Soal Baru'."}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -1173,7 +1168,7 @@ function SubmitButton({
   isSubmitting: boolean;
 }) {
   return (
-    <Button type="submit" disabled={isSubmitting} className="w-full">
+    <Button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm">
       {isSubmitting ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Proses...

@@ -119,7 +119,7 @@ export default function TestStartInterface({ testInfo, existingSubmission }: Tes
             size="lg" 
             onClick={handleStartOrContinue}
             disabled={isStarting}
-            className="w-full bg-black hover:bg-gray-500"
+            className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm shadow-indigo-200"
         >
             {isInProgress ? <RotateCcw className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
             {isStarting ? 'Memuat...' : (isInProgress ? 'Lanjutkan Ujian' : 'Mulai Ujian Sekarang')}
@@ -129,29 +129,27 @@ export default function TestStartInterface({ testInfo, existingSubmission }: Tes
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-4 md:p-8 space-y-6">
-        {/* Header dan Tombol Kembali */}
-        <div className="flex items-center">
-            <Button variant="ghost" size="sm" asChild>
-                <Link href={`/dashboard/class/${testInfo.classes.id}`} className="flex items-center gap-2 text-muted-foreground">
-                    <ArrowLeft className="w-4 h-4" />
-                    Kembali ke Kelas
-                </Link>
-            </Button>
-        </div>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header dan Tombol Kembali */}
+      <div className="flex items-center">
+          <Button variant="ghost" size="sm" asChild className="text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 rounded-xl">
+              <Link href={`/dashboard/class/${testInfo.classes.id}`} className="flex items-center gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Kembali ke Kelas
+              </Link>
+          </Button>
+      </div>
 
         {/* Layout Utama */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Kolom Kiri: Info & Instruksi */}
             <div className="lg:col-span-2 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-3xl font-bold">{testInfo.title}</CardTitle>
-                        <CardDescription>{testInfo.description || `Ujian untuk kelas ${testInfo.classes.name}.`}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Separator className="my-4" />
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 sm:p-8">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">{testInfo.title}</h2>
+                        <p className="text-slate-500 mt-2">{testInfo.description || `Ujian untuk kelas ${testInfo.classes.name}.`}</p>
+                    
+                        <Separator className="my-6" />
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                             <div className="space-y-1">
                                 <p className="text-sm text-muted-foreground">Durasi</p>
@@ -175,41 +173,42 @@ export default function TestStartInterface({ testInfo, existingSubmission }: Tes
                                 </p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <ListChecks />
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 sm:p-8 border-b border-slate-50 bg-indigo-50/30">
+                        <h3 className="flex items-center gap-2 text-lg font-bold text-slate-800">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                                <ListChecks className="h-4 w-4" />
+                            </div>
                             Petunjuk Ujian
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-5">
-                            <li>Pastikan koneksi internet Anda stabil selama pengerjaan.</li>
-                            <li>Timer akan berjalan otomatis setelah ujian dimulai dan tidak dapat dijeda.</li>
-                            <li>Jawaban Anda akan tersimpan secara otomatis setiap kali Anda menjawab.</li>
-                            <li>Ujian akan otomatis berakhir dan disubmit jika waktu habis.</li>
-                            <li>Periksa kembali semua jawaban Anda sebelum menekan tombol "Submit".</li>
+                        </h3>
+                    </div>
+                    <div className="p-6 sm:p-8">
+                        <ul className="space-y-3 text-sm text-slate-600 list-none">
+                            <li className="flex gap-3 items-start"><span className="text-indigo-400 mt-0.5">•</span> Pastikan koneksi internet Anda stabil selama pengerjaan.</li>
+                            <li className="flex gap-3 items-start"><span className="text-indigo-400 mt-0.5">•</span> Timer akan berjalan otomatis setelah ujian dimulai dan tidak dapat dijeda.</li>
+                            <li className="flex gap-3 items-start"><span className="text-indigo-400 mt-0.5">•</span> Jawaban Anda akan tersimpan secara otomatis setiap kali Anda menjawab.</li>
+                            <li className="flex gap-3 items-start"><span className="text-indigo-400 mt-0.5">•</span> Ujian akan otomatis berakhir dan disubmit jika waktu habis.</li>
+                            <li className="flex gap-3 items-start"><span className="text-indigo-400 mt-0.5">•</span> Periksa kembali semua jawaban Anda sebelum menekan tombol "Submit".</li>
                         </ul>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
             
             {/* Kolom Kanan: Status & Aksi */}
             <div className="lg:col-span-1">
-                <Card className="sticky top-8">
-                    <CardHeader>
-                        <CardTitle>Status Ujian</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden sticky top-8">
+                    <div className="p-6 border-b border-slate-50 bg-slate-50/50">
+                        <h3 className="text-base font-bold text-slate-800 tracking-tight">Status Ujian</h3>
+                    </div>
+                    <div className="p-6">
                         {getActionComponent()}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
-      </div>
     </div>
   );
 }

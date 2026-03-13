@@ -175,14 +175,20 @@ export default function TestTakingInterface({ testData, submission, existingAnsw
             <RadioGroup 
               value={questionAnswer || ''} 
               onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+              className="space-y-3"
             >
               {currentQuestion.multiple_choice_options?.map((option: any, index: number) => (
-                <div key={option.id} className="flex items-start space-x-3 p-3 border rounded hover:bg-muted/50">
-                  <RadioGroupItem value={option.id} id={`option-${option.id}`} className="mt-1" />
-                  <Label htmlFor={`option-${option.id}`} className="cursor-pointer flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm bg-muted px-2 py-1 rounded">{String.fromCharCode(65 + index)}</span>
-                      <SafeHTMLRenderer html={option.option_text} className="prose prose-sm max-w-none" />
+                <div key={option.id} className="flex items-start">
+                  <RadioGroupItem value={option.id} id={`option-${option.id}`} className="peer sr-only" />
+                  <Label 
+                    htmlFor={`option-${option.id}`} 
+                    className="flex flex-1 cursor-pointer items-start gap-3 rounded-xl border-2 border-slate-100 bg-white p-4 hover:bg-slate-50 peer-data-[state=checked]:border-indigo-600 peer-data-[state=checked]:bg-indigo-50/50 transition-all font-normal"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-medium text-slate-600 peer-data-[state=checked]:border-indigo-600 peer-data-[state=checked]:bg-indigo-600 peer-data-[state=checked]:text-white">
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <SafeHTMLRenderer html={option.option_text} className="prose prose-sm max-w-none text-slate-700" />
                     </div>
                   </Label>
                 </div>
@@ -325,89 +331,121 @@ export default function TestTakingInterface({ testData, submission, existingAnsw
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-4rem)]">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-[calc(100vh-12rem)]">
         {/* Main Content Area */}
         <div className="lg:col-span-3 flex flex-col gap-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">{testData.title}</h1>
-          </div>
-          <Card className="flex-grow flex flex-col">
-            <CardContent className="p-6 flex-grow flex flex-col space-y-4">
-              <div className="border bg-background rounded-lg p-4 flex-grow">
-                <h2 className="text-sm font-semibold mb-2 text-muted-foreground">Test Question</h2>
-                <SafeHTMLRenderer
-                  html={currentQuestion?.question_text || 'Question content will appear here'}
-                  className="prose max-w-none"
-                />
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex-grow flex flex-col overflow-hidden">
+            <div className="p-6 sm:p-8 flex-grow flex flex-col space-y-6">
+              
+              <div className="bg-indigo-50/50 rounded-xl p-5 sm:p-6 border border-indigo-100/50 flex-grow">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">Q</span>
+                  <h2 className="text-sm font-bold text-indigo-900/80 uppercase tracking-widest">Pertanyaan</h2>
+                </div>
+                <div className="text-slate-800 text-base sm:text-lg leading-relaxed">
+                  <SafeHTMLRenderer
+                    html={currentQuestion?.question_text || 'Question content will appear here'}
+                    className="prose max-w-none"
+                  />
+                </div>
               </div>
-              <div className="border bg-background rounded-lg p-4">
-                <h3 className="text-sm font-semibold mb-4 text-muted-foreground">Test Answer</h3>
+
+              <div className="flex-grow">
+                <h3 className="text-sm font-bold mb-4 text-slate-500 uppercase tracking-widest pl-1">Pilihan Jawaban</h3>
                 {renderAnswerOptions()}
               </div>
-            </CardContent>
-            <div className="flex justify-between p-4 border-t bg-gray-50 rounded-b-lg">
-              <Button variant="outline" onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))} disabled={currentQuestionIndex === 0}>
-                <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+
+            </div>
+            
+            <div className="flex justify-between p-4 sm:p-6 border-t border-slate-100 bg-slate-50/50 mt-auto">
+              <Button 
+                variant="outline" 
+                className="rounded-xl h-11 border-slate-200 hover:bg-slate-100 hover:text-slate-800 font-semibold"
+                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))} 
+                disabled={currentQuestionIndex === 0}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" /> Sebelumnya
               </Button>
-              <Button variant="default" className="bg-slate-800 hover:bg-slate-900" onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))} disabled={currentQuestionIndex === questions.length - 1}>
-                Next <ChevronRight className="h-4 w-4 ml-2" />
+              <Button 
+                variant="default" 
+                className="rounded-xl h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-sm hover:shadow-md" 
+                onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))} 
+                disabled={currentQuestionIndex === questions.length - 1}
+              >
+                Selanjutnya <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Right Sidebar */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Clock className={cn("w-4 h-4", timeRemaining < 300 ? "text-red-500" : "text-green-600")} />
-                <div className="text-sm text-muted-foreground">Time</div>
-              </div>
-              <div className={cn("text-3xl font-bold tracking-tighter", timeRemaining < 300 ? "text-red-500" : "text-green-600")}>
-                {formatTime(timeRemaining)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button className="w-full bg-green-600 hover:bg-green-700" size="lg" disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting..." : "Submit"}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader><AlertDialogTitle>Confirm Submission</AlertDialogTitle><AlertDialogDescription>Are you sure you want to finish this test?</AlertDialogDescription></AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleManualSubmit}>Yes, Submit</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
-          <Card className="flex-grow">
-            <CardHeader className="p-4"><CardTitle className="text-base">Questions Number</CardTitle></CardHeader>
-            <CardContent className="p-4 grid grid-cols-5 gap-2">
-              {questions.map((q: any, index: number) => (
-                <Button
-                  key={q.id}
-                  variant={currentQuestionIndex === index ? "default" : "outline"}
-                  size="icon"
-                  onClick={() => setCurrentQuestionIndex(index)}
-                  className={cn(
-                    "h-8 w-8 rounded-full",
-                    answers[q.id] !== undefined && currentQuestionIndex !== index && "bg-green-100 border-green-300 text-green-800 hover:bg-green-200",
-                    currentQuestionIndex === index && "bg-blue-600 text-white"
-                  )}
-                >
-                  {index + 1}
+          
+          {/* Timer Card */}
+          <div className={cn(
+             "bg-white rounded-2xl border shadow-sm p-6 text-center transition-colors duration-500",
+             timeRemaining < 300 ? "border-rose-200 bg-rose-50/50" : "border-slate-100"
+          )}>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Clock className={cn("w-5 h-5", timeRemaining < 300 ? "text-rose-500 animate-pulse" : "text-slate-400")} />
+              <div className="text-sm font-semibold uppercase tracking-wider text-slate-500">Sisa Waktu</div>
+            </div>
+            <div className={cn("text-4xl font-black font-mono tracking-tight", timeRemaining < 300 ? "text-rose-600" : "text-slate-800")}>
+              {formatTime(timeRemaining)}
+            </div>
+          </div>
+          
+          {/* Submit Card */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-base shadow-sm hover:shadow-md transition-all" disabled={isSubmitting}>
+                  {isSubmitting ? "Mengumpulkan..." : "Selesai Ujian"}
                 </Button>
-              ))}
-            </CardContent>
-          </Card>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-[24px]">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Kumpulkan Ujian Sekarang?</AlertDialogTitle>
+                  <AlertDialogDescription>Pastikan semua jawaban sudah terisi dengan benar. Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleManualSubmit} className="rounded-xl bg-teal-600 hover:bg-teal-700">Ya, Kumpulkan</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          {/* Navigator Navigation */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex-grow">
+            <div className="p-5 border-b border-slate-50">
+              <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Navigasi Soal</h3>
+            </div>
+            <div className="p-5 grid grid-cols-5 gap-3">
+              {questions.map((q: any, index: number) => {
+                const isAnswered = answers[q.id] !== undefined;
+                const isActive = currentQuestionIndex === index;
+                
+                return (
+                  <Button
+                    key={q.id}
+                    variant="outline"
+                    onClick={() => setCurrentQuestionIndex(index)}
+                    className={cn(
+                      "h-10 w-10 p-0 rounded-xl font-medium transition-all",
+                      !isActive && !isAnswered && "border-slate-200 text-slate-500 hover:bg-slate-50",
+                      isAnswered && !isActive && "bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100",
+                      isActive && "bg-indigo-600 border-indigo-600 text-white shadow-md ring-2 ring-indigo-600 ring-offset-2 hover:bg-indigo-700"
+                    )}
+                  >
+                    {index + 1}
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
