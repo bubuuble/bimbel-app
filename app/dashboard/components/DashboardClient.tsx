@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase/client";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import {
   LogOut,
   LayoutDashboard,
@@ -252,6 +252,7 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
             </button>
           </SheetTrigger>
           <SheetContent side="left" className="w-72 p-0 border-0">
+            <SheetTitle className="sr-only">Navigasi Dashboard</SheetTitle>
             <SidebarContent />
           </SheetContent>
         </Sheet>

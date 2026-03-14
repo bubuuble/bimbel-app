@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -176,19 +176,19 @@ const FEATURES = [
 /* ─────────── Facility images ─────────── */
 const FACILITY_IMAGES = [
   {
-    src: "https://placehold.co/600x450/94a3b8/1e293b?text=Kelas+Tatap+Muka",
+    src: "/image/reference/1.jpeg",
     alt: "Kelas Tatap Muka",
   },
   {
-    src: "https://placehold.co/600x450/93c5fd/1e3a5f?text=Ruang+Belajar+A",
+    src: "/image/reference/2.jpeg",
     alt: "Ruang Belajar A",
   },
   {
-    src: "https://placehold.co/600x450/86efac/14532d?text=Lounge+Siswa",
+    src: "/image/reference/3.jpeg",
     alt: "Lounge Siswa",
   },
   {
-    src: "https://placehold.co/600x450/fca5a5/7f1d1d?text=Ruang+Konsultasi",
+    src: "/image/reference/4.jpeg",
     alt: "Ruang Konsultasi",
   },
 ];
@@ -740,25 +740,21 @@ export default function HomePage() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="pb-12"
           >
-            <div className="w-full overflow-visible px-4 md:px-12">
-              {/* Grid: image (left) vs right content — heights match so button aligns with image bottom */}
-              <div className="grid md:grid-cols-2 gap-5 md:gap-14">
-                {/* Left: main image + mobile thumbnails below */}
-                <div className="flex flex-col gap-2">
-                  <div
-                    className="rounded-xl md:rounded-2xl overflow-hidden w-full"
-                    style={{ aspectRatio: "16/9" }}
-                  >
+            <div className="w-full overflow-hidden px-4 md:px-12">
+              <div className="grid md:grid-cols-2 gap-7 md:gap-8 lg:gap-1 items-center">
+                {/* Left: main image + thumbnails */}
+                <div className="space-y-2">
+                  <div className="mx-auto max-w-md md:max-w-lg lg:max-w-xl rounded-xl md:rounded-2xl overflow-hidden w-full flex items-center justify-center bg-gray-100/50 dark:bg-gray-800/50 shadow-xl border border-black/5 dark:border-white/5">
                     <img
                       key={facilityIndex}
                       src={FACILITY_IMAGES[facilityIndex].src}
                       alt={FACILITY_IMAGES[facilityIndex].alt}
-                      className="w-full h-full object-cover transition-opacity duration-300"
+                      className="w-full h-auto object-contain transition-opacity duration-300"
                     />
                   </div>
 
-                  {/* Mobile: 3 visible + arrows, centered — below main image */}
-                  <div className="flex items-center justify-center gap-2 py-1.5 md:hidden">
+                  {/* Thumbnails — 3 visible + arrow navigation */}
+                  <div className="mx-auto max-w-sm md:max-w-md flex items-center gap-2">
                     <button
                       onClick={() => setThumbOffset((o) => Math.max(0, o - 1))}
                       disabled={thumbOffset === 0}
@@ -767,22 +763,25 @@ export default function HomePage() {
                     >
                       <ChevronLeft className="w-4 h-4 text-white" />
                     </button>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1.5 flex-1">
                       {FACILITY_IMAGES.slice(thumbOffset, thumbOffset + 3).map((img, j) => {
                         const i = thumbOffset + j;
                         return (
                           <button
                             key={i}
                             onClick={() => setFacilityIndex(i)}
-                            className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                            className={`flex flex-col flex-1 rounded-lg overflow-hidden border-2 transition-all duration-200 bg-gray-100/50 dark:bg-gray-800/50 ${
                               i === facilityIndex
                                 ? "border-primary ring-2 ring-primary/30 scale-105"
                                 : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
                             }`}
-                            style={{ width: 64, height: 64 }}
                             aria-label={img.alt}
                           >
-                            <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+                            <img
+                              src={img.src}
+                              alt={img.alt}
+                              className="w-full h-auto object-contain"
+                            />
                           </button>
                         );
                       })}
@@ -798,8 +797,8 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Right: checklist + button pinned to bottom */}
-                <div className="flex flex-col gap-3 md:gap-6">
+                {/* Right: checklist + buttons */}
+                <div className="space-y-3 md:space-y-6">
                   <h2 className="font-bold text-base md:text-3xl text-foreground leading-snug">
                     Fasilitas Bimbel Master
                   </h2>
@@ -813,7 +812,7 @@ export default function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-auto space-y-2 pt-1">
+                  <div className="space-y-2 pt-1">
                     <Link
                       href="/product"
                       className="block w-full text-center font-bold py-2.5 md:py-4 rounded-full transition-all hover:scale-[1.02] shadow-md text-white text-xs md:text-base"
@@ -823,30 +822,6 @@ export default function HomePage() {
                     </Link>
                   </div>
                 </div>
-              </div>
-
-              {/* Thumbnails — below grid, aligned under image (left half) */}
-
-              {/* Desktop: thumbnails under left image column only */}
-              <div className="hidden md:grid md:grid-cols-2 md:gap-14 mt-2">
-                <div className="flex flex-wrap gap-2 py-1.5 justify-center">
-                  {FACILITY_IMAGES.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setFacilityIndex(i)}
-                      className={`rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                        i === facilityIndex
-                          ? "border-primary ring-2 ring-primary/30 scale-105"
-                          : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
-                      }`}
-                      style={{ width: 72, height: 72 }}
-                      aria-label={img.alt}
-                    >
-                      <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-                <div /> {/* spacer — keeps thumbnails under left column only */}
               </div>
             </div>
           </motion.section>
