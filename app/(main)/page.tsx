@@ -453,19 +453,76 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "0px 0px -60px 0px" }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="pt-8 pb-2 md:pt-16 md:pb-7"
+        className="pt-6 pb-2 md:pt-10 md:pb-7 px-3 sm:px-8"
       >
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex flex-col items-center text-center gap-3 md:gap-6 max-w-5xl mx-auto">
-            {/* Headline + description */}
-            <h2 className="font-extrabold text-2xl md:text-6xl leading-tight text-foreground drop-shadow-sm">
+        <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-lg shadow-primary/5 backdrop-blur-sm py-7 md:py-20">
+          {/* Decorative blobs — hidden on mobile for cleanliness */}
+          <div className="hidden md:block absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
+          <div className="hidden md:block absolute bottom-[-70px] right-[-70px] w-80 h-80 rounded-full pointer-events-none bg-white/40" />
+
+          {/* ── MOBILE layout (< md) ── */}
+          <div className="md:hidden relative z-10 flex flex-col items-center text-center px-5 gap-3">
+            {/* Badge */}
+            <div className="flex items-center gap-1.5 bg-white/60 backdrop-blur-sm rounded-full px-3 py-1 border border-white/50 shadow-sm">
+              <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+              <span className="text-[9px] font-bold tracking-widest uppercase text-foreground/60">
+                Konsultasi Gratis
+              </span>
+            </div>
+
+            {/* Headline */}
+            <div>
+              <p className="font-extrabold text-lg leading-snug text-foreground">
+                Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
+              </p>
+              <p className="font-extrabold text-2xl leading-tight text-secondary/80 mt-0.5">
+                Master Solusinya!
+              </p>
+            </div>
+
+            {/* Description — condensed */}
+            <p className="text-foreground/55 text-[11px] leading-relaxed max-w-[260px]">
+              Metode{" "}
+              <span className="font-semibold italic text-foreground/75">The Simple Learning</span>
+              {" "}dibimbing tutor berpengalaman alumni UI & PTN favorit untuk meningkatkan nilai dan tembus PTN impian..
+            </p>
+
+            {/* Form — inline pill on mobile */}
+            <form
+              className="w-full"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
+                window.location.href = `/register?email=${encodeURIComponent(email)}`;
+              }}
+            >
+              <div className="flex items-center bg-white rounded-full border border-border/30 shadow-sm p-1.5">
+                <input
+                  type="email"
+                  placeholder="Masukkan email Anda"
+                  required
+                  className="flex-1 px-3 py-2 bg-transparent text-foreground placeholder:text-foreground/40 text-xs focus:outline-none min-w-0"
+                />
+                <button
+                  type="submit"
+                  className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-xs hover:bg-primary/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
+                >
+                  Mulai Sekarang
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* ── DESKTOP layout (≥ md) ── */}
+          <div className="hidden md:flex relative z-10 container mx-auto px-6 flex-col items-center text-center gap-6 max-w-5xl">
+            <h2 className="font-extrabold text-6xl leading-tight text-foreground drop-shadow-sm">
               Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
               <br />
-              <span className="text-secondary/80 drop-shadow-md text-3xl md:text-7xl">
+              <span className="text-secondary/80 drop-shadow-md text-7xl">
                 Master Solusinya!
               </span>
             </h2>
-            <p className="text-foreground/60 text-xs md:text-lg leading-relaxed max-w-3xl">
+            <p className="text-foreground/60 text-lg leading-relaxed max-w-3xl">
               Belajar lebih mudah dengan metode{" "}
               <span className="font-semibold text-foreground/80 italic">
                 The Simple Learning
@@ -473,14 +530,11 @@ export default function HomePage() {
               , dibimbing tutor berpengalaman alumni UI & PTN favorit untuk
               meningkatkan nilai dan tembus PTN impian.
             </p>
-
-            {/* Email form */}
             <form
               className="w-full max-w-xl"
               onSubmit={(e) => {
                 e.preventDefault();
-                const email = (e.currentTarget.elements[0] as HTMLInputElement)
-                  .value;
+                const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
                 window.location.href = `/register?email=${encodeURIComponent(email)}`;
               }}
             >
@@ -489,7 +543,7 @@ export default function HomePage() {
                   type="email"
                   placeholder="Masukkan email Anda"
                   required
-                  className="flex-1 px-4 py-2 bg-transparent text-foreground placeholder:text-foreground/40 text-sm focus:outline-none"
+                  className="flex-1 px-4 py-2.5 bg-transparent text-foreground placeholder:text-foreground/40 text-sm focus:outline-none min-w-0"
                 />
                 <button
                   type="submit"
@@ -499,11 +553,9 @@ export default function HomePage() {
                 </button>
               </div>
             </form>
-
-            {/* Trust badge */}
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-500 flex-shrink-0" />
-              <span className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase text-foreground/50">
+              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/50">
                 Konsultasi Gratis
               </span>
             </div>
@@ -741,7 +793,7 @@ export default function HomePage() {
             className="pb-12"
           >
             <div className="w-full overflow-hidden px-4 md:px-12">
-              <div className="grid md:grid-cols-2 gap-7 md:gap-8 lg:gap-1 items-center">
+              <div className="grid md:grid-cols-2 gap-7 md:gap-8   lg:gap-1 items-center">
                 {/* Left: main image + thumbnails */}
                 <div className="space-y-2">
                   <div className="mx-auto max-w-md md:max-w-lg lg:max-w-xl rounded-xl md:rounded-2xl overflow-hidden w-full flex items-center justify-center bg-gray-100/50 dark:bg-gray-800/50 shadow-xl border border-black/5 dark:border-white/5">
