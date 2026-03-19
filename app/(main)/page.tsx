@@ -455,21 +455,13 @@ export default function HomePage() {
         transition={{ duration: 0.7, ease: "easeOut" }}
         className="pt-6 pb-2 md:pt-10 md:pb-7 px-3 sm:px-8"
       >
-        <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-lg shadow-primary/5 backdrop-blur-sm py-7 md:py-20">
+        <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-lg shadow-primary/5 backdrop-blur-sm py-4 md:py-20">
           {/* Decorative blobs — hidden on mobile for cleanliness */}
           <div className="hidden md:block absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
           <div className="hidden md:block absolute bottom-[-70px] right-[-70px] w-80 h-80 rounded-full pointer-events-none bg-white/40" />
 
           {/* ── MOBILE layout (< md) ── */}
-          <div className="md:hidden relative z-10 flex flex-col items-center text-center px-5 gap-3">
-            {/* Badge */}
-            <div className="flex items-center gap-1.5 bg-white/60 backdrop-blur-sm rounded-full px-3 py-1 border border-white/50 shadow-sm">
-              <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-              <span className="text-[9px] font-bold tracking-widest uppercase text-foreground/60">
-                Konsultasi Gratis
-              </span>
-            </div>
-
+          <div className="md:hidden relative z-10 flex flex-col items-center text-center px-2 gap-2">
             {/* Headline */}
             <div>
               <p className="font-extrabold text-lg leading-snug text-foreground">
@@ -481,10 +473,10 @@ export default function HomePage() {
             </div>
 
             {/* Description — condensed */}
-            <p className="text-foreground/55 text-[11px] leading-relaxed max-w-[260px]">
+            <p className="text-foreground/55 text-[11px] leading-relaxed max-w-[340px]">
               Metode{" "}
               <span className="font-semibold italic text-foreground/75">The Simple Learning</span>
-              {" "}dibimbing tutor berpengalaman alumni UI & PTN favorit untuk meningkatkan nilai dan tembus PTN impian..
+              {" "}dibimbing tutor berpengalaman alumni UI & PTN favorit untuk meningkatkan nilai dan tembus PTN impian.
             </p>
 
             {/* Form — inline pill on mobile */}
@@ -511,6 +503,14 @@ export default function HomePage() {
                 </button>
               </div>
             </form>
+
+            {/* Badge */}
+            <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/50 shadow-sm mt-1">
+              <CheckCircle className="w-2.5 h-2.5 text-emerald-500 flex-shrink-0" />
+              <span className="text-[8px] font-bold tracking-widest uppercase text-foreground/60">
+                Konsultasi Gratis
+              </span>
+            </div>
           </div>
 
           {/* ── DESKTOP layout (≥ md) ── */}
