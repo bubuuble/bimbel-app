@@ -1,4 +1,4 @@
-﻿// app/(main)/product/page.tsx
+// app/(main)/product/page.tsx
 "use client";
 
 import { client } from "@/sanity/lib/client";
@@ -18,46 +18,83 @@ import { useMidtransSnap } from "@/lib/hooks/useMidtransSnap";
 /* ─── Category Filters ───────────────────────────────────────────────── */
 
 function CategoryFilters({
+  selectedJenjang, onJenjangChange,
   selectedCategory, onCategoryChange, products,
 }: {
+  selectedJenjang: string;
+  onJenjangChange: (jenjang: string) => void;
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   products: Product[];
 }) {
+  const jenjangOptions = [
+    { value: "all", label: "Semua Jenjang" },
+    { value: "sd", label: "SD" },
+    { value: "smp", label: "SMP" },
+    { value: "sma", label: "SMA" },
+  ];
+
+  const filteredByJenjang = selectedJenjang === "all" 
+    ? products 
+    : products.filter(p => p.educationLevel === selectedJenjang || !p.educationLevel || p.educationLevel === 'all');
+
   const categoriesWithCount = CATEGORIES.map((cat) => ({
     ...cat,
-    count: cat.value === "all" ? products.length : products.filter((p) => p.category === cat.value).length,
+    count: cat.value === "all" 
+      ? filteredByJenjang.length 
+      : filteredByJenjang.filter((p) => p.category === cat.value).length,
   }));
 
   return (
-    <div className="mb-14">
-      <div className="flex items-center justify-center gap-2 mb-6">
-        <Filter className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-bold text-foreground">Filter berdasarkan kategori</h3>
-      </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        {categoriesWithCount.map((cat) => (
-          <Button key={cat.value} onClick={() => onCategoryChange(cat.value)}
-            variant={selectedCategory === cat.value ? "default" : "outline"}
-            className={`relative transition-all duration-300 border-2 rounded-full ${selectedCategory === cat.value ? 'shadow-md scale-105 bg-primary border-primary text-primary-foreground' : 'hover:scale-105 hover:shadow-sm border-border/50 text-foreground/70 hover:text-primary'}`}
-          >
-            {cat.label}
-            <Badge variant="secondary" className={`ml-2 text-xs rounded-full ${selectedCategory === cat.value ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'}`}>
-              {cat.count}
-            </Badge>
-          </Button>
-        ))}
-      </div>
-      {selectedCategory !== "all" && CATEGORY_DESCRIPTIONS[selectedCategory] && (
-        <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              {CATEGORY_DESCRIPTIONS[selectedCategory]}
-            </span>
-          </div>
+    <div className="mb-14 space-y-8">
+      {/* Tier 1: Jenjang Filter */}
+      <div>
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-bold text-foreground">Pilih Jenjang</h3>
         </div>
-      )}
+        <div className="flex flex-wrap justify-center gap-3">
+          {jenjangOptions.map((jenjang) => (
+            <Button key={jenjang.value} onClick={() => onJenjangChange(jenjang.value)}
+              variant={selectedJenjang === jenjang.value ? "default" : "outline"}
+              className={`relative transition-all duration-300 border-2 rounded-full px-6 ${selectedJenjang === jenjang.value ? 'shadow-md scale-105 bg-primary border-primary text-primary-foreground' : 'hover:scale-105 hover:shadow-sm border-border/50 text-foreground/70 hover:text-primary'}`}
+            >
+              {jenjang.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tier 2: Category Filter */}
+      <div>
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Filter className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-bold text-foreground">Pilih Program</h3>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          {categoriesWithCount.map((cat) => (
+            <Button key={cat.value} onClick={() => onCategoryChange(cat.value)}
+              variant={selectedCategory === cat.value ? "default" : "outline"}
+              className={`relative transition-all duration-300 border-2 rounded-full ${selectedCategory === cat.value ? 'shadow-md scale-105 bg-secondary border-secondary text-secondary-foreground' : 'hover:scale-105 hover:shadow-sm border-border/50 text-foreground/70 hover:text-secondary'}`}
+            >
+              {cat.label}
+              <Badge variant="secondary" className={`ml-2 text-xs rounded-full ${selectedCategory === cat.value ? 'bg-white/20 text-white' : 'bg-secondary/10 text-secondary'}`}>
+                {cat.count}
+              </Badge>
+            </Button>
+          ))}
+        </div>
+        {selectedCategory !== "all" && CATEGORY_DESCRIPTIONS[selectedCategory] && (
+          <div className="mt-6 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
+              <TrendingUp className="w-4 h-4 text-secondary" />
+              <span className="text-sm font-medium text-secondary">
+                {CATEGORY_DESCRIPTIONS[selectedCategory]}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -67,6 +104,7 @@ function CategoryFilters({
 export default function ProductPage() {
   const [products, setProducts]                     = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts]     = useState<Product[]>([]);
+  const [selectedJenjang, setSelectedJenjang]       = useState<string>("all");
   const [selectedCategory, setSelectedCategory]     = useState<string>("all");
   const [loading, setLoading]                       = useState<boolean>(true);
   const [viewMode]                                  = useState<"grid" | "list">("grid");
@@ -159,7 +197,12 @@ export default function ProductPage() {
 
   useEffect(() => {
     let filtered = products;
-    if (selectedCategory !== "all") filtered = filtered.filter((p) => p.category === selectedCategory);
+    if (selectedJenjang !== "all") {
+      filtered = filtered.filter(p => p.educationLevel === selectedJenjang || !p.educationLevel || p.educationLevel === 'all');
+    }
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
     if (searchQuery.trim()) {
       filtered = filtered.filter((p) =>
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -167,7 +210,7 @@ export default function ProductPage() {
       );
     }
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, searchQuery]);
+  }, [products, selectedJenjang, selectedCategory, searchQuery]);
 
   if (loading) {
     return (
@@ -219,8 +262,10 @@ export default function ProductPage() {
       <section className="py-16 px-4 bg-background/50">
         <div className="container mx-auto">
           <CategoryFilters
+            selectedJenjang={selectedJenjang}
+            onJenjangChange={setSelectedJenjang}
             selectedCategory={selectedCategory}
-            onCategoryChange={(c) => setSelectedCategory(c)}
+            onCategoryChange={setSelectedCategory}
             products={products}
           />
 

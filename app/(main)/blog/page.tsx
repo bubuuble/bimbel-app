@@ -1,8 +1,8 @@
-﻿// app/(main)/blog/page.tsx
+// app/(main)/blog/page.tsx
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, User, Clock, ArrowRight, BookOpen, TrendingUp, Users } from 'lucide-react';
+import { Calendar, User, Clock, ArrowRight, BookOpen } from 'lucide-react';
 import { client } from '@/sanity/lib/client';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,8 +24,6 @@ const BLOG_POSTS_QUERY = `
   }
 `;
 
-const CATEGORIES_QUERY = `*[_type == "blog"]{ category }`;
-
 interface BlogPost {
   _id: string;
   title: string;
@@ -41,36 +39,27 @@ interface BlogPost {
   featured?: boolean;
 }
 
-interface Category { name: string; count: number }
-
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function getCategoryIcon(category: string) {
-  switch (category.toLowerCase()) {
-    case 'utbk': case 'tips-belajar': return BookOpen;
-    case 'matematika': case 'fisika': case 'kimia': case 'biologi': return TrendingUp;
-    case 'psikologi': case 'motivasi': case 'karir': return Users;
-    default: return BookOpen;
-  }
-}
+// Rotating card border colors (temanfarmasi-style)
+const CARD_COLORS = [
+  'border-l-pink-400',
+  'border-l-blue-400',
+  'border-l-teal-400',
+  'border-l-amber-400',
+  'border-l-violet-400',
+  'border-l-emerald-400',
+];
 
 export default async function BlogPage() {
   try {
-    const [featuredPost, blogPosts, categoriesRaw]: [BlogPost | null, BlogPost[], { category: string }[]] =
+    const [featuredPost, blogPosts]: [BlogPost | null, BlogPost[]] =
       await Promise.all([
         client.fetch(FEATURED_POST_QUERY).catch(() => null),
         client.fetch(BLOG_POSTS_QUERY).catch(() => []),
-        client.fetch(CATEGORIES_QUERY).catch(() => []),
       ]);
-
-    const categoryData: Category[] = [];
-    if (categoriesRaw?.length) {
-      const m = new Map<string, number>();
-      categoriesRaw.forEach(i => { if (i.category) m.set(i.category, (m.get(i.category) || 0) + 1); });
-      m.forEach((count, name) => categoryData.push({ name, count }));
-    }
 
     return (
       <main className="overflow-x-hidden">
@@ -88,16 +77,15 @@ export default async function BlogPage() {
               Blog Edukatif
             </span>
             <h1 className="text-5xl md:text-7xl font-sans font-extrabold leading-tight max-w-4xl mx-auto text-foreground">
-              Blog <span className="text-primary">Edukatif</span>
+              Wawasan <span className="text-primary">Edukatif</span>
             </h1>
             <p className="text-xl max-w-3xl mx-auto font-sans leading-relaxed text-foreground/70">
-              Temukan artikel-artikel inspiratif, tips belajar efektif, dan insight terbaru dari dunia pendidikan
-              yang akan membantu perjalanan akademik Anda.
+              Artikel terbaru, panduan, dan tips untuk membantu perjalanan akademik Anda.
             </p>
           </div>
         </section>
 
-        {/* ── FEATURED POST ─────────────────────────────────────────────── */}
+        {/* ── FEATURED POST (Article Unggulan - like temanfarmasi top section) ── */}
         {featuredPost && (
           <section className="py-20 px-4 bg-background">
             <div className="container mx-auto">
@@ -118,7 +106,7 @@ export default async function BlogPage() {
                   <Link href={`/blog/${featuredPost.slug.current}`}
                     className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-bold text-primary-foreground transition-all duration-300 group bg-primary shadow-sm hover:scale-105"
                   >
-                    Baca Selengkapnya
+                    Baca Artikel
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
@@ -132,8 +120,8 @@ export default async function BlogPage() {
           </section>
         )}
 
-        {/* ── POSTS GRID ────────────────────────────────────────────────── */}
-          <section className="py-24 px-4 bg-background/50">
+        {/* ── POSTS GRID (temanfarmasi-style: cards with colored borders) ── */}
+        <section className="py-24 px-4 bg-background/50">
           <div className="container mx-auto">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-sans font-extrabold text-foreground">
@@ -142,31 +130,43 @@ export default async function BlogPage() {
             </div>
             {blogPosts?.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {blogPosts.map(post => (
-                  <article key={post._id} className="bg-card rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group border border-border/50 flex flex-col">
-                    <div className="relative h-56 overflow-hidden">
-                      <Image src={post.imageUrl || '/image/dummy1.jpg'}
-                        alt={post.imageAlt || post.title} fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                      <div className="absolute top-4 left-4 px-4 py-1.5 rounded-full text-xs font-bold text-primary-foreground shadow-lg bg-primary">
+                {blogPosts.map((post, index) => (
+                  <article
+                    key={post._id}
+                    className={`bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group border border-border/50 flex flex-col border-l-4 ${CARD_COLORS[index % CARD_COLORS.length]}`}
+                  >
+                    <div className="relative h-52 overflow-hidden">
+                      <Image
+                        src={post.imageUrl || '/image/dummy1.jpg'}
+                        alt={post.imageAlt || post.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      {/* Category badge on image (temanfarmasi-style) */}
+                      <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold text-foreground bg-white/90 backdrop-blur-sm uppercase tracking-wider shadow-sm">
                         {post.category}
                       </div>
                     </div>
-                    <div className="p-8 space-y-4 flex flex-col flex-1">
-                      <h3 className="text-xl font-bold text-foreground line-clamp-2 min-h-[56px] leading-snug group-hover:text-primary transition-colors font-sans">
+                    <div className="p-6 space-y-3 flex flex-col flex-1">
+                      {/* Date */}
+                      <div className="flex items-center gap-2 text-xs text-foreground/50 font-medium uppercase">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(post._createdAt)}
+                      </div>
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors font-sans">
                         <Link href={`/blog/${post.slug.current}`}>{post.title}</Link>
                       </h3>
+                      {/* Excerpt */}
                       <p className="text-sm text-foreground/70 font-sans leading-relaxed line-clamp-2 flex-grow">{post.excerpt}</p>
-                      <div className="flex items-center justify-between text-xs text-foreground/60 font-medium pt-6 mt-auto border-t border-border/50">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-primary" />
-                          {formatDate(post._createdAt)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-secondary" />
-                          {post.readTime}m read
-                        </div>
-                      </div>
+                      {/* CTA Button */}
+                      <Link
+                        href={`/blog/${post.slug.current}`}
+                        className="inline-flex items-center gap-2 mt-auto pt-4 text-sm font-bold text-secondary hover:text-secondary/80 transition-colors group/btn"
+                      >
+                        Baca Artikel
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </Link>
                     </div>
                   </article>
                 ))}

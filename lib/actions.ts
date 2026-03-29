@@ -14,8 +14,10 @@ import { cookies } from 'next/headers'
 // TIPE DATA UMUM & STATE
 // =======================================================
 export type FormState = { success?: string; error?: string; } | null;
-export type SignUpFormState = FormState;
-export type SignInFormState = FormState;
+export type SignUpFormState = { success?: string; error?: string; name?: string; username?: string; email?: string; } | null;
+export type SignInFormState = { success?: string; error?: string; username?: string; } | null;
+export type ForgotPasswordFormState = { success?: string; error?: string; email?: string; } | null;
+export type ResetPasswordFormState = { success?: string; error?: string; } | null;
 export type ClassFormState = FormState;
 export type MaterialFormState = FormState;
 export type EnrollState = FormState;
@@ -783,10 +785,10 @@ export async function signUp(
   const password = formData.get('password') as string;
 
   if (!name || !username || !email || !password) {
-    return { error: 'Semua field wajib diisi.' };
+    return { error: 'Semua field wajib diisi.', name, username, email };
   }
   if (password.length < 6) {
-    return { error: 'Password minimal harus 6 karakter.' };
+    return { error: 'Password minimal harus 6 karakter.', name, username, email };
   }
 
   const { error } = await supabase.auth.signUp({
@@ -803,12 +805,70 @@ export async function signUp(
   if (error) {
     console.error('Sign up error:', error);
     if (error.message.includes('unique constraint') || error.message.includes('already exists')) {
-        return { error: 'Username atau email ini sudah terdaftar. Silakan gunakan yang lain.' };
+        return { error: 'Username atau email ini sudah terdaftar. Silakan gunakan yang lain.', name, username, email };
     }
-    return { error: `Gagal mendaftar: ${error.message}` };
+    return { error: `Gagal mendaftar: ${error.message}`, name, username, email };
   }
 
   return { success: 'Pendaftaran berhasil! Anda akan diarahkan ke halaman login.' };
+}
+
+/**
+ * Mengirim email reset password.
+ */
+export async function requestPasswordReset(
+  prevState: ForgotPasswordFormState,
+  formData: FormData
+): Promise<ForgotPasswordFormState> {
+  const email = formData.get('email') as string;
+
+  if (!email) {
+    return { error: 'Email wajib diisi.', email };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?type=recovery`,
+  });
+
+  if (error) {
+    console.error('Password reset error:', error);
+    return { error: `Gagal mengirim email reset: ${error.message}`, email };
+  }
+
+  return { success: 'Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.' };
+}
+
+/**
+ * Mereset password setelah user klik link dari email.
+ */
+export async function resetPassword(
+  prevState: ResetPasswordFormState,
+  formData: FormData
+): Promise<ResetPasswordFormState> {
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!password) {
+    return { error: 'Password wajib diisi.' };
+  }
+  if (password.length < 6) {
+    return { error: 'Password minimal harus 6 karakter.' };
+  }
+  if (password !== confirmPassword) {
+    return { error: 'Password dan konfirmasi password tidak cocok.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    console.error('Reset password error:', error);
+    return { error: `Gagal mereset password: ${error.message}` };
+  }
+
+  return { success: 'Password berhasil diperbarui! Silakan masuk dengan password baru Anda.' };
 }
 
 /**
@@ -822,7 +882,7 @@ export async function signInWithUsername(
   const password = formData.get('password') as string;
 
   if (!username || !password) {
-    return { error: 'Username dan password wajib diisi.' };
+    return { error: 'Username dan password wajib diisi.', username };
   }
   
   const supabase = await createClient();
@@ -836,7 +896,7 @@ export async function signInWithUsername(
 
   if (profileError || !profile || !profile.email) {
     console.error('Profile not found or email missing for username:', username, profileError);
-    return { error: 'Username atau password salah.' };
+    return { error: 'Username atau password salah.', username };
   }
   
   // Langkah 2: Lakukan login menggunakan email yang ditemukan
@@ -846,7 +906,7 @@ export async function signInWithUsername(
   });
 
   if (signInError) {
-    return { error: 'Username atau password salah.' };
+    return { error: 'Username atau password salah.', username };
   }
 
   // Langkah 3: Jika berhasil, redirect

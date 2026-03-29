@@ -12,9 +12,9 @@ export interface Product {
   features?: string[];
   featuredImage?: { asset: any; alt?: string };
   gallery?: { asset: any; alt: string }[];
-
   // --- [TAMBAHKAN BARIS INI] ---
   supabaseClassId?: string; // Jadikan opsional (?) untuk keamanan
+  educationLevel?: 'sd' | 'smp' | 'sma' | 'all'; // Untuk filter jenjang
 
   // Field legacy (jika masih ada di tipe Anda)
   pricelistImage?: { asset: any };

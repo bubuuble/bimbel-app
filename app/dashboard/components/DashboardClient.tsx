@@ -125,10 +125,10 @@ export default function DashboardLayoutClient({ userProfile }: { userProfile: Us
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-indigo-50/60 border-r border-indigo-100">
       {/* Logo area */}
-      <div className="flex h-16 items-center flex-shrink-0 gap-2 px-5 border-b border-indigo-100 bg-white/70">
+      <div className="flex h-16 items-center flex-shrink-0 gap-3 px-6 border-b border-indigo-100 bg-white/70">
         <Image src="/image/logo/logo1.png" alt="Logo" width={32} height={32} className="w-8 h-8 object-contain" />
-        <span className="font-sans font-extrabold text-lg text-slate-800">
-          Bimbel<span className="text-secondary"> Master</span>
+        <span className="font-sans font-extrabold text-lg">
+          <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
         </span>
       </div>
 

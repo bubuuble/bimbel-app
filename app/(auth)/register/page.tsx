@@ -59,7 +59,7 @@ export default function RegisterPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
             <Image src="/image/logo/logo1.png" alt="Bimbel Master" width={40} height={40} className="rounded-xl object-contain" />
-            <span className="font-bold text-xl text-blue-900">Bimbel <span className="text-secondary">Master</span></span>
+            <span className="font-bold text-xl text-blue-900">BIMBEL <span className="text-secondary">MASTER</span></span>
           </div>
           <h1 className="text-4xl font-bold leading-tight mb-4 text-blue-950">
             Mulai Perjalanan
@@ -88,91 +88,96 @@ export default function RegisterPage() {
       {/* Right: Form panel */}
       <div className="flex flex-col items-center justify-center p-8 bg-transparent">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
-            <Image src="/image/logo/logo1.png" alt="Bimbel Master" width={36} height={36} className="rounded-xl object-contain" />
-            <span className="font-bold text-lg text-gray-900">Bimbel Master</span>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Buat Akun Baru</h2>
-            <p className="text-gray-500 mt-1 text-sm">Isi data di bawah dan mulai belajar hari ini</p>
-          </div>
-
-          <form action={formAction} className="space-y-4">
-            {state?.error && (
-              <Alert variant="destructive" className="rounded-lg">
-                <AlertDescription className="text-sm">{state.error}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">Nama Lengkap</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                required
-                placeholder="Nama Lengkap Anda"
-                className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              />
+          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8">
+            {/* Mobile logo */}
+            <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
+              <Image src="/image/logo/logo1.png" alt="Bimbel Master" width={36} height={36} className="rounded-xl object-contain" />
+              <span className="font-bold text-lg text-gray-900">BIMBEL MASTER</span>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="username" className="text-sm font-medium text-gray-700">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                required
-                placeholder="Username"
-                className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              />
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">Buat Akun Baru</h2>
+              <p className="text-gray-500 mt-1 text-sm">Isi data di bawah dan mulai belajar hari ini</p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                placeholder="email@example.com"
-                className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+            <form action={formAction} className="space-y-4">
+              {state?.error && (
+                <Alert variant="destructive" className="rounded-lg">
+                  <AlertDescription className="text-sm">{state.error}</AlertDescription>
+                </Alert>
+              )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
-              <div className="relative">
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">Nama Lengkap</Label>
                 <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  id="name"
+                  name="name"
+                  type="text"
                   required
-                  placeholder="Minimal 6 karakter"
-                  className="h-11 rounded-lg border-blue-300 pr-10 focus:border-blue-500 focus:ring-blue-500"
+                  defaultValue={state?.name || ''}
+                  placeholder="Nama Lengkap Anda"
+                  className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
-            </div>
 
-            <SubmitButton />
-          </form>
+              <div className="space-y-1.5">
+                <Label htmlFor="username" className="text-sm font-medium text-gray-700">Username</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  defaultValue={state?.username || ''}
+                  placeholder="Username"
+                  className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Sudah punya akun?{' '}
-            <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700">
-              Masuk di sini
-            </Link>
-          </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  defaultValue={state?.email || ''}
+                  placeholder="email@example.com"
+                  className="h-11 rounded-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Minimal 6 karakter"
+                    className="h-11 rounded-lg border-blue-300 pr-10 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <SubmitButton />
+            </form>
+
+            <p className="mt-6 text-center text-sm text-gray-500">
+              Sudah punya akun?{' '}
+              <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-700">
+                Masuk di sini
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

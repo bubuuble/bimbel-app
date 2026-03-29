@@ -38,6 +38,23 @@ export default defineType({
       },
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: 'educationLevel',
+      title: 'Jenjang Pendidikan',
+      type: 'string',
+      group: 'basic',
+      description: 'Filter jenjang pendidikan (SD/SMP/SMA)',
+      options: {
+        list: [
+          { title: 'SD', value: 'sd' },
+          { title: 'SMP', value: 'smp' },
+          { title: 'SMA', value: 'sma' },
+          { title: 'Semua Jenjang', value: 'all' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'all'
+    }),
 
     // Content & Description
     defineField({

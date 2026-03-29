@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -62,9 +62,10 @@ export default function Header() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
-    { href: "/product", label: "Product" }, 
+    { href: "/product", label: "Program" },
     { href: "/blog", label: "Blog" },
     { href: "/testimoni", label: "Testimonials" },
+    { href: "/gallery", label: "Gallery" },
   ];
 
   return (
@@ -86,8 +87,8 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1 md:gap-1.5 shrink-0">
           <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain" />
-          <span className="font-sans font-extrabold text-base md:text-xl text-foreground">
-            Bimbel<span className="text-secondary"> Master</span>
+          <span className="font-sans font-extrabold text-base md:text-xl">
+            <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
           </span>
         </Link>
 
@@ -144,8 +145,8 @@ export default function Header() {
           <div className="flex flex-col h-full">
             {/* Drawer header */}
             <div className="px-6 py-5 border-b border-border">
-              <span className="font-sans font-extrabold text-xl text-foreground">
-                Bimbel<span className="text-secondary"> Master</span>
+              <span className="font-sans font-extrabold text-xl">
+                <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
               </span>
             </div>
 

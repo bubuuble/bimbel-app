@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,15 +9,16 @@ export default function Footer() {
 
   const menuLinks = [
     { href: '/', label: 'Beranda' },
-    { href: '/product', label: 'Produk' },
+    { href: '/product', label: 'Program' },
     { href: '/about', label: 'Tentang Kami' },
+    { href: '/gallery', label: 'Gallery' },
     { href: '/privacy', label: 'Kebijakan Privasi' },
   ];
 
   const socialLinks = [
     { href: 'https://facebook.com', icon: Facebook, label: 'Facebook' },
     { href: 'https://instagram.com', icon: Instagram, label: 'Instagram' },
-    { href: 'https://wa.me/', icon: MessageCircle, label: 'WhatsApp' },
+    { href: 'https://wa.me/6281282641074', icon: MessageCircle, label: 'WhatsApp' },
   ];
 
   return (
@@ -28,12 +29,10 @@ export default function Footer() {
           {/* Column 1: Brand */}
           <div className="space-y-5 md:col-span-1">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center bg-primary/20">
-                <Image src="/image/logo/logo1.png" alt="Logo" width={36} height={36} className="opacity-90" />
-              </div>
+              <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
               <div className="flex flex-col">
-                <span className="font-sans font-extrabold text-lg leading-tight text-foreground">
-                  Bimbel<span className="text-secondary">Master</span>
+                <span className="font-sans font-extrabold text-lg leading-tight">
+                  <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
                 </span>
                 <span className="font-sans text-[10px] tracking-widest uppercase text-foreground/60 font-semibold">
                   Get The Simple Learning

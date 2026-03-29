@@ -22,6 +22,8 @@ import {
   Shield,
   TrendingUp,
   Heart,
+  AlertCircle,
+  X,
 } from "lucide-react";
 
 const IconMap: Record<string, any> = {
@@ -97,6 +99,9 @@ const PRODUCTS_QUERY = groq`*[_type == "product" && featured == true] | order(or
 }`;
 const TESTIMONIALS_QUERY = groq`*[_type == "testimonial" && featured == true][0..5]{
   _id, _type, name, testimonial, image{ asset, alt }, school, program, rating, featured, publishedAt
+}`;
+const PRESTASI_QUERY = groq`*[_type == "prestasiSiswa" && featured == true][0..5]{
+  _id, _type, name, achievementTitle, universityAccepted, competitionWon, description, image{ asset, alt }, school, program, year, featured, publishedAt
 }`;
 
 /* ─────────── Static logos ─────────── */
@@ -299,21 +304,26 @@ export default function HomePage() {
   const [landing, setLanding] = useState<LandingData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [prestasi, setPrestasi] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
   const [facilityIndex, setFacilityIndex] = useState(0);
   const [thumbOffset, setThumbOffset] = useState(0);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     Promise.all([
       client.fetch(LANDING_QUERY),
       client.fetch(PRODUCTS_QUERY),
       client.fetch(TESTIMONIALS_QUERY),
+      client.fetch(PRESTASI_QUERY),
     ])
-      .then(([l, p, t]) => {
+      .then(([l, p, t, pr]) => {
         setLanding(l);
         setProducts(p || []);
         setTestimonials(t || []);
+        setPrestasi(pr || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -358,7 +368,20 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <Image
+              src="/image/logo/logo1.png"
+              alt="Loading"
+              width={48}
+              height={48}
+              className="animate-pulse"
+            />
+          </div>
+          <div className="w-48 h-1.5 rounded-full bg-primary/20 overflow-hidden">
+            <div className="h-full rounded-full bg-primary animate-loading-bar" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -446,122 +469,239 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
-          1.5  LEAD CAPTURE  —  CTA singkat + email form
+          1.5  LEAD CAPTURE / SECONDARY HERO
       ══════════════════════════════════════════════════════════════ */}
-      <motion.section
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "0px 0px -60px 0px" }}
-        transition={{ duration: 0.7, ease: "easeOut" }}
-        className="pt-6 pb-2 md:pt-10 md:pb-7 px-3 sm:px-8"
-      >
-        <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 shadow-lg shadow-primary/5 backdrop-blur-sm py-4 md:py-20">
-          {/* Decorative blobs — hidden on mobile for cleanliness */}
-          <div className="hidden md:block absolute top-[-70px] left-[-70px] z-0 w-72 h-72 rounded-full pointer-events-none bg-white/40" />
-          <div className="hidden md:block absolute bottom-[-70px] right-[-70px] w-80 h-80 rounded-full pointer-events-none bg-white/40" />
+      <>
+  <motion.section
+    initial={{ opacity: 0, y: 24 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+    transition={{ duration: 0.7, ease: "easeOut" }}
+    className="relative w-full z-10 overflow-visible"
+  >
+    {/* Colored Background */}
+    <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 z-0" />
 
-          {/* ── MOBILE layout (< md) ── */}
-          <div className="md:hidden relative z-10 flex flex-col items-center text-center px-2 gap-2">
-            {/* Headline */}
-            <div>
-              <p className="font-extrabold text-lg leading-snug text-foreground">
-                Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
-              </p>
-              <p className="font-extrabold text-2xl leading-tight text-secondary/80 mt-0.5">
-                Master Solusinya!
-              </p>
-            </div>
+    {/* Soft floating background blobs */}
+    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4 pointer-events-none z-0" />
+    <div className="absolute bottom-1/2 left-0 w-[400px] h-[400px] bg-rose-400/20 dark:bg-rose-600/10 rounded-full blur-3xl -translate-x-1/3 pointer-events-none z-0" />
 
-            {/* Description — condensed */}
-            <p className="text-foreground/55 text-[11px] leading-relaxed max-w-[340px]">
-              Metode{" "}
-              <span className="font-semibold italic text-foreground/75">The Simple Learning</span>
-              {" "}dibimbing tutor berpengalaman alumni UI & PTN favorit untuk meningkatkan nilai dan tembus PTN impian.
-            </p>
-
-            {/* Form — inline pill on mobile */}
-            <form
-              className="w-full"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
-                window.location.href = `/register?email=${encodeURIComponent(email)}`;
-              }}
-            >
-              <div className="flex items-center bg-white rounded-full border border-border/30 shadow-sm p-1.5">
-                <input
-                  type="email"
-                  placeholder="Masukkan email Anda"
-                  required
-                  className="flex-1 px-3 py-2 bg-transparent text-foreground placeholder:text-foreground/40 text-xs focus:outline-none min-w-0"
-                />
-                <button
-                  type="submit"
-                  className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-xs hover:bg-primary/90 active:scale-95 transition-all shadow-md whitespace-nowrap"
-                >
-                  Mulai Sekarang
-                </button>
+    {/* Hero content — extra pb to make room for overlapping menu */}
+    <div className="container mx-auto px-4 sm:px-8 lg:px-12 relative z-30 pt-16 md:pt-24 pb-24 md:pb-28 lg:pb-32 flex flex-col md:flex-row items-center gap-10 md:gap-16">
+      
+      {/* Left Column: Text & Form */}
+      <div className="flex-1 space-y-4 md:space-y-6 text-left w-full z-10 pl-10">
+        <h2 className="font-extrabold text-3xl md:text-4xl lg:text-[44px] leading-[1.2] text-foreground drop-shadow-sm max-w-2xl">
+          Bimbel Online & Offline Terbesar, Terlengkap, dan Terbukti di Indonesia
+        </h2>
+        
+        <div className="pt-2">
+          <form
+            className="w-full max-w-lg relative z-20"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!phone || phone.length < 9) {
+                setPhoneError('ERROR: Cannot read "phone input" (nomor HP harus minimal 9 digit). Mohon periksa kembali.');
+                return;
+              }
+              setPhoneError(null);
+              window.open(`https://wa.me/6281282641074?text=Halo%20saya%20tertarik%20dengan%20diskon%20spesial.%20Nomor%20HP:%20%2B62${phone}`);
+            }}
+          >
+            <label className="block text-foreground/90 font-bold text-sm md:text-base mb-3 drop-shadow-sm">
+              Diskon spesial untukmu dengan isi nomor HP sekarang
+            </label>
+            
+            <div className="flex items-center bg-white dark:bg-card rounded-full p-1.5 shadow-xl shadow-primary/5 w-full hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/40">
+              <div className="pl-4 pr-3 font-extrabold text-foreground/80 border-r border-border/40">
+                +62
               </div>
-            </form>
-
-            {/* Badge */}
-            <div className="flex items-center gap-1 bg-white/60 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/50 shadow-sm mt-1">
-              <CheckCircle className="w-2.5 h-2.5 text-emerald-500 flex-shrink-0" />
-              <span className="text-[8px] font-bold tracking-widest uppercase text-foreground/60">
-                Konsultasi Gratis
-              </span>
+              <input
+                type="tel"
+                name="phone"
+                id="phone"
+                minLength={9}
+                maxLength={16}
+                placeholder="812xxxx"
+                required
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (phoneError) setPhoneError(null);
+                }}
+                className="flex-1 px-4 py-3 w-full bg-transparent text-foreground placeholder:text-foreground/40 text-sm md:text-base focus:outline-none font-semibold"
+              />
+              <button
+                type="submit"
+                className="flex-shrink-0 bg-[#F97316] hover:bg-[#EA580C] text-white px-5 md:px-7 py-3 rounded-full font-bold text-sm md:text-base transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
+              >
+                Dapatkan Diskon <ArrowRight className="w-4 h-4 hidden sm:block" />
+              </button>
             </div>
-          </div>
 
-          {/* ── DESKTOP layout (≥ md) ── */}
-          <div className="hidden md:flex relative z-10 container mx-auto px-6 flex-col items-center text-center gap-6 max-w-5xl">
-            <h2 className="font-extrabold text-6xl leading-tight text-foreground drop-shadow-sm">
-              Sudah Ikut Bimbel Tapi Masih Belum Ngerti?
-              <br />
-              <span className="text-secondary/80 drop-shadow-md text-7xl">
-                Master Solusinya!
-              </span>
-            </h2>
-            <p className="text-foreground/60 text-lg leading-relaxed max-w-3xl">
-              Belajar lebih mudah dengan metode{" "}
-              <span className="font-semibold text-foreground/80 italic">
-                The Simple Learning
-              </span>
-              , dibimbing tutor berpengalaman alumni UI & PTN favorit untuk
-              meningkatkan nilai dan tembus PTN impian.
-            </p>
-            <form
-              className="w-full max-w-xl"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const email = (e.currentTarget.elements[0] as HTMLInputElement).value;
-                window.location.href = `/register?email=${encodeURIComponent(email)}`;
-              }}
-            >
-              <div className="flex items-center bg-white rounded-full border border-border/40 shadow-sm p-1.5">
-                <input
-                  type="email"
-                  placeholder="Masukkan email Anda"
-                  required
-                  className="flex-1 px-4 py-2.5 bg-transparent text-foreground placeholder:text-foreground/40 text-sm focus:outline-none min-w-0"
-                />
-                <button
-                  type="submit"
-                  className="flex-shrink-0 bg-primary text-primary-foreground px-5 py-2.5 rounded-full font-bold text-sm hover:bg-primary/90 hover:scale-105 transition-all shadow-md whitespace-nowrap"
-                >
-                  Mulai Sekarang
-                </button>
-              </div>
-            </form>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-foreground/50">
-                Konsultasi Gratis
-              </span>
-            </div>
-          </div>
+            {phoneError && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mt-4 relative"
+              >
+                <div className="bg-white dark:bg-card border border-red-200 dark:border-red-900 rounded-2xl px-5 py-4 shadow-lg shadow-red-500/5 dark:shadow-red-900/10">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-sm leading-relaxed">
+                        <span className="font-bold text-red-500">ERROR:</span>{" "}
+                        <span className="text-foreground/70">Cannot read</span>{" "}
+                        <span className="font-semibold text-foreground bg-red-50 dark:bg-red-950/50 px-1.5 py-0.5 rounded">&quot;{phone}&quot;</span>
+                      </p>
+                      <p className="font-mono text-sm leading-relaxed mt-0.5">
+                        <span className="text-foreground/70">(nomor HP harus minimal 9 digit).</span>{" "}
+                        <span className="text-foreground font-medium">Mohon periksa kembali.</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setPhoneError(null)}
+                      className="text-foreground/30 hover:text-foreground/60 transition-colors flex-shrink-0 mt-0.5"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </form>
         </div>
-      </motion.section>
+      </div>
+
+      {/* Right Column: Dynamic Image */}
+      <div className="flex-1 w-full flex justify-center md:justify-end relative z-40 mt-8 md:mt-0 pointer-events-none">
+        <picture className="w-full max-w-[320px] md:max-w-[420px] lg:max-w-xl drop-shadow-2xl relative block">
+          <source srcSet="https://roboguru-forum-cdn.ruangguru.com/image/faf3c4c1-14cd-45bd-aa59-f8017155be37.png" media="(max-width: 768px)" />
+          <img 
+            src="https://roboguru-forum-cdn.ruangguru.com/image/c8d6923b-c6f1-4a02-a7ad-b7e9d268b138.png" 
+            className="w-full h-auto block relative z-10 hover:scale-[1.03] transition-transform duration-500 ease-out" 
+            alt="Student Success" 
+            loading="lazy" 
+          />
+        </picture>
+      </div>
+    </div>
+
+    {/* ── Action Menu Desktop: absolute di bottom, overlap ke bawah ── */}
+    <div className="absolute bottom-0 translate-y-1/2 left-0 right-0 px-6 lg:px-12 z-50 hidden lg:block">
+      <div className="container mx-auto">
+        <div className="bg-white dark:bg-card rounded-3xl shadow-2xl shadow-black/10 border border-border/50 p-2 flex items-stretch overflow-hidden w-full divide-x divide-border/20">
+          
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all rounded-l-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <Target className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">Persiapan</p>
+                <p className="text-sm font-bold text-foreground">UTBK-SNBT</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">Bimbel</p>
+                <p className="text-sm font-bold text-foreground">Tatap Muka</p>
+              </div>
+            </div>
+          </Link>
+          
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <Globe className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">Bimbel Online</p>
+                <p className="text-sm font-bold text-foreground">Interaktif</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <BookOpen className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">Video Belajar</p>
+                <p className="text-sm font-bold text-foreground">& Soal</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">English</p>
+                <p className="text-sm font-bold text-foreground">Academy</p>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 dark:hover:bg-foreground/5 transition-all rounded-r-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                <TrendingUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </div>
+              <div className="text-left leading-tight hidden xl:block">
+                <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider">Semua</p>
+                <p className="text-sm font-bold text-foreground">Program</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </div>
+  </motion.section>
+
+  {/* Spacer desktop: dorong konten berikutnya ke bawah sesuai setengah tinggi menu (~40px) */}
+  <div className="hidden lg:block h-16" />
+
+  {/* Mobile menu — di luar section, normal flow */}
+  <div className="lg:hidden px-4 sm:px-8 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 py-6">
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex flex-shrink-0 items-center justify-center"><Target className="w-5 h-5 text-red-600 dark:text-red-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">UTBK-SNBT</span>
+    </Link>
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex flex-shrink-0 items-center justify-center"><Users className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Tatap Muka</span>
+    </Link>
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-cyan-100 dark:bg-cyan-500/20 flex flex-shrink-0 items-center justify-center"><Globe className="w-5 h-5 text-cyan-600 dark:text-cyan-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Online Interaktif</span>
+    </Link>
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 flex flex-shrink-0 items-center justify-center"><BookOpen className="w-5 h-5 text-rose-600 dark:text-rose-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Video Belajar</span>
+    </Link>
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex flex-shrink-0 items-center justify-center"><GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">English Academy</span>
+    </Link>
+    <Link href="/product" className="bg-white dark:bg-card p-3 rounded-2xl shadow-sm border border-border/40 flex flex-col items-center text-center gap-2 hover:bg-gray-50 dark:hover:bg-foreground/5 hover:scale-105 transition-all">
+      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-500/20 flex flex-shrink-0 items-center justify-center"><TrendingUp className="w-5 h-5 text-gray-600 dark:text-gray-400" /></div>
+      <span className="text-[11px] sm:text-xs font-bold text-foreground leading-tight">Semua Program</span>
+    </Link>
+  </div>
+</>
 
       {/* ══════════════════════════════════════════════════════════════
           FIRST GROUP (Logos, Features, Products)
@@ -645,37 +785,37 @@ export default function HomePage() {
                   const DynamicIcon =
                     iconMap[i] || f.Icon || getIcon(f.icon?.trim()) || BookOpen;
 
-                  // Warna pastel lembut
+                  // Gradient backgrounds with white icons
                   const colorSchemes = [
                     {
                       bg: "#FFF8E8",
                       color: "#B8934A",
-                      iconBg: "rgba(184, 147, 74, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #F59E0B, #D97706)",
                     },
                     {
                       bg: "#E8F8F3",
                       color: "#5BA08A",
-                      iconBg: "rgba(91, 160, 138, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #10B981, #059669)",
                     },
                     {
                       bg: "#FEF0EE",
                       color: "#D4806A",
-                      iconBg: "rgba(212, 128, 106, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #F87171, #DC2626)",
                     },
                     {
                       bg: "#E8F4F8",
                       color: "#4A8FA8",
-                      iconBg: "rgba(74, 143, 168, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #38BDF8, #0284C7)",
                     },
                     {
                       bg: "#EBF4FF",
                       color: "#5B8FC4",
-                      iconBg: "rgba(91, 143, 196, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
                     },
                     {
                       bg: "#F3EEFF",
                       color: "#9B7EC8",
-                      iconBg: "rgba(155, 126, 200, 0.10)",
+                      iconGradient: "linear-gradient(135deg, #A855F7, #7C3AED)",
                     },
                   ];
 
@@ -692,15 +832,14 @@ export default function HomePage() {
                       }}
                     >
                       <div
-                        className="w-9 h-9 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0"
+                        className="w-9 h-9 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
                         style={{
-                          backgroundColor: scheme.iconBg,
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                          background: scheme.iconGradient,
+                          boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
                         }}
                       >
                         <DynamicIcon
-                          className="w-4 h-4 md:w-7 md:h-7"
-                          style={{ color: scheme.color }}
+                          className="w-4 h-4 md:w-7 md:h-7 text-white"
                         />
                       </div>
                       <span
@@ -774,9 +913,6 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════════ */}
       <section className="relative w-full overflow-hidden">
         <div className="relative z-10 w-full">
-          {/* ══════════════════════════════════════════════════════════════
-              5.  WHY BIMBEL MASTER  —  image gallery + features
-          ══════════════════════════════════════════════════════════════ */}
           {/* Section heading — outside the blue container */}
           <div className="text-center mb-8 md:mb-10 space-y-3 px-4">
             <StyledText as="h2" data={{ text: 'Kenapa', highlightText: 'Bimbel Master?' }} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground" />
@@ -793,87 +929,100 @@ export default function HomePage() {
             className="pb-12"
           >
             <div className="w-full overflow-hidden px-4 md:px-12">
-              <div className="grid md:grid-cols-2 gap-7 md:gap-8   lg:gap-1 items-center">
-                {/* Left: main image + thumbnails */}
-                <div className="space-y-2">
-                  <div className="mx-auto max-w-md md:max-w-lg lg:max-w-xl rounded-xl md:rounded-2xl overflow-hidden w-full flex items-center justify-center bg-gray-100/50 dark:bg-gray-800/50 shadow-xl border border-black/5 dark:border-white/5">
-                    <img
-                      key={facilityIndex}
-                      src={FACILITY_IMAGES[facilityIndex].src}
-                      alt={FACILITY_IMAGES[facilityIndex].alt}
-                      className="w-full h-auto object-contain transition-opacity duration-300"
-                    />
+              <div className="grid md:grid-cols-2 gap-10 md:gap-12 lg:gap-16 items-center">
+                
+                {/* Left: checklist + button */}
+                <div className="space-y-6 md:space-y-8 order-2 md:order-1">
+                  <div className="space-y-4">
+                    <h2 className="font-extrabold text-3xl md:text-4xl text-foreground leading-snug">
+                      Fasilitas Bimbel Master
+                    </h2>
+                    <ul className="space-y-3 md:space-y-4">
+                      {WHY_ITEMS.map((item: any, i: number) => (
+                        <li key={i} className="flex items-start gap-4 p-3 -mx-3 rounded-2xl hover:bg-foreground/5 border border-transparent transition-all">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 pt-0.5">
+                            <span className="block font-bold text-foreground text-lg mb-1">{item.title}</span>
+                            <span className="block text-foreground/70 text-sm md:text-base leading-relaxed">
+                              {item.desc || item.description}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="pt-2">
+                    <Link
+                      href="/product"
+                      className="inline-flex items-center justify-center gap-2 font-bold py-3.5 px-8 rounded-full transition-all hover:scale-105 shadow-xl shadow-blue-500/20 text-white text-base bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                    >
+                      Mulai Belajar Sekarang <ArrowRight className="w-5 h-5" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Right: main image + thumbnails */}
+                <div className="space-y-6 order-1 md:order-2 relative">
+                  <div className="absolute -inset-4 md:-inset-8 bg-gradient-to-tr from-blue-100/40 to-rose-100/40 rounded-[3rem] -z-10 blur-2xl opacity-70"></div>
+                  
+                  <div className="mx-auto rounded-[1.5rem] overflow-hidden w-full flex items-center justify-center bg-white shadow-2xl border border-border/40 p-2 md:p-3 relative group">
+                    <div className="w-full relative rounded-xl overflow-hidden bg-gray-50/50">
+                      <img
+                        key={facilityIndex}
+                        src={FACILITY_IMAGES[facilityIndex].src}
+                        alt={FACILITY_IMAGES[facilityIndex].alt}
+                        className="w-full aspect-[4/3] md:aspect-auto md:h-[400px] object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
                   </div>
 
-                  {/* Thumbnails — 3 visible + arrow navigation */}
-                  <div className="mx-auto max-w-sm md:max-w-md flex items-center gap-2">
+                  {/* Thumbnails */}
+                  <div className="mx-auto max-w-sm flex items-center justify-center gap-4">
                     <button
                       onClick={() => setThumbOffset((o) => Math.max(0, o - 1))}
                       disabled={thumbOffset === 0}
-                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-border/50 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white transition-all text-foreground"
                       aria-label="Previous thumbnails"
                     >
-                      <ChevronLeft className="w-4 h-4 text-white" />
+                      <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <div className="flex gap-1.5 flex-1">
+
+                    <div className="flex gap-3">
                       {FACILITY_IMAGES.slice(thumbOffset, thumbOffset + 3).map((img, j) => {
                         const i = thumbOffset + j;
                         return (
                           <button
                             key={i}
                             onClick={() => setFacilityIndex(i)}
-                            className={`flex flex-col flex-1 rounded-lg overflow-hidden border-2 transition-all duration-200 bg-gray-100/50 dark:bg-gray-800/50 ${
-                              i === facilityIndex
-                                ? "border-primary ring-2 ring-primary/30 scale-105"
-                                : "border-foreground/20 opacity-60 hover:opacity-90 hover:border-foreground/50"
-                            }`}
+                            className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 w-16 h-12 md:w-20 md:h-14 ${i === facilityIndex
+                                ? "border-primary scale-110 shadow-md z-10"
+                                : "border-transparent opacity-60 hover:opacity-100"
+                              }`}
                             aria-label={img.alt}
                           >
                             <img
                               src={img.src}
                               alt={img.alt}
-                              className="w-full h-auto object-contain"
+                              className="absolute inset-0 w-full h-full object-cover"
                             />
                           </button>
                         );
                       })}
                     </div>
+
                     <button
                       onClick={() => setThumbOffset((o) => Math.min(FACILITY_IMAGES.length - 3, o + 1))}
                       disabled={thumbOffset >= FACILITY_IMAGES.length - 3}
-                      className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-blue-800 hover:bg-blue-700 disabled:opacity-30 transition-all"
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-border/50 shadow-sm hover:bg-gray-50 disabled:opacity-30 disabled:hover:bg-white transition-all text-foreground"
                       aria-label="Next thumbnails"
                     >
-                      <ChevronRight className="w-4 h-4 text-white" />
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Right: checklist + buttons */}
-                <div className="space-y-3 md:space-y-6">
-                  <h2 className="font-bold text-base md:text-3xl text-foreground leading-snug">
-                    Fasilitas Bimbel Master
-                  </h2>
-                  <ul className="space-y-2.5 md:space-y-4">
-                    {WHY_ITEMS.map((item: any, i: number) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="min-w-0 break-words text-foreground/80 text-xs md:text-base leading-relaxed">
-                          {item.desc || item.description}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="space-y-2 pt-1">
-                    <Link
-                      href="/product"
-                      className="block w-full text-center font-bold py-2.5 md:py-4 rounded-full transition-all hover:scale-[1.02] shadow-md text-white text-xs md:text-base"
-                      style={{ background: "#FB4C4C" }}
-                    >
-                      Gabung Sekarang
-                    </Link>
-                  </div>
-                </div>
               </div>
             </div>
           </motion.section>
@@ -911,23 +1060,64 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                  <TestimonialGrid
-                    tilted
-                    testimonials={testimonials.map((t) => ({
-                      ...t,
-                      imageUrl: t.image
-                        ? urlForImage(t.image).width(400).url()
-                        : undefined,
-                      imageAlt: t.image?.alt || t.name,
-                      _type: t._type || "testimonial",
-                      featured: t.featured || false,
-                      publishedAt: t.publishedAt || new Date().toISOString(),
-                      rating: t.rating || 5,
-                    }))}
-                  />
-                </div>
+              <div className="space-y-16">
+                {/* Prestasi Siswa Map (New Schema) */}
+                {prestasi.length > 0 && (
+                  <div>
+                    <h3 className="text-2xl font-bold text-center mb-8 text-foreground">
+                      Prestasi Gemilang Siswa Kami
+                    </h3>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                        <TestimonialGrid
+                          tilted
+                          testimonials={prestasi.map((p) => ({
+                            _id: p._id,
+                            _type: "testimonial", // map to testimonial for UI grid compatibility
+                            name: p.name,
+                            testimonial: p.description || `${p.achievementTitle} ${p.universityAccepted ? 'di ' + p.universityAccepted : ''} ${p.competitionWon ? 'pada ' + p.competitionWon : ''}`,
+                            imageUrl: p.image
+                              ? urlForImage(p.image).width(400).url()
+                              : undefined,
+                            imageAlt: p.image?.alt || p.name,
+                            school: p.school,
+                            program: p.program || p.year,
+                            rating: 5,
+                            featured: p.featured || false,
+                            publishedAt: p.publishedAt || new Date().toISOString(),
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Original Testimonials Map */}
+                {testimonials.length > 0 && (
+                  <div>
+                    <h3 className="text-2xl font-bold text-center mb-8 text-foreground">
+                      Apa Kata Siswa Tentang Bimbel Master?
+                    </h3>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                        <TestimonialGrid
+                          tilted
+                          testimonials={testimonials.map((t) => ({
+                            ...t,
+                            imageUrl: t.image
+                              ? urlForImage(t.image).width(400).url()
+                              : undefined,
+                            imageAlt: t.image?.alt || t.name,
+                            _type: t._type || "testimonial",
+                            featured: t.featured || false,
+                            publishedAt: t.publishedAt || new Date().toISOString(),
+                            rating: t.rating || 5,
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="text-center mt-10">
@@ -988,6 +1178,31 @@ export default function HomePage() {
           </motion.section>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          FLOATING WHATSAPP BUTTON
+      ══════════════════════════════════════════════════════════════ */}
+      <a
+        href="https://wa.me/6281282641074?text=Halo%20Bimbel%20Master%2C%20saya%20ingin%20bertanya%20tentang%20program%20bimbingan%20belajar."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 group"
+        aria-label="Chat WhatsApp"
+      >
+        <div className="relative">
+          {/* Pulse ring */}
+          <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-20" />
+          {/* Button */}
+          <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-xl shadow-green-500/30 group-hover:scale-110 transition-transform duration-300">
+            <MessageCircle className="w-7 h-7 md:w-8 md:h-8 text-white" />
+          </div>
+          {/* Tooltip */}
+          <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-white rounded-xl px-4 py-2 shadow-lg border border-border/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+            <p className="text-sm font-semibold text-foreground">Chat dengan kami!</p>
+            <div className="absolute right-[-6px] top-1/2 -translate-y-1/2 w-3 h-3 bg-white rotate-45 border-r border-b border-border/50" />
+          </div>
+        </div>
+      </a>
     </main>
   );
 }
