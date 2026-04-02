@@ -109,21 +109,18 @@ export default function GalleryPage() {
     if (lightboxIndex !== null) setLightboxIndex((lightboxIndex + 1) % filtered.length)
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-          <p className="text-foreground/70">Memuat gallery...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <main className="overflow-x-hidden min-h-screen bg-background">
+      {/* Title */}
+      <section className="pt-24 md:pt-32 pb-2 px-2 md:px-4 text-center">
+        <h1 className="font-extrabold text-3xl md:text-5xl text-primary font-sans tracking-tight uppercase drop-shadow-sm">Master Gallery</h1>
+        <p className="text-foreground/70 text-xs md:text-lg font-medium mt-1 md:mt-2 max-w-2xl mx-auto px-4">
+          Lihat momen-momen berharga dari kegiatan belajar mengajar, fasilitas, dan prestasi siswa Bimbel Master.
+        </p>
+      </section>
+
       {/* Hero Banner Slider */}
-      <section className="pt-24 pb-4 px-4 relative group/slider">
+      <section className="pt-4 pb-4 px-1 md:px-4 relative group/slider">
         <div className="container mx-auto max-w-6xl relative">
           
           {/* Navigation Buttons (Desktop only or hidden on mobile) */}
@@ -182,9 +179,9 @@ export default function GalleryPage() {
       </section>
 
       {/* Filter and Title */}
-      <section className="py-4 px-4 pb-2">
+      <section className="py-4 px-2 md:px-4 pb-2">
         <div className="container mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex justify-between items-center w-full">
+          <div className="flex justify-between items-center w-full px-1 md:px-0">
             <h2 className="text-2xl md:text-3xl font-bold font-sans text-foreground drop-shadow-sm">All Photos</h2>
             <button 
               onClick={() => setShowFilters(!showFilters)}
@@ -196,7 +193,7 @@ export default function GalleryPage() {
           
           {/* Expanded Filters */}
           {showFilters && (
-            <div className="flex flex-wrap justify-end gap-2 w-full mt-2 md:mt-0 animate-in fade-in slide-in-from-top-2">
+            <div className="flex flex-wrap justify-end gap-2 w-full mt-2 md:mt-0 animate-in fade-in slide-in-from-top-2 px-1 md:px-0">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat.value}
@@ -216,7 +213,7 @@ export default function GalleryPage() {
       </section>
 
       {/* Gallery Grid */}
-      <section className="pb-20 px-4 pt-2">
+      <section className="pb-20 px-1 md:px-2 pt-2">
         <div className="container mx-auto">
           {filtered.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
@@ -224,7 +221,7 @@ export default function GalleryPage() {
                 <div
                   key={item._id}
                   className="relative rounded-2xl overflow-hidden shadow-sm cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 aspect-[4/5] sm:aspect-[3/4]"
-                  // onClick={() => openLightbox(index)}
+                  onClick={() => openLightbox(index)}
                 >
                   <Image
                     src={item.image?.asset ? urlForImage(item.image).width(600).url() : (item as any).imageUrl}
@@ -260,6 +257,71 @@ export default function GalleryPage() {
           )}
         </div>
       </section>
+
+      {/* Lightbox Modal */}
+      {lightboxIndex !== null && filtered[lightboxIndex] && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+          onClick={closeLightbox}
+        >
+          {/* Close Button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 md:top-8 md:right-8 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all z-10"
+          >
+            <X className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+
+          {/* Navigation Controls */}
+          {filtered.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevLightbox() }}
+                className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all z-10"
+              >
+                <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextLightbox() }}
+                className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-14 md:h-14 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all z-10"
+              >
+                <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+              </button>
+            </>
+          )}
+
+          {/* Modal Content */}
+          <div 
+            className="w-full max-w-5xl relative flex flex-col items-center animate-in zoom-in-95 duration-300" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative w-full aspect-[4/3] md:aspect-[16/9] lg:aspect-[21/9] rounded-xl md:rounded-2xl overflow-hidden shadow-2xl bg-black/50">
+              <Image
+                src={filtered[lightboxIndex].image?.asset ? urlForImage(filtered[lightboxIndex].image).width(1200).url() : (filtered[lightboxIndex] as any).imageUrl}
+                alt={filtered[lightboxIndex].image?.alt || filtered[lightboxIndex].title}
+                fill
+                unoptimized={!(filtered[lightboxIndex].image?.asset)}
+                className="object-contain"
+              />
+            </div>
+            
+            {/* Detail Texts */}
+            <div className="text-center mt-4 md:mt-6 text-white w-full max-w-3xl">
+              <span className="inline-block mb-2 px-3 py-1 rounded-full text-xs font-bold bg-primary text-primary-foreground uppercase tracking-wider">
+                {filtered[lightboxIndex].category}
+              </span>
+              <h3 className="font-bold text-xl md:text-3xl lg:text-4xl drop-shadow-md">
+                {filtered[lightboxIndex].title}
+              </h3>
+              {filtered[lightboxIndex].description && (
+                <p className="text-white/80 text-sm md:text-base mt-2 leading-relaxed">
+                  {filtered[lightboxIndex].description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
