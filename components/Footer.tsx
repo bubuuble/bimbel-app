@@ -32,7 +32,7 @@ export default function Footer() {
               <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12 object-contain" />
               <div className="flex flex-col">
                 <span className="font-sans font-extrabold text-lg leading-tight">
-                  <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
+                  <span className="text-primary">Bimbel</span><span className="text-secondary"> Master</span>
                 </span>
                 <span className="font-sans text-[10px] tracking-widest uppercase text-foreground/60 font-semibold">
                   Get The Simple Learning
@@ -49,8 +49,8 @@ export default function Footer() {
             <h4 className="font-sans font-bold text-base mb-5 text-primary">Kantor Pusat</h4>
             <div className="font-sans text-sm space-y-1.5 leading-relaxed text-foreground/70">
               <p>Jl. Agus Salim No 30 A-B</p>
-              <p>Sawahan</p>
-              <p>Padang, Sumatera Barat</p>
+              <p>Sawahan, Kota Padang</p>
+              <p>Sumatera Barat</p>
             </div>
           </div>
 

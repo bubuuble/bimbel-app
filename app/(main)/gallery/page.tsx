@@ -1,12 +1,12 @@
 // app/(main)/gallery/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { client } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
 import { urlForImage } from '@/sanity/lib/image'
-import { Loader2, X, Camera, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Loader2, X, Camera, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface GalleryItem {
@@ -31,16 +31,69 @@ const CATEGORIES = [
   { value: 'lainnya', label: 'Lainnya' },
 ]
 
+const DUMMY_ITEMS: any[] = Array.from({ length: 6 }).map((_, i) => ({
+  _id: `dummy-${i}`,
+  title: `Placeholder Foto ${i + 1}`,
+  category: CATEGORIES[(i % (CATEGORIES.length - 1)) + 1].value,
+  description: 'Ini adalah foto placeholder untuk melihat tampilan grid & detail.',
+  imageUrl: `https://picsum.photos/seed/${i + 10}/600/400`,
+}))
+
 export default function GalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
+  const [activeSlide, setActiveSlide] = useState(0)
+  const sliderRef = useRef<HTMLDivElement>(null)
+
+  const bannerImages = [
+    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop"
+  ]
+
+  const scrollToIndex = (index: number) => {
+    if (sliderRef.current && sliderRef.current.children[0]) {
+      const slider = sliderRef.current;
+      const slideElement = slider.children[0] as HTMLElement;
+      // slideElement.offsetWidth doesn't include the gap, assuming gap-4 (16px)
+      const slideWidth = slideElement.offsetWidth + 16;
+      slider.scrollTo({
+        left: index * slideWidth,
+        behavior: 'smooth'
+      });
+      setActiveSlide(index);
+    }
+  }
+
+  const scrollSlider = (direction: 'left' | 'right') => {
+    const newIndex = direction === 'left' 
+      ? (activeSlide > 0 ? activeSlide - 1 : bannerImages.length - 1)
+      : (activeSlide < bannerImages.length - 1 ? activeSlide + 1 : 0);
+    scrollToIndex(newIndex);
+  }
+
+  // Automatically track scroll position for dots
+  const handleScroll = () => {
+    if (sliderRef.current && sliderRef.current.children[0]) {
+      const scrollPosition = sliderRef.current.scrollLeft;
+      const slideElement = sliderRef.current.children[0] as HTMLElement;
+      const slideWidth = slideElement.offsetWidth + 16; // Add gap
+      const newIndex = Math.round(scrollPosition / slideWidth);
+      if (newIndex !== activeSlide && newIndex >= 0 && newIndex < bannerImages.length) {
+        setActiveSlide(newIndex);
+      }
+    }
+  }
 
   useEffect(() => {
     client.fetch(GALLERY_QUERY)
-      .then((data) => { setItems(data || []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then((data) => { setItems(data?.length > 0 ? data : DUMMY_ITEMS); setLoading(false) })
+      .catch(() => { setItems(DUMMY_ITEMS); setLoading(false) })
   }, [])
 
   const filtered = selectedCategory === 'all'
@@ -68,139 +121,145 @@ export default function GalleryPage() {
   }
 
   return (
-    <main className="overflow-x-hidden">
-      {/* Hero */}
-      <section className="relative pt-32 pb-24 px-4 overflow-hidden bg-gradient-to-br from-background via-primary/5 to-secondary/5">
-        <div className="absolute top-[-80px] right-[-80px] w-[400px] h-[400px] rounded-full pointer-events-none bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-[-60px] left-[-60px] w-72 h-72 rounded-full pointer-events-none bg-secondary/10 blur-3xl" />
+    <main className="overflow-x-hidden min-h-screen bg-background">
+      {/* Hero Banner Slider */}
+      <section className="pt-24 pb-4 px-4 relative group/slider">
+        <div className="container mx-auto max-w-6xl relative">
+          
+          {/* Navigation Buttons (Desktop only or hidden on mobile) */}
+          <button 
+            onClick={() => scrollSlider('left')}
+            className="absolute left-2 md:-left-6 lg:-left-12 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 hidden sm:flex border border-border/50"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          
+          <button 
+            onClick={() => scrollSlider('right')}
+            className="absolute right-2 md:-right-6 lg:-right-12 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all opacity-0 group-hover/slider:opacity-100 hidden sm:flex border border-border/50"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
 
-        <div className="container mx-auto text-center relative z-10 space-y-6">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/10 text-primary">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse bg-secondary" />
-            Galeri Foto
-          </span>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-sans font-extrabold leading-tight max-w-4xl mx-auto text-foreground">
-            <span className="text-primary">Gallery</span> Bimbel Master
-          </h1>
-          <p className="text-lg max-w-3xl mx-auto leading-relaxed text-foreground/70">
-            Lihat momen-momen berharga dari kegiatan belajar mengajar, fasilitas, dan prestasi siswa Bimbel Master.
-          </p>
-        </div>
-      </section>
-
-      {/* Category Filters */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto">
-          <div className="flex flex-wrap justify-center gap-3">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.value}
-                onClick={() => setSelectedCategory(cat.value)}
-                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 border-2 ${
-                  selectedCategory === cat.value
-                    ? 'bg-primary border-primary text-primary-foreground shadow-md scale-105'
-                    : 'border-border/50 text-foreground/70 hover:text-primary hover:border-primary/30 hover:scale-105'
-                }`}
+          {/* Slider Container */}
+          <div 
+            ref={sliderRef} 
+            onScroll={handleScroll}
+            className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 scroll-smooth" 
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {bannerImages.map((src, index) => (
+              <div 
+                key={index} 
+                className="relative w-[88%] md:w-[92%] flex-shrink-0 snap-start rounded-2xl md:rounded-3xl overflow-hidden aspect-[16/10] md:aspect-[21/9] lg:aspect-[21/8] shadow-md border border-border/50"
               >
-                {cat.label}
-              </button>
+                <style jsx>{`
+                  div::-webkit-scrollbar { display: none; }
+                `}</style>
+                <Image
+                  src={src}
+                  alt={`Banner promo ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Slider Dots */}
+          <div className="flex justify-center mt-4 gap-2">
+            {bannerImages.map((_, idx) => (
+              <button 
+                key={idx} 
+                onClick={() => scrollToIndex(idx)}
+                className={`h-2 rounded-full transition-all duration-300 ${idx === activeSlide ? 'w-6 bg-primary' : 'w-2 bg-border/50 hover:bg-primary/50'}`} 
+                aria-label={`Go to slide ${idx + 1}`}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Gallery Grid */}
-      <section className="pb-20 px-4">
-        <div className="container mx-auto">
-          {filtered.length > 0 ? (
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-              {filtered.map((item, index) => (
-                <motion.div
-                  key={item._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="break-inside-avoid group cursor-pointer"
-                  onClick={() => openLightbox(index)}
+      {/* Filter and Title */}
+      <section className="py-4 px-4 pb-2">
+        <div className="container mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex justify-between items-center w-full">
+            <h2 className="text-2xl md:text-3xl font-bold font-sans text-foreground drop-shadow-sm">All Photos</h2>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="p-2 rounded-full bg-secondary/20 hover:bg-secondary/40 text-foreground transition-colors"
+            >
+              <SlidersHorizontal className="w-5 h-5 text-primary" />
+            </button>
+          </div>
+          
+          {/* Expanded Filters */}
+          {showFilters && (
+            <div className="flex flex-wrap justify-end gap-2 w-full mt-2 md:mt-0 animate-in fade-in slide-in-from-top-2">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => setSelectedCategory(cat.value)}
+                  className={`px-4 py-1.5 rounded-full font-semibold text-xs transition-all duration-300 border shadow-sm ${
+                    selectedCategory === cat.value
+                      ? 'bg-primary border-primary text-primary-foreground shadow-md'
+                      : 'bg-background border-border/60 text-foreground/80 hover:text-primary hover:border-primary/50'
+                  }`}
                 >
-                  <div className="relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border border-border/50">
-                    <Image
-                      src={urlForImage(item.image).width(600).url()}
-                      alt={item.image?.alt || item.title}
-                      width={600}
-                      height={400}
-                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                      <p className="text-white font-bold text-sm">{item.title}</p>
-                      {item.description && (
-                        <p className="text-white/80 text-xs mt-1 line-clamp-2">{item.description}</p>
-                      )}
-                    </div>
-                    <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm text-primary uppercase">
-                      {item.category}
-                    </div>
-                  </div>
-                </motion.div>
+                  {cat.label}
+                </button>
               ))}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <Camera className="w-16 h-16 mx-auto mb-4 text-primary/20" />
-              <p className="text-foreground/50 font-medium">Belum ada foto di gallery.</p>
             </div>
           )}
         </div>
       </section>
 
-      {/* Lightbox */}
-      {lightboxIndex !== null && filtered[lightboxIndex] && (
-        <div
-          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={closeLightbox}
-        >
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      {/* Gallery Grid */}
+      <section className="pb-20 px-4 pt-2">
+        <div className="container mx-auto">
+          {filtered.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
+              {filtered.map((item, index) => (
+                <div
+                  key={item._id}
+                  className="relative rounded-2xl overflow-hidden shadow-sm cursor-pointer group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 aspect-[4/5] sm:aspect-[3/4]"
+                  // onClick={() => openLightbox(index)}
+                >
+                  <Image
+                    src={item.image?.asset ? urlForImage(item.image).width(600).url() : (item as any).imageUrl}
+                    alt={item.image?.alt || item.title}
+                    fill
+                    unoptimized={!(item.image?.asset)}
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  {/* Overlay Gradient: dark at top for tag readability, dark at bottom for title */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+                  
+                  {/* Top Tag */}
+                  <div className="absolute top-3 left-3 md:top-4 md:left-4">
+                    <span className="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold bg-white/20 backdrop-blur-md text-white uppercase tracking-wide shadow-sm border border-white/20">
+                      {item.category}
+                    </span>
+                  </div>
 
-          {filtered.length > 1 && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); prevLightbox() }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); nextLightbox() }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors z-10"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </>
-          )}
-
-          <div className="max-w-4xl max-h-[85vh] relative" onClick={(e) => e.stopPropagation()}>
-            <Image
-              src={urlForImage(filtered[lightboxIndex].image).width(1200).url()}
-              alt={filtered[lightboxIndex].image?.alt || filtered[lightboxIndex].title}
-              width={1200}
-              height={800}
-              className="rounded-2xl max-h-[75vh] w-auto h-auto object-contain mx-auto"
-            />
-            <div className="text-center mt-4 text-white">
-              <p className="font-bold text-lg">{filtered[lightboxIndex].title}</p>
-              {filtered[lightboxIndex].description && (
-                <p className="text-white/70 text-sm mt-1">{filtered[lightboxIndex].description}</p>
-              )}
+                  {/* Bottom Title */}
+                  <div className="absolute bottom-0 left-0 w-full p-3 md:p-5">
+                    <p className="font-bold text-base md:text-xl text-white drop-shadow-md truncate">
+                      {item.title}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-20">
+              <Camera className="w-16 h-16 mx-auto mb-4 text-primary/30" />
+              <p className="text-foreground/60 font-medium">Belum ada foto di gallery.</p>
+            </div>
+          )}
         </div>
-      )}
+      </section>
     </main>
   )
 }

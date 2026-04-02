@@ -88,7 +88,7 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-1 md:gap-1.5 shrink-0">
           <Image src="/image/logo/logo1.png" alt="Logo" width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain" />
           <span className="font-sans font-extrabold text-base md:text-xl">
-            <span className="text-primary">BIMBEL</span><span className="text-secondary"> MASTER</span>
+            <span className="text-primary">Bimbel</span><span className="text-secondary"> Master</span>
           </span>
         </Link>
 
