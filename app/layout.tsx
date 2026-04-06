@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Montserrat, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { AlertProvider } from "@/components/AlertProvider";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"], 
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${plusJakartaSans.variable} ${montserrat.variable} ${playfair.variable} font-sans`}>
-        {children}
+        <AlertProvider>
+          {children}
+        </AlertProvider>
       </body>
     </html>
   );

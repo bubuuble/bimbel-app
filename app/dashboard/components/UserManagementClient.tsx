@@ -4,6 +4,7 @@
 import { useState, useEffect, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
+import { alert } from "@/lib/alerts";
 import CreateUserForm from "./CreateUserForm";
 import { updateUserRole, deleteUserByAdmin, getUserProfileById, type FormState } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,12 @@ function UserRow({
     }, [roleState]);
 
     const handleDelete = async () => {
-        if (confirm(`Anda yakin ingin menghapus pengguna "${profile.name || profile.username}"?`)) {
+        const confirmed = await alert.confirm(
+            "Hapus Pengguna?", 
+            `Anda yakin ingin menghapus pengguna "${profile.name || profile.username}"? Tindakan ini tidak dapat dibatalkan.`
+        );
+        
+        if (confirmed) {
             const formData = new FormData();
             formData.append('userId', profile.id);
             const result = await deleteUserByAdmin(formData); // Sekarang mengembalikan hasil

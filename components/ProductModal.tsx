@@ -48,8 +48,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
   product, 
   isOpen, 
   onClose,
-  onPayment,
-  isProcessingPayment
+  onAddToCart,
+  isAddingToCart
 }) => {
   if (!product) return null;
 
@@ -149,19 +149,19 @@ const ProductModal: React.FC<ProductModalProps> = ({
           {/* Footer Aksi */}
           <div className="flex-shrink-0 p-6 border-t border-border/50 bg-background/50">
             <Button 
-              onClick={() => onPayment(product)}
-              disabled={isProcessingPayment}
+              onClick={() => onAddToCart(product)}
+              disabled={isAddingToCart}
               className="w-full h-12 text-base font-bold group rounded-xl text-secondary-foreground bg-secondary hover:opacity-90 transition-all shadow-sm"
             >
-              {isProcessingPayment ? (
+              {isAddingToCart ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Memproses...
+                  Menambahkan...
                 </>
               ) : (
                 <>
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Daftar & Bayar Sekarang
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  Tambah ke Keranjang
                 </>
               )}
             </Button>

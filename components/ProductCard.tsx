@@ -4,7 +4,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart, Clock, Users, ArrowRight } from 'lucide-react';
+import { Eye, Clock, Users, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { urlForImage } from '@/sanity/lib/image';
 import { Product, ViewMode, CATEGORY_DESCRIPTIONS } from '@/types/product';
@@ -120,14 +120,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
               )}
               <p className="text-xl font-bold text-primary">{formatPrice(product.price)}</p>
             </div>
-            <Link
-              href={`/pembayaran?product_id=${product._id}`}
-              onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={(e) => { e.stopPropagation(); onClick?.(); }}
               className="flex items-center gap-2 px-5 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-bold shadow-sm hover:opacity-90 hover:scale-105 transition-all"
             >
-              Daftar Sekarang
+              Cek Detail
               <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -193,13 +192,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
             <p className="text-sm md:text-xl font-bold text-primary">{formatPrice(product.price)}</p>
           </div>
-          <Link
-            href={`/pembayaran?product_id=${product._id}`}
-            onClick={(e) => e.stopPropagation()}
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick?.(); }}
             className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+            title="Lihat Detail Program"
           >
-            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-          </Link>
+            <Eye className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
         </div>
       </div>
     </div>

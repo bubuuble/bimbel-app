@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -1051,38 +1051,38 @@ export default function HomePage() {
                             </div>
 
                             {/* Content */}
-                            <div className="w-full md:w-1/2 space-y-4">
-                              <div className="space-y-2">
-                                <p className="text-sm font-bold text-primary uppercase tracking-wider">
+                            <div className="w-full md:w-1/2 space-y-2 md:space-y-4">
+                              <div className="space-y-1 md:space-y-2">
+                                <p className="text-xs md:text-sm font-bold text-primary uppercase tracking-wider">
                                   {p.achievementTitle}
                                 </p>
-                                <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                                <h3 className="text-xl md:text-3xl font-bold text-foreground">
                                   {p.name}
                                 </h3>
-                                <p className="text-secondary font-semibold text-lg">
+                                <p className="text-base md:text-lg text-secondary font-semibold">
                                   {p.universityAccepted}
                                 </p>
                               </div>
 
-                              <p className="text-foreground/70 text-base leading-relaxed">
+                              <p className="text-sm md:text-base text-foreground/70 leading-relaxed md:leading-relaxed">
                                 {p.description}
                               </p>
 
-                              <div className="pt-4 space-y-2">
-                                <p className="text-sm text-foreground/60">
+                              <div className="pt-2 md:pt-4 space-y-1 md:space-y-2">
+                                <p className="text-xs md:text-sm text-foreground/60">
                                   <span className="font-semibold">Asal Sekolah:</span> {p.school}
                                 </p>
                                 {p.program && (
-                                  <p className="text-sm text-foreground/60">
+                                  <p className="text-xs md:text-sm text-foreground/60">
                                     <span className="font-semibold">Program:</span> {p.program}
                                   </p>
                                 )}
                               </div>
 
-                              <div className="pt-4">
+                              <div className="pt-2 md:pt-4">
                                 <a
                                   href="https://wa.me/6287786864036"
-                                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-full hover:bg-primary/90 transition-all hover:scale-105"
+                                  className="inline-flex items-center gap-2 px-5 py-2 md:px-6 md:py-3 bg-primary text-primary-foreground text-sm md:text-base font-semibold rounded-full hover:bg-primary/90 transition-all hover:scale-105"
                                 >
                                   Hubungi Kami <ArrowRight className="w-4 h-4" />
                                 </a>
@@ -1101,7 +1101,7 @@ export default function HomePage() {
                         (prestasiIndex - 1 + prestasi.length) % prestasi.length
                       )
                     }
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 md:-translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg"
+                    className="absolute left-0 top-[28%] md:top-1/2 -translate-y-1/2 translate-x-2 md:-translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg border-2 border-white/20 md:border-transparent"
                     aria-label="Previous"
                   >
                     <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -1109,16 +1109,15 @@ export default function HomePage() {
 
                   <button
                     onClick={() =>
-                      setPrestasiIndex((prestasiIndex + 1) % prestasi.length)
+                      setPrestasiIndex((prestasiIndex + 1) % prestasi.length)   
                     }
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 md:translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg"
+                    className="absolute right-0 top-[28%] md:top-1/2 -translate-y-1/2 -translate-x-2 md:translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg border-2 border-white/20 md:border-transparent"
                     aria-label="Next"
                   >
                     <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
 
-                  {/* Pagination Dots */}
-                  <div className="flex items-center justify-center gap-2 mt-8">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                     {prestasi.map((_, i) => (
                       <button
                         key={i}

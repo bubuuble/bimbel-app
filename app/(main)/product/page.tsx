@@ -13,7 +13,7 @@ import { Loader2, Filter, Search, TrendingUp, BookOpen } from "lucide-react";
 import { Product, CATEGORIES, CATEGORY_DESCRIPTIONS } from "@/types/product";
 import ProductGrid from "@/components/ProductGrid";
 import ProductModal from "@/components/ProductModal";
-import { useMidtransSnap } from "@/lib/hooks/useMidtransSnap";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 /* ─── Category Filters ───────────────────────────────────────────────── */
 
@@ -111,8 +111,6 @@ export default function ProductPage() {
   const [searchQuery, setSearchQuery]               = useState<string>("");
   const [selectedProduct, setSelectedProduct]       = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen]               = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const snap = useMidtransSnap();
 
   const [user, setUser]               = useState<User | null>(null);
   const [isAuthLoading, setAuthLoading] = useState(true);
@@ -123,7 +121,9 @@ export default function ProductPage() {
     setIsModalOpen(true);
   };
 
-  const handlePayment = async (product: Product) => {
+  const { setCartItem } = useCartStore();
+
+  const handleAddToCart = async (product: Product) => {
     if (isAuthLoading) return;
     if (!user) {
       alert("Anda harus login terlebih dahulu untuk mendaftar.");
@@ -131,41 +131,10 @@ export default function ProductPage() {
       return;
     }
 
+    setCartItem(product);
     setIsModalOpen(false);
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    setIsProcessingPayment(true);
-    try {
-      const response = await fetch('/api/create-transaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product._id,
-          productName: product.title,
-          price: product.price,
-          classId: product.supabaseClassId,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create transaction.");
-      }
-
-      const { token } = await response.json();
-
-      snap.pay(token, {
-        onSuccess: (result: any) => { alert("Pembayaran berhasil!"); window.location.href = '/dashboard/kelas'; },
-        onPending: (result: any) => { alert("Pembayaran Anda sedang diproses."); },
-        onError: (result: any) => { alert("Pembayaran gagal."); },
-        onClose: () => { console.log('customer closed the popup'); },
-      });
-    } catch (error: any) {
-      console.error("Payment Error:", error);
-      alert(`Error: ${error.message}`);
-    } finally {
-      setIsProcessingPayment(false);
-    }
+    setSelectedProduct(null);
+    router.push('/cart');
   };
 
   useEffect(() => {
@@ -287,8 +256,7 @@ export default function ProductPage() {
           product={selectedProduct}
           isOpen={isModalOpen}
           onClose={() => { setIsModalOpen(false); setSelectedProduct(null); }}
-          onPayment={handlePayment}
-          isProcessingPayment={isProcessingPayment}
+          onAddToCart={handleAddToCart}
         />
       )}
     </main>
