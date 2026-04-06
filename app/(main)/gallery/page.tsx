@@ -62,10 +62,38 @@ export default function GalleryPage() {
       const slideElement = slider.children[0] as HTMLElement;
       // slideElement.offsetWidth doesn't include the gap, assuming gap-4 (16px)
       const slideWidth = slideElement.offsetWidth + 16;
-      slider.scrollTo({
-        left: index * slideWidth,
-        behavior: 'smooth'
-      });
+      const targetLeft = index * slideWidth;
+
+      // Custom smooth scroll animation for slower speed
+      const startLeft = slider.scrollLeft;
+      const distance = targetLeft - startLeft;
+      let startTime: number | null = null;
+      const duration = 600; // Duration in ms (higher = slower animation)
+
+      // Temporarily disable CSS snap and smooth scroll to prevent fighting with JS animation
+      slider.style.scrollBehavior = 'auto';
+      slider.style.scrollSnapType = 'none';
+
+      const animation = (currentTime: number) => {
+        if (startTime === null) startTime = currentTime;
+        const timeElapsed = currentTime - startTime;
+        const progress = Math.min(timeElapsed / duration, 1);
+        
+        // easeInOutQuad: smooth acceleration and deceleration
+        const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+        slider.scrollLeft = startLeft + distance * ease;
+
+        if (timeElapsed < duration) {
+          requestAnimationFrame(animation);
+        } else {
+          // Restore CSS behaviors
+          slider.style.scrollBehavior = '';
+          slider.style.scrollSnapType = '';
+        }
+      };
+
+      requestAnimationFrame(animation);
       setActiveSlide(index);
     }
   }
@@ -148,7 +176,7 @@ export default function GalleryPage() {
             {bannerImages.map((src, index) => (
               <div 
                 key={index} 
-                className="relative w-[88%] md:w-[92%] flex-shrink-0 snap-start rounded-2xl md:rounded-3xl overflow-hidden aspect-[16/10] md:aspect-[21/9] lg:aspect-[21/8] shadow-md border border-border/50"
+                className="relative w-[88%] md:w-[92%] flex-shrink-0 snap-start snap-always rounded-2xl md:rounded-3xl overflow-hidden aspect-[16/10] md:aspect-[21/9] lg:aspect-[21/8] shadow-md border border-border/50"
               >
                 <style jsx>{`
                   div::-webkit-scrollbar { display: none; }

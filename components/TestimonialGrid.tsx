@@ -9,6 +9,7 @@ import { TestimonialWithImage } from '@/types/testimonial';
 interface TestimonialGridProps {
   testimonials: TestimonialWithImage[];
   tilted?: boolean;
+  gridClassName?: string;
 }
 
 const COLORS = [
@@ -92,7 +93,7 @@ const TestimonialCard: React.FC<{ testimonial: TestimonialWithImage; index: numb
   );
 };
 
-const TestimonialGrid: React.FC<TestimonialGridProps> = ({ testimonials, tilted = false }) => {
+const TestimonialGrid: React.FC<TestimonialGridProps> = ({ testimonials, tilted = false, gridClassName }) => {
   if (!testimonials || testimonials.length === 0) {
     return (
       <div className="text-center py-16">
@@ -102,9 +103,11 @@ const TestimonialGrid: React.FC<TestimonialGridProps> = ({ testimonials, tilted 
       </div>
     );
   }
+  
+  const defaultGrid = "grid md:grid-cols-2 lg:grid-cols-3 gap-8";
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className={gridClassName || defaultGrid}>
       {testimonials.map((t, i) => (
         <TestimonialCard key={t._id} testimonial={t} index={i} tilted={tilted} />
       ))}

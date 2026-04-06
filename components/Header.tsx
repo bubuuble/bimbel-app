@@ -7,7 +7,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/lib/store/useCartStore";
 
 function NavLink({
   href,
@@ -38,8 +39,11 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const supabase = createClient();
+  const [mounted, setMounted] = useState(false);
+  const cartItem = useCartStore((state) => state.cartItem);
 
   useEffect(() => {
+    setMounted(true);
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -103,6 +107,19 @@ export default function Header() {
 
         {/* Actions */}
         <div className="hidden lg:flex items-center gap-3">
+          <Link
+            href="/cart"
+            className="relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-primary/10 transition-colors mr-2"
+            aria-label="Shopping cart"
+          >
+            <ShoppingCart className="w-5 h-5 text-foreground" />
+            {mounted && cartItem && (
+              <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-secondary text-white text-[10px] font-bold rounded-full">
+                1
+              </span>
+            )}
+          </Link>
+
           {user ? (
             <Link
               href="/dashboard"
@@ -128,14 +145,28 @@ export default function Header() {
           )}
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          className="lg:hidden flex items-center justify-center pt-1 text-primary transition-opacity hover:opacity-70"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Open menu"
-        >
-          <Menu className="w-7 h-7" />
-        </button>
+        {/* Mobile Action Icons (Cart + Menu) */}
+        <div className="lg:hidden flex items-center justify-center gap-2 pt-1">
+          <Link
+            href="/cart"
+            className="relative flex items-center justify-center w-9 h-9 rounded-full text-primary hover:opacity-70 transition-opacity"
+            aria-label="Shopping cart"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {mounted && cartItem && (
+              <span className="absolute 0 -right-1 flex items-center justify-center w-4 h-4 bg-secondary text-white text-[10px] font-bold rounded-full">
+                1
+              </span>
+            )}
+          </Link>
+          <button
+            className="flex items-center justify-center text-primary transition-opacity hover:opacity-70"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="w-7 h-7" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}

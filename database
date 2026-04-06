@@ -1,0 +1,225 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.attendance_records (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL,
+  student_id uuid NOT NULL,
+  status text NOT NULL CHECK (status = ANY (ARRAY['HADIR'::text, 'SAKIT'::text, 'IZIN'::text])),
+  notes text,
+  submitted_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT attendance_records_pkey PRIMARY KEY (id),
+  CONSTRAINT attendance_records_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.attendance_sessions(id),
+  CONSTRAINT attendance_records_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.attendance_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  class_id uuid NOT NULL,
+  session_date date NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  title text NOT NULL DEFAULT 'Sesi Absensi'::text,
+  start_time timestamp with time zone NOT NULL DEFAULT now(),
+  expires_at timestamp with time zone,
+  teacher_id uuid,
+  CONSTRAINT attendance_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT attendance_sessions_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
+  CONSTRAINT attendance_sessions_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.classes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  description text,
+  teacher_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  sanity_product_id text,
+  CONSTRAINT classes_pkey PRIMARY KEY (id),
+  CONSTRAINT classes_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.enrollments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  class_id uuid,
+  student_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT enrollments_pkey PRIMARY KEY (id),
+  CONSTRAINT enrollments_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
+  CONSTRAINT enrollments_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.essay_answers (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL UNIQUE,
+  answer_key text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT essay_answers_pkey PRIMARY KEY (id),
+  CONSTRAINT essay_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.matching_correct_pairs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL,
+  prompt_id uuid NOT NULL,
+  option_id uuid NOT NULL,
+  CONSTRAINT matching_correct_pairs_pkey PRIMARY KEY (id),
+  CONSTRAINT matching_correct_pairs_prompt_id_fkey FOREIGN KEY (prompt_id) REFERENCES public.matching_prompts(id),
+  CONSTRAINT matching_correct_pairs_option_id_fkey FOREIGN KEY (option_id) REFERENCES public.matching_options(id),
+  CONSTRAINT matching_correct_pairs_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.matching_options (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL,
+  option_text text NOT NULL,
+  CONSTRAINT matching_options_pkey PRIMARY KEY (id),
+  CONSTRAINT matching_options_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.matching_prompts (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL,
+  prompt_text text NOT NULL,
+  CONSTRAINT matching_prompts_pkey PRIMARY KEY (id),
+  CONSTRAINT matching_prompts_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.material_files (
+  id bigint NOT NULL DEFAULT nextval('material_files_id_seq'::regclass),
+  material_id uuid NOT NULL,
+  file_name text NOT NULL,
+  file_url text NOT NULL,
+  file_type text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT material_files_pkey PRIMARY KEY (id),
+  CONSTRAINT material_files_material_id_fkey FOREIGN KEY (material_id) REFERENCES public.materials(id)
+);
+CREATE TABLE public.materials (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title character varying NOT NULL,
+  file_url text,
+  file_type character varying,
+  class_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  is_task boolean NOT NULL DEFAULT false,
+  deadline timestamp with time zone,
+  description character varying,
+  CONSTRAINT materials_pkey PRIMARY KEY (id),
+  CONSTRAINT materials_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id)
+);
+CREATE TABLE public.multiple_choice_options (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL,
+  option_text text NOT NULL,
+  is_correct boolean NOT NULL DEFAULT false,
+  CONSTRAINT multiple_choice_options_pkey PRIMARY KEY (id),
+  CONSTRAINT multiple_choice_options_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  message text NOT NULL,
+  link text,
+  is_read boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.payments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  amount integer NOT NULL,
+  status character varying NOT NULL,
+  midtrans_order_id character varying UNIQUE,
+  created_at timestamp with time zone DEFAULT now(),
+  snap_token text,
+  product_name text,
+  sanity_product_id text,
+  CONSTRAINT payments_pkey PRIMARY KEY (id),
+  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  name character varying,
+  username character varying UNIQUE,
+  email character varying UNIQUE,
+  role USER-DEFINED NOT NULL DEFAULT 'SISWA'::user_role,
+  place_of_birth text,
+  date_of_birth date,
+  religion text,
+  school_origin text,
+  grade text,
+  address text,
+  phone_number text,
+  parent_name text,
+  parent_phone_number text,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.questions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  test_id uuid NOT NULL,
+  question_text text NOT NULL,
+  type USER-DEFINED NOT NULL,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT questions_pkey PRIMARY KEY (id),
+  CONSTRAINT questions_test_id_fkey FOREIGN KEY (test_id) REFERENCES public.tests(id)
+);
+CREATE TABLE public.student_answers (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  submission_id uuid NOT NULL,
+  question_id uuid NOT NULL,
+  answer_data jsonb NOT NULL,
+  is_correct boolean,
+  score_awarded integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT student_answers_pkey PRIMARY KEY (id),
+  CONSTRAINT student_answers_submission_id_fkey FOREIGN KEY (submission_id) REFERENCES public.test_submissions(id),
+  CONSTRAINT student_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id),
+  CONSTRAINT fk_student_answers_question_id FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);
+CREATE TABLE public.submissions (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  student_id uuid NOT NULL,
+  class_id uuid NOT NULL,
+  material_id uuid NOT NULL,
+  file_url text,
+  text_content text,
+  grade integer,
+  feedback text,
+  notes text,
+  CONSTRAINT submissions_pkey PRIMARY KEY (id),
+  CONSTRAINT submissions_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.profiles(id),
+  CONSTRAINT submissions_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
+  CONSTRAINT submissions_material_id_fkey FOREIGN KEY (material_id) REFERENCES public.materials(id)
+);
+CREATE TABLE public.test_submissions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  test_id uuid NOT NULL,
+  student_id uuid NOT NULL,
+  status text NOT NULL DEFAULT 'IN_PROGRESS'::text,
+  started_at timestamp with time zone DEFAULT now(),
+  completed_at timestamp with time zone,
+  total_score integer,
+  class_id uuid NOT NULL,
+  CONSTRAINT test_submissions_pkey PRIMARY KEY (id),
+  CONSTRAINT test_submissions_test_id_fkey FOREIGN KEY (test_id) REFERENCES public.tests(id),
+  CONSTRAINT test_submissions_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.profiles(id),
+  CONSTRAINT test_submissions_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id)
+);
+CREATE TABLE public.tests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  class_id uuid NOT NULL,
+  title text NOT NULL,
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  duration_minutes integer,
+  teacher_id uuid,
+  total_questions integer NOT NULL DEFAULT 10,
+  points_per_question numeric NOT NULL DEFAULT 10.00,
+  CONSTRAINT tests_pkey PRIMARY KEY (id),
+  CONSTRAINT tests_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
+  CONSTRAINT tests_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.true_false_statements (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  question_id uuid NOT NULL,
+  statement_text text NOT NULL,
+  is_true boolean NOT NULL,
+  CONSTRAINT true_false_statements_pkey PRIMARY KEY (id),
+  CONSTRAINT true_false_statements_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id)
+);

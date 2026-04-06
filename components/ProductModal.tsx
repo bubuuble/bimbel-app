@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  CreditCard
+  CreditCard,
+  ShoppingCart
 } from 'lucide-react';
 
 // Props Interface yang sudah diperbarui untuk menerima fungsi pembayaran
@@ -27,8 +28,8 @@ interface ProductModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  onPayment: (product: Product) => void;
-  isProcessingPayment: boolean;
+  onAddToCart: (product: Product) => void;
+  isAddingToCart?: boolean;
 }
 
 // Sub-komponen untuk seksi informasi

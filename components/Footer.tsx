@@ -18,7 +18,7 @@ export default function Footer() {
   const socialLinks = [
     { href: 'https://facebook.com', icon: Facebook, label: 'Facebook' },
     { href: 'https://instagram.com', icon: Instagram, label: 'Instagram' },
-    { href: 'https://wa.me/6281282641074', icon: MessageCircle, label: 'WhatsApp' },
+    { href: 'https://wa.me/6287786864036', icon: MessageCircle, label: 'WhatsApp' },
   ];
 
   return (

@@ -46,6 +46,9 @@ import { client } from "@/sanity/lib/client";
 import { groq } from "next-sanity";
 import { urlForImage } from "@/sanity/lib/image";
 import TestimonialGrid from "@/components/TestimonialGrid";
+import AchievementCard from "@/components/AchievementCard";
+import SimpleAchievementCard from "@/components/SimpleAchievementCard";
+import TestimonialCardV2 from "@/components/TestimonialCardV2";
 import ProductGrid from "@/components/ProductGrid";
 import { motion } from "framer-motion";
 import { TestimonialWithImage } from "@/types/testimonial";
@@ -308,9 +311,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
   const [facilityIndex, setFacilityIndex] = useState(0);
+  const [prestasiIndex, setPrestasiIndex] = useState(0);
   const [thumbOffset, setThumbOffset] = useState(0);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
+  const heroSliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([
@@ -323,10 +328,18 @@ export default function HomePage() {
         setLanding(l);
         setProducts(p || []);
         setTestimonials(t || []);
-        setPrestasi(pr || []);
+        // Fallback mock data for Prestasi if empty, so user can see implementation
+        const finalPrestasi = pr && pr.length > 0 ? pr : [
+          { _id: 'm1', name: 'Khayla Putri Herlina', achievementTitle: 'Lolos SNBT 2026', universityAccepted: 'Universitas Indonesia', description: 'Metode belajarnya asik dan mudah dipahami.', school: 'SMAN 8 Jakarta', image: '/image/prestasi/1.jpeg' },
+          { _id: 'm2', name: 'Precisia Rahaja', achievementTitle: 'Lolos SNBT 2026', universityAccepted: 'Universitas Indonesia', description: 'Mentor-mentornya sangat membantu dalam persiapan ujian.', school: 'SMAN 3 Bandung', image: '/image/prestasi/2.jpeg' },
+        ];
+        setPrestasi(finalPrestasi);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setLoading(false);
+      });
   }, []);
 
   const heroImages = (landing?.heroImages ?? []).map((img) => ({
@@ -334,14 +347,45 @@ export default function HomePage() {
     alt: img.alt || "Hero",
   }));
 
+  const scrollHeroTo = useCallback(
+    (index: number) => {
+      if (heroSliderRef.current && heroImages.length > 0 && heroSliderRef.current.children[0]) {
+        const el = heroSliderRef.current;
+        const slideEl = el.children[0] as HTMLElement;
+        const gap = window.innerWidth >= 768 ? 0 : 12; // gap-3 (12px) on mobile
+        el.scrollTo({ left: index * (slideEl.offsetWidth + gap), behavior: "smooth" });
+        setHeroIndex(index);
+      }
+    },
+    [heroImages.length]
+  );
+
+  const handleHeroScroll = () => {
+    if (heroSliderRef.current && heroSliderRef.current.children[0]) {
+      const scrollPos = heroSliderRef.current.scrollLeft;
+      const slideEl = heroSliderRef.current.children[0] as HTMLElement;
+      const gap = window.innerWidth >= 768 ? 0 : 12;
+      const w = slideEl.offsetWidth + gap;
+      if (w > 0) {
+        const newIdx = Math.round(scrollPos / w);
+        if (newIdx !== heroIndex && newIdx >= 0 && newIdx < heroImages.length) {
+          setHeroIndex(newIdx);
+        }
+      }
+    }
+  };
+
   const nextHero = useCallback(() => {
-    if (heroImages.length > 1) setHeroIndex((p) => (p + 1) % heroImages.length);
-  }, [heroImages.length]);
+    if (heroImages.length > 1) {
+      scrollHeroTo((heroIndex + 1) % heroImages.length);
+    }
+  }, [heroIndex, heroImages.length, scrollHeroTo]);
 
   const prevHero = useCallback(() => {
-    if (heroImages.length > 1)
-      setHeroIndex((p) => (p - 1 + heroImages.length) % heroImages.length);
-  }, [heroImages.length]);
+    if (heroImages.length > 1) {
+      scrollHeroTo((heroIndex - 1 + heroImages.length) % heroImages.length);
+    }
+  }, [heroIndex, heroImages.length, scrollHeroTo]);
 
   useEffect(() => {
     if (heroImages.length <= 1) return;
@@ -391,237 +435,244 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════
           1.  HERO  —  Full-image carousel, no text
       ══════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden w-full aspect-video md:aspect-auto md:h-[100svh] md:min-h-[560px]">
-        {/* Slides */}
-        {heroImages.length > 0 ? (
-          heroImages.map((img, i) => (
+      <section className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-auto md:h-[100svh] md:min-h-[560px] pt-4 pb-2 md:p-0">
+        <div className="relative w-full h-full">
+          {/* Slides */}
+          {heroImages.length > 0 ? (
             <div
-              key={i}
-              className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-              style={{
-                opacity: i === heroIndex ? 1 : 0,
-                zIndex: i === heroIndex ? 1 : 0,
-              }}
+              ref={heroSliderRef}
+              onScroll={handleHeroScroll}
+              className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scroll-smooth px-3 md:px-0 gap-3 md:gap-0 scroll-px-3 md:scroll-px-0 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              <Image
-                src={img.src}
-                alt={img.alt}
-                fill
-                className="object-cover"
-                priority={i === 0}
-                sizes="100vw"
-              />
+              {heroImages.map((img, i) => (
+                <div
+                  key={i}
+                  className="relative w-[95%] sm:w-[96%] md:w-full h-full flex-shrink-0 snap-start snap-always rounded-[1.25rem] md:rounded-none overflow-hidden shadow-lg md:shadow-none"
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    className="object-cover"
+                    priority={i === 0}
+                    sizes="(max-width: 768px) 100vw, 100vw"
+                  />
+                </div>
+              ))}
             </div>
-          ))
-        ) : (
-          <div className="absolute inset-0" style={{ background: "#C3D4FF" }} />
-        )}
+          ) : (
+            <div className="absolute inset-0 rounded-[1.25rem] md:rounded-none mx-3 md:mx-0" style={{ background: "#C3D4FF" }} />
+          )}
 
-        {/* Prev / Next arrows */}
-        {heroImages.length > 1 && (
-          <>
-            <button
-              onClick={prevHero}
-              className="absolute left-2 md:left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{
-                background: "rgba(255,255,255,0.25)",
-                backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.4)",
-              }}
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
-            </button>
-            <button
-              onClick={nextHero}
-              className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-all hover:scale-110"
-              style={{
-                background: "rgba(255,255,255,0.25)",
-                backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.4)",
-              }}
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
-            </button>
-          </>
-        )}
-
-        {/* Dot indicators */}
-        {heroImages.length > 1 && (
-          <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {heroImages.map((_, i) => (
+          {/* Prev / Next arrows */}
+          {heroImages.length > 1 && (
+            <>
               <button
-                key={i}
-                onClick={() => setHeroIndex(i)}
-                className="rounded-full transition-all duration-300"
+                onClick={prevHero}
+                className="absolute hidden md:flex left-3 md:left-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full items-center justify-center transition-all hover:scale-110"
                 style={{
-                  width: i === heroIndex ? 28 : 8,
-                  height: 8,
-                  background:
-                    i === heroIndex ? "#E84040" : "rgba(255,255,255,0.5)",
+                  background: "rgba(255,255,255,0.25)",
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(255,255,255,0.4)",
                 }}
-                aria-label={`Slide ${i + 1}`}
-              />
-            ))}
-          </div>
-        )}
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 text-white" />
+              </button>
+              <button
+                onClick={nextHero}
+                className="absolute hidden md:flex right-3 md:right-5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 md:w-11 md:h-11 rounded-full items-center justify-center transition-all hover:scale-110"
+                style={{
+                  background: "rgba(255,255,255,0.25)",
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(255,255,255,0.4)",
+                }}
+                aria-label="Next slide"
+              >
+                <ChevronRight className="w-4 h-4 md:w-6 md:h-6 text-white" />
+              </button>
+            </>
+          )}
+
+          {/* Dot indicators */}
+          {heroImages.length > 1 && (
+            <div className="absolute bottom-4 md:bottom-7 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+              {heroImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollHeroTo(i)}
+                  className="rounded-full transition-all duration-300"
+                  style={{
+                    width: i === heroIndex ? 28 : 8,
+                    height: 8,
+                    background:
+                      i === heroIndex ? "#E84040" : "rgba(255,255,255,0.5)",
+                  }}
+                  aria-label={`Slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
           1.5  LEAD CAPTURE / SECONDARY HERO
       ══════════════════════════════════════════════════════════════ */}
       <>
-  <motion.section
-    initial={{ opacity: 0, y: 24 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "0px 0px -60px 0px" }}
-    transition={{ duration: 0.7, ease: "easeOut" }}
-    className="relative w-full z-10 overflow-visible"
-  >
-    {/* Background & Blobs (Original) */}
-    <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 z-0" />
-    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4 pointer-events-none z-0" />
-    <div className="absolute bottom-1/2 left-0 w-[400px] h-[400px] bg-rose-400/20 dark:bg-rose-600/10 rounded-full blur-3xl -translate-x-1/3 pointer-events-none z-0" />
+    <motion.section
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className="relative w-full z-10 overflow-visible"
+    >
+      {/* Background & Blobs (Original) */}
+      <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/90 via-rose-100/90 to-amber-100/90 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4 pointer-events-none" />
+        <div className="absolute bottom-1/2 left-0 w-[400px] h-[400px] bg-rose-400/20 dark:bg-rose-600/10 rounded-full blur-3xl -translate-x-1/3 pointer-events-none" />
+      </div>
 
-    {/* Hero Content */}
-    <div className="container mx-auto px-4 sm:px-8 lg:px-12 relative z-30 pt-10 md:pt-24 pb-16 md:pb-11 flex flex-col md:flex-row items-center">
-      
-      {/* Left Column: Teks & Form (Di mobile lebar dibatasi agar tidak tabrakan dengan gambar) */}
-      <div className="w-full md:flex-1 space-y-4 md:space-y-6 text-left z-20 pr-[30%] md:pr-0 md:pl-10">
-        <h2 className="font-extrabold text-2xl md:text-4xl lg:text-[44px] leading-tight text-foreground drop-shadow-sm">
-          Bimbel Online & Offline Terbesar, Terlengkap, dan Terbukti di Indonesia
-        </h2>
+      {/* Hero Content */}
+      <div className="container mx-auto px-4 sm:px-8 lg:px-12 relative z-30 pt-10 md:pt-24 pb-16 md:pb-11 flex flex-col md:flex-row items-center">
         
-        <div className="pt-2">
-          <label className="block text-foreground/90 font-bold text-[11px] md:text-base mb-2 md:mb-3">
-            Diskon spesial untukmu dengan isi nomor HP sekarang
-          </label>
+        {/* Left Column: Teks & Form (Di mobile lebar dibatasi agar tidak tabrakan dengan gambar) */}
+        <div className="w-full md:flex-1 space-y-4 md:space-y-6 text-left z-20 pr-[30%] md:pr-0 md:pl-10">
+          <h2 className="font-extrabold text-2xl md:text-4xl lg:text-[44px] leading-relaxed drop-shadow-sm pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
+            Bimbel Online & Offline Terbesar, Terlengkap, dan Terbukti di Indonesia
+          </h2>
           
-          <form
-            className="w-full max-w-lg relative z-20"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!phone || phone.length < 9) {
-                setPhoneError('Nomor HP minimal 9 digit.');
-                return;
-              }
-              setPhoneError(null);
-              window.open(`https://wa.me/6281282641074?text=Halo%20saya%20tertarik...`);
-            }}
-          >
-            <div className="flex items-center bg-white dark:bg-card rounded-full p-1 shadow-lg border border-border/40 w-full max-w-[320px] md:max-w-full">
-              <div className="pl-3 pr-2 font-bold text-foreground/70 border-r border-border/40 text-xs md:text-base">
-                +62
+          <div className="pt-2">
+            <label className="block text-foreground/90 font-bold text-[11px] md:text-base mb-2 md:mb-3">
+              Diskon spesial untukmu dengan isi nomor HP sekarang
+            </label>
+            
+            <form
+              className="w-full max-w-lg relative z-20"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!phone || phone.length < 9) {
+                  setPhoneError('Nomor HP minimal 9 digit.');
+                  return;
+                }
+                setPhoneError(null);
+                window.open(`https://wa.me/6287786864036?text=Halo%20saya%20tertarik...`);
+              }}
+            >
+              <div className="flex items-center bg-white dark:bg-card rounded-full p-1 shadow-lg border border-border/40 w-full max-w-[320px] md:max-w-full">
+                <div className="pl-3 pr-2 font-bold text-foreground/70 border-r border-border/40 text-xs md:text-base">
+                  +62
+                </div>
+                <input
+                  type="tel"
+                  placeholder="812xxxx"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="flex-1 px-2 md:px-4 py-2 md:py-3 w-full bg-transparent text-foreground text-xs md:text-base focus:outline-none font-semibold"
+                />
+                <button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/60 text-white px-3 md:px-7 py-2 md:py-3 rounded-full font-bold text-[10px] md:text-base transition-all active:scale-95"
+                >
+                  Dapatkan Diskon
+                </button>
               </div>
-              <input
-                type="tel"
-                placeholder="812xxxx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 px-2 md:px-4 py-2 md:py-3 w-full bg-transparent text-foreground text-xs md:text-base focus:outline-none font-semibold"
-              />
-              <button
-                type="submit"
-                className="bg-[#F97316] hover:bg-[#EA580C] text-white px-3 md:px-7 py-2 md:py-3 rounded-full font-bold text-[10px] md:text-base transition-all active:scale-95"
-              >
-                Dapatkan Diskon
-              </button>
-            </div>
-            {/* Error logic tetap sama */}
-          </form>
+              {/* Error logic tetap sama */}
+            </form>
+          </div>
+        </div>
+
+        {/* Right Column: Gambar (Mobile: Absolute ke kanan bawah | Desktop: Relative/Normal) */}
+        <div className="absolute bottom-0 right-0 md:relative md:flex-1 w-[45%] md:w-full flex justify-end items-end z-10 pointer-events-none">
+          <picture className="w-full max-w-[200px] md:max-w-[420px] lg:max-w-xl drop-shadow-2xl block translate-y-4 md:translate-y-0">
+            <source srcSet="https://roboguru-forum-cdn.ruangguru.com/image/faf3c4c1-14cd-45bd-aa59-f8017155be37.png" media="(max-width: 768px)" />
+            <img 
+              src="https://roboguru-forum-cdn.ruangguru.com/image/c8d6923b-c6f1-4a02-a7ad-b7e9d268b138.png" 
+              className="w-full h-auto block" 
+              alt="Student Success" 
+            />
+          </picture>
         </div>
       </div>
 
-      {/* Right Column: Gambar (Mobile: Absolute ke kanan bawah | Desktop: Relative/Normal) */}
-      <div className="absolute bottom-0 right-0 md:relative md:flex-1 w-[45%] md:w-full flex justify-end items-end z-10 pointer-events-none">
-        <picture className="w-full max-w-[200px] md:max-w-[420px] lg:max-w-xl drop-shadow-2xl block translate-y-4 md:translate-y-0">
-          <source srcSet="https://roboguru-forum-cdn.ruangguru.com/image/faf3c4c1-14cd-45bd-aa59-f8017155be37.png" media="(max-width: 768px)" />
-          <img 
-            src="https://roboguru-forum-cdn.ruangguru.com/image/c8d6923b-c6f1-4a02-a7ad-b7e9d268b138.png" 
-            className="w-full h-auto block" 
-            alt="Student Success" 
-          />
-        </picture>
-      </div>
-    </div>
-
-    {/* Action Menu Desktop (Hanya muncul di Desktop) */}
-    <div className="absolute bottom-0 translate-y-1/2 left-0 right-0 px-6 lg:px-12 z-50 hidden lg:block">
-      <div className="container mx-auto">
-        <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-border/50 p-2 flex items-stretch overflow-hidden w-full divide-x divide-border/20">
-          {/* Menu Desktop Anda */}
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center"><Target className="w-5 h-5 text-red-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Persiapan</p><p className="text-sm font-bold">UTBK-SNBT</p></div>
-            </div>
-          </Link>
-          {/* ... teruskan item menu desktop lainnya sesuai kode original Anda ... */}
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"><Users className="w-5 h-5 text-blue-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Bimbel</p><p className="text-sm font-bold">Tatap Muka</p></div>
-            </div>
-          </Link>
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center"><Globe className="w-5 h-5 text-cyan-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Bimbel Online</p><p className="text-sm font-bold">Interaktif</p></div>
-            </div>
-          </Link>
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center"><BookOpen className="w-5 h-5 text-rose-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Video Belajar</p><p className="text-sm font-bold">& Soal</p></div>
-            </div>
-          </Link>
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center"><GraduationCap className="w-5 h-5 text-indigo-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">English</p><p className="text-sm font-bold">Academy</p></div>
-            </div>
-          </Link>
-          <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all rounded-r-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-gray-600" /></div>
-              <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Semua</p><p className="text-sm font-bold">Program</p></div>
-            </div>
-          </Link>
+      {/* Action Menu Desktop (Hanya muncul di Desktop) */}
+      <div className="absolute bottom-0 translate-y-1/2 left-0 right-0 px-6 lg:px-12 z-50 hidden lg:block">
+        <div className="container mx-auto">
+          <div className="bg-white dark:bg-card rounded-3xl shadow-2xl border border-border/50 p-2 flex items-stretch overflow-hidden w-full divide-x divide-border/20">
+            {/* Menu Desktop Anda */}
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center"><Target className="w-5 h-5 text-red-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Persiapan</p><p className="text-sm font-bold">UTBK-SNBT</p></div>
+              </div>
+            </Link>
+            {/* ... teruskan item menu desktop lainnya sesuai kode original Anda ... */}
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"><Users className="w-5 h-5 text-blue-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Bimbel</p><p className="text-sm font-bold">Tatap Muka</p></div>
+              </div>
+            </Link>
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center"><Globe className="w-5 h-5 text-cyan-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Bimbel Online</p><p className="text-sm font-bold">Interaktif</p></div>
+              </div>
+            </Link>
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center"><BookOpen className="w-5 h-5 text-rose-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Video Belajar</p><p className="text-sm font-bold">& Soal</p></div>
+              </div>
+            </Link>
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center"><GraduationCap className="w-5 h-5 text-indigo-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">English</p><p className="text-sm font-bold">Academy</p></div>
+              </div>
+            </Link>
+            <Link href="/product" className="group flex-1 flex items-center justify-center py-4 px-2 hover:bg-gray-50 transition-all rounded-r-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-gray-600" /></div>
+                <div className="text-left hidden xl:block"><p className="text-[10px] font-bold uppercase">Semua</p><p className="text-sm font-bold">Program</p></div>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  </motion.section>
+    </motion.section>
 
-  {/* Mobile Action Menu (Ruangguru Style: White Card) */}
-  <div className="lg:hidden px-4 relative z-50 -mt-10">
-    <div className="bg-white dark:bg-card rounded-2xl shadow-xl border border-border/40 p-4">
-      <p className="text-[12px] font-bold text-foreground mb-4">
-        Semua kebutuhan belajar ada di Bimbel Master
-      </p>
-      <div className="grid grid-cols-4 gap-2">
-        <Link href="/product" className="flex flex-col items-center text-center gap-2">
-          <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center"><Target className="w-5 h-5 text-red-600" /></div>
-          <span className="text-[10px] font-bold text-foreground leading-tight">UTBK-SNBT</span>
-        </Link>
-        <Link href="/product" className="flex flex-col items-center text-center gap-2">
-          <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center"><Users className="w-5 h-5 text-blue-600" /></div>
-          <span className="text-[10px] font-bold text-foreground leading-tight">Tatap Muka</span>
-        </Link>
-        <Link href="/product" className="flex flex-col items-center text-center gap-2">
-          <div className="w-11 h-11 rounded-full bg-cyan-100 flex items-center justify-center"><Globe className="w-5 h-5 text-cyan-600" /></div>
-          <span className="text-[10px] font-bold text-foreground leading-tight">Online</span>
-        </Link>
-        <Link href="/product" className="flex flex-col items-center text-center gap-2">
-          <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-gray-600" /></div>
-          <span className="text-[10px] font-bold text-foreground leading-tight">Semua</span>
-        </Link>
+      {/* Mobile Action Menu (Ruangguru Style: White Card) */}
+      <div className="lg:hidden px-4 relative z-50 -mt-10">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-xl border border-border/40 p-4">
+          <p className="text-[12px] font-bold text-foreground mb-4">
+            Semua kebutuhan belajar ada di Bimbel Master
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            <Link href="/product" className="flex flex-col items-center text-center gap-2">
+              <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center"><Target className="w-5 h-5 text-red-600" /></div>
+              <span className="text-[10px] font-bold text-foreground leading-tight">UTBK-SNBT</span>
+            </Link>
+            <Link href="/product" className="flex flex-col items-center text-center gap-2">
+              <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center"><Users className="w-5 h-5 text-blue-600" /></div>
+              <span className="text-[10px] font-bold text-foreground leading-tight">Tatap Muka</span>
+            </Link>
+            <Link href="/product" className="flex flex-col items-center text-center gap-2">
+              <div className="w-11 h-11 rounded-full bg-cyan-100 flex items-center justify-center"><Globe className="w-5 h-5 text-cyan-600" /></div>
+              <span className="text-[10px] font-bold text-foreground leading-tight">Online</span>
+            </Link>
+            <Link href="/product" className="flex flex-col items-center text-center gap-2">
+              <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-gray-600" /></div>
+              <span className="text-[10px] font-bold text-foreground leading-tight">Semua</span>
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div className="h-10 lg:h-20" />
-</>
+      <div className="h-10 lg:h-20" />
+    </>
 
       {/* ══════════════════════════════════════════════════════════════
           FIRST GROUP (Logos, Features, Products)
@@ -687,7 +738,7 @@ export default function HomePage() {
             className="py-8"
           >
             <div className="container mx-auto px-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-foreground">
+              <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 pb-6 leading-relaxed bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
                 Keunggulan Master
               </h2>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 max-w-5xl mx-auto">
@@ -786,19 +837,19 @@ export default function HomePage() {
             className="pt-10 pb-14"
           >
             <div className="container mx-auto px-6">
-              <div className="text-center mb-14 space-y-3">
+              <div className="text-center mb-14 space-y-4">
                 <StyledText
                   as="h2"
                   data={
                     landing?.productsTitle || {
                       text: "Program",
                       highlightText: "Eksklusif",
-                      highlightColor: "text-primary",
+                      highlightColor: "text-blue-800 dark:text-blue-500",
                     }
                   }
-                  wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground"
+                  wrapperClass="font-sans font-extrabold text-4xl md:text-[3.5rem] tracking-tight pb-2 leading-relaxed bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600"
                 />
-                <p className="text-lg max-w-xl mx-auto text-foreground/70">
+                <p className="text-[1.15rem] md:text-2xl leading-relaxed max-w-3xl mx-auto text-slate-500 dark:text-slate-400 font-medium">
                   {landing?.productsDescription ||
                     "Dirancang khusus untuk membantu siswa Indonesia meraih hasil terbaik dalam ujian dan seleksi masuk."}
                 </p>
@@ -835,7 +886,7 @@ export default function HomePage() {
         <div className="relative z-10 w-full">
           {/* Section heading — outside the blue container */}
           <div className="text-center mb-8 md:mb-10 space-y-3 px-4">
-            <StyledText as="h2" data={{ text: 'Kenapa', highlightText: 'Bimbel Master?' }} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground" />
+            <StyledText as="h2" data={{ text: 'Kenapa', highlightText: 'Bimbel Master?' }} wrapperClass="font-sans font-extrabold text-4xl md:text-5xl pb-6 leading-relaxed bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600" />
             <p className="text-lg max-w-xl mx-auto text-foreground/70">
               Kombinasi pendekatan tradisional dan teknologi modern untuk pengalaman belajar yang optimal.
             </p>
@@ -854,7 +905,7 @@ export default function HomePage() {
                 {/* Left: checklist + button */}
                 <div className="space-y-6 md:space-y-8 order-2 md:order-1">
                   <div className="space-y-4">
-                    <h2 className="font-extrabold text-3xl md:text-4xl text-foreground leading-snug">
+                    <h2 className="font-extrabold text-3xl md:text-4xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
                       Fasilitas Bimbel Master
                     </h2>
                     <ul className="space-y-3 md:space-y-4">
@@ -948,108 +999,202 @@ export default function HomePage() {
           </motion.section>
 
           {/* ══════════════════════════════════════════════════════════════
-          7.  TESTIMONIALS  —  chat-bubble style
+          7.  PRESTASI SISWA
       ══════════════════════════════════════════════════════════════ */}
-          <motion.section
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="pt-12 pb-14"
-          >
-            <div className="container mx-auto px-6">
-              <div className="text-center mb-14 space-y-3">
-                <StyledText
-                  as="p"
-                  data={landing?.testimonialsSubtitle || "Testimoni Nyata"}
-                  wrapperClass="text-xs font-bold tracking-widest uppercase text-secondary"
-                />
-                <StyledText
-                  as="h2"
-                  data={
-                    landing?.testimonialsTitle || {
-                      text: "Bukan Sekadar Testimoni, Tapi",
-                      highlightText: "Bukti Nyata",
+          {prestasi.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="pt-16 pb-20 bg-background"
+            >
+              <div className="container mx-auto px-6">
+                <div className="text-center mb-16 space-y-3">
+                  <p className="text-xs font-bold tracking-widest uppercase text-secondary">
+                    PRESTASI SISWA
+                  </p>
+                  <h2 className="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
+                    Lulusan Terbaik Bimbel Master
+                  </h2>
+                  <p className="text-lg max-w-xl mx-auto text-foreground/70">
+                    Bukti nyata keberhasilan siswa kami dalam meraih kampus impian.
+                  </p>
+                </div>
+
+                {/* Carousel Container */}
+                <div className="relative max-w-2xl mx-auto">
+                  {/* Card Display */}
+                  <div className="relative overflow-hidden rounded-3xl bg-white shadow-2xl border border-border/20">
+                    <div className="grid grid-cols-1">
+                      {prestasi.map((p: any, i: number) => (
+                        <div
+                          key={p._id}
+                          className={`transition-all duration-500 ease-in-out transform ${
+                            i === prestasiIndex
+                              ? "opacity-100 scale-100 pointer-events-auto"
+                              : "absolute opacity-0 scale-95 pointer-events-none"
+                          }`}
+                        >
+                          <div className="flex flex-col md:flex-row items-center gap-6 p-8 md:p-10">
+                            {/* Image */}
+                            <div className="w-full md:w-1/2 flex-shrink-0">
+                              <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 shadow-lg">
+                                <Image
+                                  src={p.image || "/image/prestasi/1.jpg"}
+                                  alt={p.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, 50vw"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="w-full md:w-1/2 space-y-4">
+                              <div className="space-y-2">
+                                <p className="text-sm font-bold text-primary uppercase tracking-wider">
+                                  {p.achievementTitle}
+                                </p>
+                                <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                                  {p.name}
+                                </h3>
+                                <p className="text-secondary font-semibold text-lg">
+                                  {p.universityAccepted}
+                                </p>
+                              </div>
+
+                              <p className="text-foreground/70 text-base leading-relaxed">
+                                {p.description}
+                              </p>
+
+                              <div className="pt-4 space-y-2">
+                                <p className="text-sm text-foreground/60">
+                                  <span className="font-semibold">Asal Sekolah:</span> {p.school}
+                                </p>
+                                {p.program && (
+                                  <p className="text-sm text-foreground/60">
+                                    <span className="font-semibold">Program:</span> {p.program}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="pt-4">
+                                <a
+                                  href="https://wa.me/6287786864036"
+                                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-full hover:bg-primary/90 transition-all hover:scale-105"
+                                >
+                                  Hubungi Kami <ArrowRight className="w-4 h-4" />
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <button
+                    onClick={() =>
+                      setPrestasiIndex(
+                        (prestasiIndex - 1 + prestasi.length) % prestasi.length
+                      )
                     }
-                  }
-                  wrapperClass="font-sans font-extrabold text-4xl md:text-5xl text-foreground"
-                />
-                <p className="text-lg max-w-xl mx-auto text-foreground/70">
-                  {landing?.testimonialsDescription ||
-                    "Cerita sukses dari siswa-siswa terbaik kami."}
-                </p>
-              </div>
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 md:-translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg"
+                    aria-label="Previous"
+                  >
+                    <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
 
-              <div className="space-y-16">
-                {/* Prestasi Siswa Map (New Schema) */}
-                {prestasi.length > 0 && (
-                  <div>
-                    <h3 className="text-2xl font-bold text-center mb-8 text-foreground">
-                      Prestasi Gemilang Siswa Kami
-                    </h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                        <TestimonialGrid
-                          tilted
-                          testimonials={prestasi.map((p) => ({
-                            _id: p._id,
-                            _type: "testimonial", // map to testimonial for UI grid compatibility
-                            name: p.name,
-                            testimonial: p.description || `${p.achievementTitle} ${p.universityAccepted ? 'di ' + p.universityAccepted : ''} ${p.competitionWon ? 'pada ' + p.competitionWon : ''}`,
-                            imageUrl: p.image
-                              ? urlForImage(p.image).width(400).url()
-                              : undefined,
-                            imageAlt: p.image?.alt || p.name,
-                            school: p.school,
-                            program: p.program || p.year,
-                            rating: 5,
-                            featured: p.featured || false,
-                            publishedAt: p.publishedAt || new Date().toISOString(),
-                          }))}
-                        />
-                      </div>
-                    </div>
+                  <button
+                    onClick={() =>
+                      setPrestasiIndex((prestasiIndex + 1) % prestasi.length)
+                    }
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 md:translate-x-20 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95 shadow-lg"
+                    aria-label="Next"
+                  >
+                    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+
+                  {/* Pagination Dots */}
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    {prestasi.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPrestasiIndex(i)}
+                        className={`rounded-full transition-all duration-300 ${
+                          i === prestasiIndex
+                            ? "bg-primary w-8 h-3"
+                            : "bg-primary/30 w-3 h-3 hover:bg-primary/50"
+                        }`}
+                        aria-label={`Go to slide ${i + 1}`}
+                      />
+                    ))}
                   </div>
-                )}
+                </div>
 
-                {/* Original Testimonials Map */}
-                {testimonials.length > 0 && (
-                  <div>
-                    <h3 className="text-2xl font-bold text-center mb-8 text-foreground">
-                      Apa Kata Siswa Tentang Bimbel Master?
-                    </h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                        <TestimonialGrid
-                          tilted
-                          testimonials={testimonials.map((t) => ({
-                            ...t,
-                            imageUrl: t.image
-                              ? urlForImage(t.image).width(400).url()
-                              : undefined,
-                            imageAlt: t.image?.alt || t.name,
-                            _type: t._type || "testimonial",
-                            featured: t.featured || false,
-                            publishedAt: t.publishedAt || new Date().toISOString(),
-                            rating: t.rating || 5,
-                          }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <div className="text-center mt-12">
+                  <Link
+                    href="/testimoni"
+                    className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-bold text-white bg-primary shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                  >
+                    Lihat Semua Siswa <ArrowRight className="w-6 h-6 ml-1" />
+                  </Link>
+                </div>
               </div>
+            </motion.section>
+          )}
 
-              <div className="text-center mt-10">
-                <Link
-                  href="/testimoni"
-                  className="inline-flex items-center gap-2 text-sm font-semibold hover:underline text-primary"
-                >
-                  Lihat Semua Testimoni <ArrowRight className="w-4 h-4" />
-                </Link>
+          {/* ══════════════════════════════════════════════════════════════
+          8.  TESTIMONIALS  —  Standard Grid
+      ══════════════════════════════════════════════════════════════ */}
+          {testimonials.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="pt-12 pb-24"
+            >
+              <div className="container mx-auto px-6">
+                <div className="text-center mb-14 space-y-3">
+                  <p className="text-xs font-bold tracking-widest uppercase text-secondary">
+                    TESTIMONI SISWA
+                  </p>
+                  <h2 className="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
+                    Apa Kata Mereka Tentang Kami?
+                  </h2>
+                  <p className="text-lg max-w-xl mx-auto text-foreground/70">
+                    Cerita pengalaman belajar yang menyenangkan dan efektif.
+                  </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+                  {testimonials.map((t: any) => (
+                    <TestimonialCardV2
+                      key={t._id}
+                      name={t.name}
+                      testimonial={t.testimonial}
+                      role={t.school || t.program}
+                      imageUrl={t.image ? urlForImage(t.image).width(400).url() : undefined}
+                      imageAlt={t.image?.alt || t.name}
+                      rating={t.rating}
+                    />
+                  ))}
+                </div>
+
+                <div className="text-center mt-12">
+                  <Link
+                    href="/testimoni"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+                  >
+                    Lihat Semua Testimoni <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.section>
+            </motion.section>
+          )}
 
           {/* ══════════════════════════════════════════════════════════════
           8.  CTA BANNER
@@ -1072,7 +1217,7 @@ export default function HomePage() {
               <StyledText
                 as="h2"
                 data={"Siap Mulai Perjalanan Belajarmu?"}
-                wrapperClass="font-sans font-extrabold text-4xl md:text-5xl leading-tight text-foreground"
+                wrapperClass="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600"
               />
               <p className="text-lg text-foreground/80">
                 Bergabunglah dengan 1.200+ siswa yang telah mempercayakan
@@ -1103,10 +1248,10 @@ export default function HomePage() {
           FLOATING WHATSAPP BUTTON
       ══════════════════════════════════════════════════════════════ */}
       <a
-        href="https://wa.me/6281282641074?text=Halo%20Bimbel%20Master%2C%20saya%20ingin%20bertanya%20tentang%20program%20bimbingan%20belajar."
+        href="https://wa.me/6287786864036?text=Halo%20Bimbel%20Master%2C%20saya%20ingin%20bertanya%20tentang%20program%20bimbingan%20belajar."
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 group"
+        className="fixed bottom-12 right-12 z-50 group"
         aria-label="Chat WhatsApp"
       >
         <div className="relative">
