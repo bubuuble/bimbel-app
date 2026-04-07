@@ -45,11 +45,19 @@ const getIcon = (name?: string) =>
 import { client } from "@/sanity/lib/client";
 import { groq } from "next-sanity";
 import { urlForImage } from "@/sanity/lib/image";
-import TestimonialGrid from "@/components/TestimonialGrid";
 import AchievementCard from "@/components/AchievementCard";
 import SimpleAchievementCard from "@/components/SimpleAchievementCard";
 import TestimonialCardV2 from "@/components/TestimonialCardV2";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ProductGrid from "@/components/ProductGrid";
+import GalleryHero from "@/components/GalleryHero";
 import { motion } from "framer-motion";
 import { TestimonialWithImage } from "@/types/testimonial";
 import { Product } from "@/types/product";
@@ -304,6 +312,7 @@ function useInView(threshold = 0.05) {
 }
 
 export default function HomePage() {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [landing, setLanding] = useState<LandingData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -1148,55 +1157,117 @@ export default function HomePage() {
           {/* ══════════════════════════════════════════════════════════════
           8.  TESTIMONIALS  —  Standard Grid
       ══════════════════════════════════════════════════════════════ */}
-          {testimonials.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="pt-12 pb-24"
-            >
-              <div className="container mx-auto px-6">
-                <div className="text-center mb-14 space-y-3">
-                  <p className="text-xs font-bold tracking-widest uppercase text-secondary">
-                    TESTIMONI SISWA
-                  </p>
-                  <h2 className="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
-                    Apa Kata Mereka Tentang Kami?
-                  </h2>
-                  <p className="text-lg max-w-xl mx-auto text-foreground/70">
-                    Cerita pengalaman belajar yang menyenangkan dan efektif.
-                  </p>
-                </div>
-
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
-                  {testimonials.map((t: any) => (
-                    <TestimonialCardV2
-                      key={t._id}
-                      name={t.name}
-                      testimonial={t.testimonial}
-                      role={t.school || t.program}
-                      imageUrl={t.image ? urlForImage(t.image).width(400).url() : undefined}
-                      imageAlt={t.image?.alt || t.name}
-                      rating={t.rating}
-                    />
-                  ))}
-                </div>
-
-                <div className="text-center mt-12">
-                  <Link
-                    href="/testimoni"
-                    className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
-                  >
-                    Lihat Semua Testimoni <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="pt-12 pb-24"
+          >
+            <div className="container mx-auto px-6">
+              <div className="text-center mb-14 space-y-3">
+                <p className="text-xs font-bold tracking-widest uppercase text-secondary">
+                  TESTIMONI SISWA
+                </p>
+                <h2 className="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
+                  Apa Kata Mereka Tentang Kami?
+                </h2>
+                <p className="text-lg max-w-xl mx-auto text-foreground/70">
+                  Cerita pengalaman belajar yang menyenangkan dan efektif.
+                </p>
               </div>
-            </motion.section>
-          )}
+
+              <Carousel opts={{ align: "start", loop: false }} className="w-full max-w-7xl mx-auto">
+                <CarouselContent className="-ml-4">
+                  {/* Dummy Data for Homepage Preview (Using structure from /testimoni) - Main Testimoni */}
+                  {[
+                    { id: 1, name: "Cover Story 1", image: "https://placehold.co/600x800/e2e8f0/94a3b8.png?text=Main+Testimoni+1" },
+                    { id: 2, name: "Cover Story 2", image: "https://placehold.co/600x800/e2e8f0/94a3b8.png?text=Main+Testimoni+2" },
+                    { id: 3, name: "Cover Story 3", image: "https://placehold.co/600x800/e2e8f0/94a3b8.png?text=Main+Testimoni+3" }
+                  ].map((item) => (
+                    <CarouselItem key={item.id} className="pl-4 basis-[75%] md:basis-1/2">
+                      <div className="border-4 border-white shadow-xl overflow-hidden rounded-[2rem] h-[400px] md:h-[500px] flex items-center justify-center relative group transition-transform duration-300 hover:-translate-y-2 cursor-pointer">
+                        <div className="p-0 flex items-center justify-center h-full w-full bg-slate-100">
+                          <img 
+                            src={item.image}
+                            alt={item.name}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className="relative z-10 flex flex-col items-center justify-end h-full pb-8 w-full gap-2">
+                            <Award className="w-12 h-12 text-white/50" />
+                            <div className="text-white font-bold text-xl tracking-wide uppercase">{item.name}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+
+                  {/* Preview / Lihat Semua Card */}
+                  <CarouselItem className="pl-4 basis-[75%] md:basis-1/2 py-4">
+                    <div className="relative h-[400px] md:h-[500px] w-full rounded-[2rem] border-4 border-white overflow-hidden shadow-lg flex items-center justify-center group">
+                      {/* Fake background for preview card */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-orange-50" />
+                      
+                      <div className="relative z-10 flex flex-col items-center justify-center p-6 gap-4 text-center h-full">
+                        <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center text-primary shadow-md group-hover:scale-110 transition-transform">
+                          <ArrowRight className="h-8 w-8 text-primary group-hover:translate-x-1 transition-transform" />
+                        </div>
+                        <h3 className="font-bold text-xl text-slate-800">Masih Banyak Lagi!</h3>
+                        <Link href="/testimoni" className="bg-primary text-white font-bold px-6 py-2.5 rounded-full hover:bg-primary/90 transition-all hover:shadow-lg hover:-translate-y-1 shadow-md flex items-center gap-2 mt-2 text-sm">
+                          Lihat Semua
+                        </Link>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                </CarouselContent>
+                
+                <div className="flex justify-center gap-4 mt-8">
+                  <CarouselPrevious className="static translate-y-0 translate-x-0 bg-white border border-slate-200 hover:bg-slate-50 hover:text-primary transition-colors text-slate-700 shadow-sm w-12 h-12" />
+                  <CarouselNext className="static translate-y-0 translate-x-0 bg-white border border-slate-200 hover:bg-slate-50 hover:text-primary transition-colors text-slate-700 shadow-sm w-12 h-12" />
+                </div>
+              </Carousel>
+            </div>
+          </motion.section>
 
           {/* ══════════════════════════════════════════════════════════════
-          8.  CTA BANNER
+          8.5  GALLERY HERO
+      ══════════════════════════════════════════════════════════════ */}
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="pt-12 pb-24 bg-background"
+          >
+            <div className="container mx-auto px-6 mb-12">
+              <div className="text-center space-y-3">
+                <p className="text-xs font-bold tracking-widest uppercase text-secondary">
+                  GALLERY MASTER
+                </p>
+                <h2 className="font-sans font-extrabold text-4xl md:text-5xl leading-relaxed pb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-primary to-orange-600">
+                  Momen Berharga Kami
+                </h2>
+                <p className="text-lg max-w-xl mx-auto text-foreground/70">
+                  Lihat kegiatan, fasilitas, dan momen-momen terbaik di Bimbel Master.
+                </p>
+              </div>
+            </div>
+            
+            <GalleryHero />
+            
+            <div className="text-center mt-12">
+              <Link
+                href="/gallery"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-bold text-white bg-primary shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+              >
+                Lihat Semua Gallery <ArrowRight className="w-5 h-5 ml-1" />
+              </Link>
+            </div>
+          </motion.section>
+
+          {/* ══════════════════════════════════════════════════════════════
+          9.  CTA BANNER
       ══════════════════════════════════════════════════════════════ */}
           <motion.section
             initial={{ opacity: 0, y: 50 }}
@@ -1267,6 +1338,29 @@ export default function HomePage() {
           </div>
         </div>
       </a>
+
+      {/* Modal / Dialog for Image Preview */}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <DialogContent showCloseButton={false} className="max-w-[90vw] md:max-w-4xl p-0 bg-transparent border-0 shadow-none flex justify-center items-center pointer-events-none">
+          <DialogTitle className="sr-only">Preview Gambar Testimoni</DialogTitle>
+          {selectedImage && (
+            <div className="relative inline-flex items-center justify-center max-w-full max-h-[85vh] pointer-events-auto">
+              <img 
+                src={selectedImage} 
+                alt="Preview Testimoni" 
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              />
+              <button 
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-4 -right-4 bg-white/70 hover:bg-white backdrop-blur-md p-2 rounded-full shadow-xl hover:scale-110 transition-all duration-300 z-50 group border border-white/50"
+                aria-label="Close"
+              >
+                <X className="w-6 h-6 text-slate-700 group-hover:text-rose-500 transition-colors" />
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

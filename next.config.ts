@@ -32,6 +32,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.sanity.io',
       },
+      // --- TAMBAHKAN POLA BARU INI UNTUK PLACEHOLDER ---
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
       // ------------------------------------------
     ],
   },
